@@ -1,0 +1,279 @@
+@use "sass:math";
+@import url("https://fonts.googleapis.com/css2?family=Azeret+Mono:ital,wght@0,100..900;1,100..900&display=swap");
+@font-face {
+  font-family: "nbarchitekt";
+  src: url(assets/fonts/NBArchitektStd-Regular.woff2) format("woff2");
+  font-style: normal;
+  font-weight: 400;
+}
+@font-face {
+  font-family: "nbarchitekt";
+  src: url(assets/fonts/NBArchitektStd-Bold.woff2) format("woff2");
+  font-style: normal;
+  font-weight: 700;
+}
+@function vw($px: 16, $base: 1920) {
+  @return math.div($px, $base) * 100vw;
+}
+@function vh($px: 16, $base: 1080) {
+  @return math.div($px, $base) * 100vh;
+}
+
+$bg-color: #0d0d0d;
+$text-primary: #ffffff;
+$text-secondary: #cccccc;
+$text-green: #e1ff9b;
+$accent-gradient: linear-gradient(135deg, #fff 0%, #a5a5a5 100%);
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "nbarchitekt", "Azeret Mono", monospace;
+  background-color: $bg-color;
+  color: $text-primary;
+  overflow: hidden;
+}
+
+.app-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+
+  .webgl-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+  }
+
+  .content {
+    position: fixed;
+    top: 0px;
+    left: 0;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+    /* Re-enable pointer events for interactive elements */
+    .header,
+    .hero,
+    .works {
+      pointer-events: auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      padding: 2rem;
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      width: 100%;
+      height: vh(180);
+      max-height: 200px;
+      background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.5),
+        rgba(0, 0, 0, 0)
+      );
+
+      * {
+        color: $text-primary;
+      }
+
+      .menu-nav {
+        background: rgba(0, 0, 0, 0);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba($text-green, 0.2);
+        border-radius: 150px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 200px;
+        height: 50px;
+        /* E1FF9B 30% 투명도, Blur 50px 글로우 효과 */
+        box-shadow: 0 0 50px 0 rgba($text-green, 0.3);
+        button {
+          transition: 0.3s;
+          width: auto;
+          height: auto;
+          position: relative;
+          &::after {
+            content: "";
+            display: block;
+            width: 100%;
+            height: 1px;
+            background-color: $text-green;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            clip-path: inset(0% 100% 0% 0%);
+            transition: clip-path 0.3s ease;
+          }
+        }
+        button:hover {
+          color: $text-green;
+          &::after {
+            clip-path: inset(0% 0% 0% 0%);
+          }
+        }
+      }
+
+      .menu-lang {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0 10px;
+        height: 50px;
+        button {
+          color: rgba(255, 255, 255, 0.5);
+          transition: 0.3s;
+          &.on,
+          &:hover {
+            color: rgba(255, 255, 255, 1);
+          }
+        }
+      }
+
+      .divider {
+        width: 1px;
+        height: 10px;
+        margin: 0px 10px;
+        background-color: #fff;
+      }
+    }
+
+    .hero {
+      width: 100%;
+      height: vh(250);
+      position: absolute;
+      bottom: 0rem;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+      .title {
+        position: absolute;
+        bottom: 3rem;
+        left: 2rem;
+        h1 {
+          font-size: vw(80, 1920);
+          font-weight: 400;
+        }
+        h3 {
+          font-size: vw(24, 1920);
+          font-weight: 400;
+        }
+      }
+      .btn-go-works {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: vw(350);
+        height: vw(350);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+
+        .focus {
+          position: relative;
+          width: 50px;
+          height: 50px;
+
+          /* 평시에 시선을 끄는 심장박동 스타일의 리사이징 애니메이션 */
+          animation: pulse 2s infinite ease-in-out;
+
+          /* 십자가 그래픽 (가로줄, 세로줄) */
+          &::before,
+          &::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            background-color: $text-primary;
+            transform: translate(-50%, -50%);
+            transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+          }
+
+          /* 가로선 */
+          &::before {
+            width: 100%;
+            height: 1px;
+          }
+
+          /* 세로선 */
+          &::after {
+            width: 1px;
+            height: 100%;
+          }
+        }
+
+        .text {
+          opacity: 0;
+          font-family: inherit;
+          font-size: 14px;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          transition:
+            opacity 0.5s ease,
+            transform 1s ease;
+          transform: translateX(-10px);
+          color: $text-primary;
+        }
+
+        /* Hover Interaction */
+        &:hover {
+          .focus {
+            /* 호버 시 펄스 애니메이션 일시 정지 후 90도 회전/스케일 업 오버라이드 */
+            animation-play-state: paused;
+
+            &::before,
+            &::after {
+              transform: translate(-50%, -50%) rotate(90deg) scale(1);
+            }
+          }
+          .text {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      }
+      .sub {
+        position: absolute;
+        right: 2rem;
+        bottom: 3rem;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        text-align: right;
+        font-size: vw(18, 1920);
+      }
+    }
+  }
+}
+
+/* 맥박이 뛰듯 크기와 투명도가 부드럽게 변하는 애니메이션 (시선 유도) */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(0.9);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+}
