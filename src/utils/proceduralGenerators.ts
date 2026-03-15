@@ -141,55 +141,26 @@ export function generateNebulaParticles(options: NebulaGeneratorOptions) {
 
   // Pre-define the 3 aesthetic colors requested by user
   const palette = [
-    new THREE.Color("#84f8ff"), // 1
-    new THREE.Color("#4ea7ff"), // 2
-    new THREE.Color("#ccfe69"), // 3
-    new THREE.Color("#feffed"), // 4
-    new THREE.Color("#ff8c00"), // 5
-    new THREE.Color("#c04b69"), // 6
+    // new THREE.Color("#dedde7"), 
+    // new THREE.Color("#c7c5d2"),
+    // new THREE.Color("#9e9cb0"),
+    new THREE.Color("#ffffff"),
   ];
 
   for (let i = 0; i < count; i++) {
-    const a = Math.random() * Math.PI * 2;
-    // Push particles out past radiusBase, then feather out
-    const r = radiusBase + Math.random() * Math.random() * radiusSpread; // Math.random() twice biases to the inner edge of the nebula ring
+    // 화면 전체에 균일하게 퍼지도록 직교좌표 랜덤 분포
+    const totalSpread = radiusBase + radiusSpread;
+    const x = (Math.random() - 0.5) * 2.0 * totalSpread;
+    const y = (Math.random() - 0.5) * 2.0 * totalSpread;
+    const z = (Math.random() - 0.5) * thickness;
 
-    const rootDist = Math.sqrt(r - radiusBase) / Math.sqrt(radiusSpread); // Density falloff
-    
-    // Z-thickness, thicker in the outer edge forming an accretion disk / cloud
-    const zThickness = thickness * (0.2 + rootDist); 
-    let z = (Math.random() - 0.5) * zThickness;
-
-    // Add extra volumetric noise
-    const rz = (Math.random() - 0.5) * (thickness * 0.5);
-
-    positions[i * 3 + 0] = r * Math.cos(a);
-    positions[i * 3 + 1] = r * Math.sin(a);
-    positions[i * 3 + 2] = z + rz;
+    positions[i * 3 + 0] = x;
+    positions[i * 3 + 1] = y;
+    positions[i * 3 + 2] = z;
     randoms[i] = Math.random();
 
-    // Assign color based on distance from center with weighted probability
-    // rootDist: 0 (center/inner) -> 1 (outer edge)
-    // Blue: higher probability near center (low rootDist)
-    // Orange: higher probability in middle distance
-    // Purple: higher probability at outer edge (high rootDist)
-    
-    const blueWeight = Math.pow(1 - rootDist, 2); // 높을수록 중앙에 가까움
-    const orangeWeight = rootDist * (1 - rootDist) * 4; // 중간 거리에서 최대 (0.5에서 최대값)
-    const purpleWeight = Math.pow(rootDist, 2); // 높을수록 멀리
-    
-    const totalWeight = blueWeight + orangeWeight + purpleWeight;
-    const random = Math.random() * totalWeight;
-    
-    let color;
-    if (random < blueWeight) {
-      color = palette[1]; // Blue (가운데)
-    } else if (random < blueWeight + orangeWeight) {
-      color = palette[0]; // Orange (중간)
-    } else {
-      color = palette[2]; // Purple (멀리)
-    }
-    
+    // Assign random color from palette
+    const color = palette[Math.floor(Math.random() * palette.length)];
     colors[i * 3 + 0] = color.r;
     colors[i * 3 + 1] = color.g;
     colors[i * 3 + 2] = color.b;

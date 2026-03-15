@@ -22,7 +22,7 @@
 $bg-color: #0d0d0d;
 $text-primary: #ffffff;
 $text-secondary: #cccccc;
-$text-green: #e1ff9b;
+$text-green: #dedde7;
 $accent-gradient: linear-gradient(135deg, #fff 0%, #a5a5a5 100%);
 
 * {
@@ -36,6 +36,7 @@ body {
   background-color: $bg-color;
   color: $text-primary;
   overflow: hidden;
+  cursor: none;
 }
 
 .app-container {
@@ -50,6 +51,48 @@ body {
     z-index: 1;
   }
 
+  > .focus {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 50px;
+    height: 50px;
+    pointer-events: none;
+    z-index: 9999;
+    margin-left: -25px;
+    margin-top: -25px;
+    will-change: transform;
+    transition: 0.1s ease;
+
+    &.off{
+      opacity: 0;
+      clip-path: inset(50% 50% 0% 0%);
+    }
+    &.on{
+      opacity: 1;
+      clip-path: inset(0% 0% 0% 0%);
+    }
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      background-color: $text-primary;
+      transform: translate(-50%, -50%);
+      transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    &::before {
+      width: 100%;
+      height: 1px;
+    }
+    &::after {
+      width: 1px;
+      height: 100%;
+    }
+  }
+  
   .content {
     position: fixed;
     top: 0px;
@@ -82,6 +125,7 @@ body {
         rgba(0, 0, 0, 0.5),
         rgba(0, 0, 0, 0)
       );
+      font-size: max(vw(16, 1920), 16px);
 
       * {
         color: $text-primary;
@@ -97,8 +141,13 @@ body {
         align-items: center;
         width: 200px;
         height: 50px;
-        /* E1FF9B 30% 투명도, Blur 50px 글로우 효과 */
         box-shadow: 0 0 50px 0 rgba($text-green, 0.3);
+        opacity: 0;
+
+        &.on{
+          opacity: 1;
+        }
+        
         button {
           transition: 0.3s;
           width: auto;
@@ -159,22 +208,16 @@ body {
         position: absolute;
         bottom: 3rem;
         left: 2rem;
-        h1 {
-          font-size: vw(80, 1920);
+        h2 {
+          font-size: max(vw(30, 1920), 30px);
           font-weight: 400;
         }
         h3 {
-          font-size: vw(24, 1920);
+          font-size: max(vw(24, 1920), 24px);
           font-weight: 400;
         }
       }
-      .btn-go-works {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: vw(300);
-        height: vw(300);
+      .btn-star{
         background: transparent;
         border: none;
         cursor: pointer;
@@ -183,39 +226,16 @@ body {
         justify-content: center;
         align-items: center;
         gap: 15px;
-
-        .focus {
-          position: relative;
-          width: 50px;
-          height: 50px;
-
-          /* 평시에 시선을 끄는 심장박동 스타일의 리사이징 애니메이션 */
-          animation: pulse 2s infinite ease-in-out;
-
-          /* 십자가 그래픽 (가로줄, 세로줄) */
-          &::before,
-          &::after {
-            content: "";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            background-color: $text-primary;
-            transform: translate(-50%, -50%);
-            transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
-          }
-
-          /* 가로선 */
-          &::before {
-            width: 100%;
-            height: 1px;
-          }
-
-          /* 세로선 */
-          &::after {
-            width: 1px;
-            height: 100%;
-          }
+        width: max(vw(100), 150px);
+        height: max(vw(100), 150px);
+        position: fixed;
+        left: 0; 
+        top: 0;
+        transform: translate(-50%, -50%); // JS에서 left, top을 별 중심으로 세팅
+        *{
+          flex-shrink: 0;
         }
+        
 
         .text {
           opacity: 0;
@@ -247,6 +267,8 @@ body {
           }
         }
       }
+
+      // .btn-go-works, .btn-go-info: 위치는 JS에서 동적으로 세팅 (각 별 중심 프로젝션)
       .sub {
         position: absolute;
         right: 2rem;
@@ -256,7 +278,7 @@ body {
         flex-direction: column;
         gap: 0.8rem;
         text-align: right;
-        font-size: vw(18, 1920);
+        font-size: max(vw(18, 1920), 18px);
       }
     }
   }

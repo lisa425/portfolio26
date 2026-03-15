@@ -25,33 +25,38 @@ const heroConfig = {
   },
   particles: {
     coreStar: {
-      count: 4000,
+      count: 5000,
       radius: 8.5,
-      innerRadiusRatio: 0.5,
+      innerRadiusRatio: 0.6,
       points: 5,
       thickness: 4.5, // Increased from 1.0. This directly controls the maximum Z-axis spread (depth)
       jitter: 0.4, // Increased from 0.1. Adds random 3D scatter, making it look less like a solid shell
       rotationOffset: Math.PI / 2 + 0.3,
 
       material: {
-        size: 75.0, // Smaller particles reveal the shape better than huge overlapping ones
-        color: "#cffcff", // Pure white/blue core
+        size: 50.0, // Smaller particles reveal the shape better than huge overlapping ones
+        color: "#eae9f3", // Pure white/blue core
         noiseStrength: 0.2, // Less undulating so it doesn't distort the star shape too much
-        holeRadius: 8.0, // The exact coordinate size of the pushed hole
+        holeRadius: 9.0, // The exact coordinate size of the pushed hole
         repulsionForce: 0.5, // Reduced from 1.5 to 0.5 to make distance interaction weaker
       },
+      starPosition: {
+        star1: [-6, 1, 0],
+        star2: [7, -4, 0],
+      },
+      star2Scale: 0.6, // star2의 비율 (holeRadius 등에 공통 적용)
     },
     nebula: {
-      count: 10000, // Medium density spread over a huge area
-      radiusBase: 2.5, // Starts roughly outside the star
-      radiusSpread: 20.0, // Extends far out
-      thickness: 10.0, // Thick volumetric cloud (Increased from 4.0 to match the star's new depth)
+      count: 8000, // 배경 별 밀도 증가
+      radiusBase: 0, // Starts roughly outside the star
+      radiusSpread: 50.0, // 더 넓게 퍼지도록 확장
+      thickness: 0.0, // Flat spread
 
       material: {
-        size: 30.0,
-        color: "#4e77ff", // Deep blue/purple cosmic cloud tone
+        size: 10.0,
+        color: "#4e77ff",
         noiseStrength: 0.2, // Less wavey
-        holeRadius: 9.0, // Pushes nebula out slightly wider than the core
+        holeRadius: 9.0, // 별 크기(radius)와 비슷하게 설정
         repulsionForce: 0.8, // Reduced from 2.5 to 0.8
       },
     },
@@ -61,7 +66,7 @@ const heroConfig = {
       enabled: true,
       strength: 0.3, // Let the core star shine like crazy
       radius: 0.7, // Spread the glow
-      threshold: 0.1, // Catch most of the colored point particles
+      threshold: 0.2, // Catch most of the colored point particles
     },
   },
 };
@@ -69,7 +74,8 @@ const heroConfig = {
 export const useHeroScene = (
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
   containerRef: React.RefObject<HTMLElement | null>,
-  buttonRef?: React.RefObject<HTMLElement | null>,
+  buttonWorksRef?: React.RefObject<HTMLElement | null>,
+  buttonInfoRef?: React.RefObject<HTMLElement | null>,
 ) => {
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
@@ -93,7 +99,7 @@ export const useHeroScene = (
     const renderer = new THREE.WebGLRenderer({
       canvas: canvas,
       alpha: heroConfig.render.alpha,
-      antialias: heroConfig.render.antialias,
+      antialias: false, // 파티클 시스템에는 antialias 불필요 (성능 최적화)
     });
     renderer.setClearColor(
       heroConfig.render.clearColor,
@@ -122,13 +128,14 @@ export const useHeroScene = (
     // -------------------------------------------------------------
     // 5. MOUSE INTERACTION SETUP (Raycaster & Drag Rotation)
     // -------------------------------------------------------------
+    // 각 별에 대해 별도의 마우스 파라미터 (별의 위치를 고려한 로컬 좌표계)
     const mouseParams = {
       targetX: 100, // 초기값을 멀리 설정하여 구멍이 생기지 않도록
       targetY: 100,
       currentX: 100, // We lerp towards target for smoothness
       currentY: 100,
     };
-
+    
     const dragParams = {
       isDragging: false,
       previousX: 0,
@@ -137,8 +144,9 @@ export const useHeroScene = (
       targetRotationY: 0,
     };
 
-    // Button hover state (드래그 비활성화를 위해 앞에 선언)
-    let isButtonHovered = false;
+    // Button hover state (각 별별로 독립적으로 관리)
+    let isButtonHoveredStar1 = false;
+    let isButtonHoveredStar2 = false;
 
     const MAX_ROTATION = THREE.MathUtils.degToRad(10); // limit to ~15 degrees max in either direction
 
@@ -167,7 +175,7 @@ export const useHeroScene = (
       }
 
       // 2. Drag Rotation Logic (버튼 호버 중에는 비활성화)
-      if (dragParams.isDragging && !isButtonHovered) {
+      if (dragParams.isDragging && !isButtonHoveredStar1 && !isButtonHoveredStar2) {
         const deltaX = event.clientX - dragParams.previousX;
         const deltaY = event.clientY - dragParams.previousY;
 
@@ -194,7 +202,7 @@ export const useHeroScene = (
 
     const handleMouseDown = (event: MouseEvent) => {
       // 버튼 호버 중에는 드래그 비활성화
-      if (!isButtonHovered) {
+      if (!isButtonHoveredStar1 && !isButtonHoveredStar2) {
         dragParams.isDragging = true;
         dragParams.previousX = event.clientX;
         dragParams.previousY = event.clientY;
@@ -226,8 +234,8 @@ export const useHeroScene = (
     // -------------------------------------------------------------
     const clock = new THREE.Clock();
 
-    // LAYER 1: Core Star Shape
-    const starData = generateStarParticles({
+    // LAYER 1: Star 1 (기존 별)
+    const star1Data = generateStarParticles({
       count: heroConfig.particles.coreStar.count,
       radius: heroConfig.particles.coreStar.radius,
       innerRadiusRatio: heroConfig.particles.coreStar.innerRadiusRatio,
@@ -237,40 +245,79 @@ export const useHeroScene = (
       rotationOffset: heroConfig.particles.coreStar.rotationOffset,
     });
 
-    const starGeo = new THREE.BufferGeometry();
-    starGeo.setAttribute(
+    const star1Geo = new THREE.BufferGeometry();
+    star1Geo.setAttribute(
       "position",
-      new THREE.BufferAttribute(starData.positions, 3),
+      new THREE.BufferAttribute(star1Data.positions, 3),
     );
-    starGeo.setAttribute(
+    star1Geo.setAttribute(
       "randomScale",
-      new THREE.BufferAttribute(starData.randoms, 1),
+      new THREE.BufferAttribute(star1Data.randoms, 1),
     );
 
-    const starMat = createInteractiveParticleMaterial({
+    const star1Mat = createInteractiveParticleMaterial({
       size: heroConfig.particles.coreStar.material.size,
       color: heroConfig.particles.coreStar.material.color,
       noiseStrength: heroConfig.particles.coreStar.material.noiseStrength,
       holeRadius: heroConfig.particles.coreStar.material.holeRadius,
       repulsionForce: heroConfig.particles.coreStar.material.repulsionForce,
+      isCoreStar: true, // coreStar 파티클에만 크기 변화 적용
     });
 
-    const starPoints = new THREE.Points(starGeo, starMat);
-    scene.add(starPoints);
+    const star1Points = new THREE.Points(star1Geo, star1Mat);
+    star1Points.position.set(heroConfig.particles.coreStar.starPosition.star1[0], heroConfig.particles.coreStar.starPosition.star1[1], heroConfig.particles.coreStar.starPosition.star1[2]); // 여기서 star1 위치 설정
+    star1Points.rotation.y = THREE.MathUtils.degToRad(30);
+    scene.add(star1Points);
+
+    // LAYER 2: Star 2 (작은 별)
+    const star2Data = generateStarParticles({
+      count: heroConfig.particles.coreStar.count,
+      radius: heroConfig.particles.coreStar.radius * 0.6, // 60% 크기
+      innerRadiusRatio: heroConfig.particles.coreStar.innerRadiusRatio,
+      points: heroConfig.particles.coreStar.points,
+      thickness: heroConfig.particles.coreStar.thickness,
+      jitter: heroConfig.particles.coreStar.jitter,
+      rotationOffset: heroConfig.particles.coreStar.rotationOffset,
+    });
+
+    const star2Geo = new THREE.BufferGeometry();
+    star2Geo.setAttribute(
+      "position",
+      new THREE.BufferAttribute(star2Data.positions, 3),
+    );
+    star2Geo.setAttribute(
+      "randomScale",
+      new THREE.BufferAttribute(star2Data.randoms, 1),
+    );
+
+    const star2Scale = heroConfig.particles.coreStar.star2Scale;
+    const star2Mat = createInteractiveParticleMaterial({
+      size: heroConfig.particles.coreStar.material.size * 0.8,
+      color: heroConfig.particles.coreStar.material.color,
+      noiseStrength: heroConfig.particles.coreStar.material.noiseStrength,
+      holeRadius: heroConfig.particles.coreStar.material.holeRadius * star2Scale, // star2Scale 적용
+      repulsionForce: heroConfig.particles.coreStar.material.repulsionForce,
+      isCoreStar: true,
+    });
+
+    const star2Points = new THREE.Points(star2Geo, star2Mat);
+    star2Points.position.set(heroConfig.particles.coreStar.starPosition.star2[0], heroConfig.particles.coreStar.starPosition.star2[1], heroConfig.particles.coreStar.starPosition.star2[2]); // 위치 조정 (나중에 수정 가능)
+    star2Points.rotation.y = THREE.MathUtils.degToRad(-30);
+    star2Points.rotation.z = THREE.MathUtils.degToRad(-30);
+    scene.add(star2Points);
 
     // Button hover effect: 버튼에 마우스오버하면 구멍 효과 발생
-    let targetButtonHover = 0.0; // 초기값은 0 (구멍 없음)
-    let targetNebulaHoleRadius = 0; // 초기값은 0 (구멍 없음)
+    let targetButtonHoverStar1 = 0.0; // star1용 (btn-go-works)
+    let targetButtonHoverStar2 = 0.0; // star2용 (btn-go-info)
     let buttonCleanup: (() => void) | null = null;
     
-    if (buttonRef?.current) {
-      const button = buttonRef.current;
+    // btn-go-works: star1에만 효과
+    if (buttonWorksRef?.current) {
+      const button = buttonWorksRef.current;
       
       const handleButtonMouseEnter = () => {
-        // 버튼 호버 시 구멍 효과 활성화 (uButtonHover를 1.0으로 트랜지션)
-        isButtonHovered = true;
-        targetButtonHover = 1.0;
-        targetNebulaHoleRadius = heroConfig.particles.nebula.material.holeRadius; // Nebula holeRadius 활성화
+        isButtonHoveredStar1 = true;
+        targetButtonHoverStar1 = 1.0; // star1만 활성화
         
         // 별의 rotation을 0으로 초기화
         dragParams.targetRotationX = 0;
@@ -278,16 +325,51 @@ export const useHeroScene = (
       };
       
       const handleButtonMouseLeave = () => {
-        // 버튼에서 벗어나면 구멍 효과 비활성화 (uButtonHover를 0.0으로 트랜지션)
-        isButtonHovered = false;
-        targetButtonHover = 0.0;
-        targetNebulaHoleRadius = 0; // Nebula holeRadius 비활성화
+        isButtonHoveredStar1 = false;
+        targetButtonHoverStar1 = 0.0; // star1 비활성화
       };
       
       button.addEventListener("mouseenter", handleButtonMouseEnter);
       button.addEventListener("mouseleave", handleButtonMouseLeave);
       
+      if (!buttonCleanup) {
+        buttonCleanup = () => {};
+      }
+      const originalCleanup = buttonCleanup;
       buttonCleanup = () => {
+        originalCleanup();
+        button.removeEventListener("mouseenter", handleButtonMouseEnter);
+        button.removeEventListener("mouseleave", handleButtonMouseLeave);
+      };
+    }
+    
+    // btn-go-info: star2에만 효과
+    if (buttonInfoRef?.current) {
+      const button = buttonInfoRef.current;
+      
+      const handleButtonMouseEnter = () => {
+        isButtonHoveredStar2 = true;
+        targetButtonHoverStar2 = 1.0; // star2만 활성화
+        
+        // 별의 rotation을 0으로 초기화
+        dragParams.targetRotationX = 0;
+        dragParams.targetRotationY = 0;
+      };
+      
+      const handleButtonMouseLeave = () => {
+        isButtonHoveredStar2 = false;
+        targetButtonHoverStar2 = 0.0; // star2 비활성화
+      };
+      
+      button.addEventListener("mouseenter", handleButtonMouseEnter);
+      button.addEventListener("mouseleave", handleButtonMouseLeave);
+      
+      if (!buttonCleanup) {
+        buttonCleanup = () => {};
+      }
+      const originalCleanup = buttonCleanup;
+      buttonCleanup = () => {
+        originalCleanup();
         button.removeEventListener("mouseenter", handleButtonMouseEnter);
         button.removeEventListener("mouseleave", handleButtonMouseLeave);
       };
@@ -320,6 +402,7 @@ export const useHeroScene = (
       color: heroConfig.particles.nebula.material.color,
       noiseStrength: heroConfig.particles.nebula.material.noiseStrength,
       holeRadius: 0, // 초기값은 0 (버튼 호버 시에만 구멍 생성)
+      holeRadiusStar2: 0, // star2 holeRadius도 초기값 0
       repulsionForce: heroConfig.particles.nebula.material.repulsionForce,
       useVertexColors: true, // Enable the per-vertex color macro in the shader
     });
@@ -337,7 +420,7 @@ export const useHeroScene = (
 
       // Smooth lerp for mouse coordinates to avoid jerky jumps
       // 버튼 호버 중이 아닐 때만 마우스 위치 업데이트
-      if (!isButtonHovered) {
+      if (!isButtonHoveredStar1 && !isButtonHoveredStar2) {
         // 마우스가 멀리 떨어져 있을 때는 더 느리게 전환 (부드러운 아웃 트랜지션)
         const targetDistance = Math.sqrt(
           mouseParams.targetX * mouseParams.targetX + 
@@ -351,23 +434,69 @@ export const useHeroScene = (
         mouseParams.currentY +=
           (mouseParams.targetY - mouseParams.currentY) * lerpSpeed;
       } else {
-        // 버튼 호버 중에는 마우스를 중앙으로 유지하여 holeActivation 활성화
-        mouseParams.currentX += (0 - mouseParams.currentX) * 0.1;
-        mouseParams.currentY += (0 - mouseParams.currentY) * 0.1;
+        // 버튼 호버 중에는 마우스를 해당 별의 위치로 유지하여 holeActivation 활성화
+        // star1 호버 중이면 star1 위치로, star2 호버 중이면 star2 위치로
+        let targetMouseX = mouseParams.targetX;
+        let targetMouseY = mouseParams.targetY;
+        
+        if (isButtonHoveredStar1) {
+          targetMouseX = star1Points.position.x;
+          targetMouseY = star1Points.position.y;
+        }
+        if (isButtonHoveredStar2) {
+          targetMouseX = star2Points.position.x;
+          targetMouseY = star2Points.position.y;
+        }
+        
+        mouseParams.currentX += (targetMouseX - mouseParams.currentX) * 0.1;
+        mouseParams.currentY += (targetMouseY - mouseParams.currentY) * 0.1;
       }
 
       // Update uniforms for both layers
-      if (starMat) {
-        starMat.uniforms.uTime.value = elapsedTime;
-        starMat.uniforms.uMouse.value.set(
-          mouseParams.currentX,
-          mouseParams.currentY,
+      // 각 별의 마우스 좌표를 별의 로컬 좌표계로 변환 (별의 위치를 빼서 상대 좌표로)
+      if (star1Mat) {
+        // star1은 0.1초 늦게 시작 (타이밍 차이)
+        star1Mat.uniforms.uTime.value = elapsedTime
+        // star1의 로컬 좌표계로 변환 (별의 위치를 빼서)
+        star1Mat.uniforms.uMouse.value.set(
+          mouseParams.currentX - star1Points.position.x,
+          mouseParams.currentY - star1Points.position.y,
         );
         
-        // Smooth lerp for uButtonHover transition (버튼 호버 시 0→1, 마우스아웃 시 1→0)
-        const currentButtonHover = starMat.uniforms.uButtonHover.value;
-        starMat.uniforms.uButtonHover.value += 
-          (targetButtonHover - currentButtonHover) * 0.1; // 부드러운 트랜지션 속도
+        // Smooth lerp for uButtonHover transition (btn-go-works 호버 시 0→1, 마우스아웃 시 1→0)
+        const currentButtonHover = star1Mat.uniforms.uButtonHover.value;
+        star1Mat.uniforms.uButtonHover.value += 
+          (targetButtonHoverStar1 - currentButtonHover) * 0.1; // 부드러운 트랜지션 속도
+        
+        // 별의 구멍 효과를 위한 uniform 전달 (별의 로컬 좌표계에서는 중심이 0,0)
+        star1Mat.uniforms.uStar1Position.value.set(0, 0);
+        star1Mat.uniforms.uStar2Position.value.set(0, 0);
+        const currentButtonHoverStar1 = star1Mat.uniforms.uButtonHoverStar1.value;
+        star1Mat.uniforms.uButtonHoverStar1.value += 
+          (targetButtonHoverStar1 - currentButtonHoverStar1) * 0.1;
+        star1Mat.uniforms.uButtonHoverStar2.value = 0.0; // star1에는 star2 호버 효과 없음
+      }
+      if (star2Mat) {
+        // star2는 즉시 시작 (기본 타이밍)
+        star2Mat.uniforms.uTime.value = elapsedTime 
+        // star2의 로컬 좌표계로 변환 (별의 위치를 빼서)
+        star2Mat.uniforms.uMouse.value.set(
+          mouseParams.currentX - star2Points.position.x,
+          mouseParams.currentY - star2Points.position.y,
+        );
+        
+        // Smooth lerp for uButtonHover transition (btn-go-info 호버 시 0→1, 마우스아웃 시 1→0)
+        const currentButtonHover = star2Mat.uniforms.uButtonHover.value;
+        star2Mat.uniforms.uButtonHover.value += 
+          (targetButtonHoverStar2 - currentButtonHover) * 0.1; // 부드러운 트랜지션 속도
+        
+        // 별의 구멍 효과를 위한 uniform 전달 (별의 로컬 좌표계에서는 중심이 0,0)
+        star2Mat.uniforms.uStar1Position.value.set(0, 0);
+        star2Mat.uniforms.uStar2Position.value.set(0, 0);
+        star2Mat.uniforms.uButtonHoverStar1.value = 0.0; // star2에는 star1 호버 효과 없음
+        const currentButtonHoverStar2 = star2Mat.uniforms.uButtonHoverStar2.value;
+        star2Mat.uniforms.uButtonHoverStar2.value += 
+          (targetButtonHoverStar2 - currentButtonHoverStar2) * 0.1;
       }
       if (nebulaMat) {
         nebulaMat.uniforms.uTime.value = elapsedTime;
@@ -376,31 +505,70 @@ export const useHeroScene = (
           mouseParams.currentY,
         );
         
-        // Smooth lerp for uButtonHover transition (버튼 호버 시 0→1, 마우스아웃 시 1→0)
-        const currentNebulaButtonHover = nebulaMat.uniforms.uButtonHover.value;
-        nebulaMat.uniforms.uButtonHover.value += 
-          (targetButtonHover - currentNebulaButtonHover) * 0.1; // 부드러운 트랜지션 속도
+        // Star1과 Star2의 실제 위치를 nebula에 전달 (Points 객체에서 직접 읽어 항상 동기화)
+        nebulaMat.uniforms.uStar1Position.value.set(
+          star1Points.position.x,
+          star1Points.position.y
+        );
+        nebulaMat.uniforms.uStar2Position.value.set(
+          star2Points.position.x,
+          star2Points.position.y
+        );
         
-        // Smooth lerp for nebula holeRadius transition
-        const currentNebulaHoleRadius = nebulaMat.uniforms.uHoleRadius.value;
-        nebulaMat.uniforms.uHoleRadius.value += 
-          (targetNebulaHoleRadius - currentNebulaHoleRadius) * 0.1; // 부드러운 트랜지션 속도
+        // 각 별의 버튼 호버 상태를 nebula에 전달 (부드러운 트랜지션)
+        const currentButtonHoverStar1 = nebulaMat.uniforms.uButtonHoverStar1.value;
+        nebulaMat.uniforms.uButtonHoverStar1.value += 
+          (targetButtonHoverStar1 - currentButtonHoverStar1) * 0.1;
+        
+        const currentButtonHoverStar2 = nebulaMat.uniforms.uButtonHoverStar2.value;
+        nebulaMat.uniforms.uButtonHoverStar2.value += 
+          (targetButtonHoverStar2 - currentButtonHoverStar2) * 0.1;
+        
+        // Nebula holeRadius: star1은 원본, star2는 star2Scale 적용
+        nebulaMat.uniforms.uHoleRadius.value = heroConfig.particles.nebula.material.holeRadius;
+        nebulaMat.uniforms.uHoleRadiusStar2.value = heroConfig.particles.nebula.material.holeRadius * star2Scale;
       }
 
       // Animate bloom strength: 0.2와 0.3 사이를 왔다갔다 반짝거리는 효과
       if (bloomPass) {
-        const minStrength = 0.25;
-        const maxStrength = 0.3;
+        const minStrength = 0.2;
+        const maxStrength = 0.25;
         // sin 함수를 사용해서 0.2와 0.3 사이를 부드럽게 오가도록
         const normalizedSin = (Math.sin(elapsedTime * 2.0) + 1) / 2; // 0 to 1
         bloomPass.strength = minStrength + (maxStrength - minStrength) * normalizedSin;
       }
 
-      // Apply drag rotation via smooth lerp EXCLUSIVELY to the Star (mesh) so the Nebula remains static
-      starPoints.rotation.x +=
-        (dragParams.targetRotationX - starPoints.rotation.x) * 0.1;
-      starPoints.rotation.y +=
-        (dragParams.targetRotationY - starPoints.rotation.y) * 0.1;
+      // Apply drag rotation via smooth lerp EXCLUSIVELY to the Stars (mesh) so the Nebula remains static
+      star1Points.rotation.x +=
+        (dragParams.targetRotationX - star1Points.rotation.x) * 0.1;
+      star1Points.rotation.y +=
+        (dragParams.targetRotationY - star1Points.rotation.y) * 0.1;
+      
+      star2Points.rotation.x +=
+        (dragParams.targetRotationX - star2Points.rotation.x) * 0.1;
+      star2Points.rotation.y +=
+        (dragParams.targetRotationY - star2Points.rotation.y) * 0.1;
+
+      // 홀의 중심 위치(셰이더 uStar1/2Position)를 화면 좌표로 프로젝션하여 버튼 위치 동기화
+      const projectHoleToScreen = (holePos: THREE.Vector2) => {
+        const pos3D = new THREE.Vector3(holePos.x, holePos.y, 0);
+        pos3D.project(camera); // NDC (-1 ~ 1)
+        return {
+          x: (pos3D.x * 0.5 + 0.5) * container.clientWidth,
+          y: (-pos3D.y * 0.5 + 0.5) * container.clientHeight,
+        };
+      };
+
+      if (buttonWorksRef?.current) {
+        const screen1 = projectHoleToScreen(nebulaMat.uniforms.uStar1Position.value);
+        buttonWorksRef.current.style.left = `${screen1.x}px`;
+        buttonWorksRef.current.style.top = `${screen1.y}px`;
+      }
+      if (buttonInfoRef?.current) {
+        const screen2 = projectHoleToScreen(nebulaMat.uniforms.uStar2Position.value);
+        buttonInfoRef.current.style.left = `${screen2.x}px`;
+        buttonInfoRef.current.style.top = `${screen2.y}px`;
+      }
     };
 
     const render = () => {
@@ -466,5 +634,5 @@ export const useHeroScene = (
 
       scene.clear();
     };
-  }, [canvasRef, containerRef, buttonRef]);
+  }, [canvasRef, containerRef, buttonWorksRef, buttonInfoRef]);
 };
