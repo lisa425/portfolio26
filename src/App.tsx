@@ -128,21 +128,16 @@ function App() {
         </header>
 
         <section className="hero">
-          <div ref={textRef} className="title">
-            {/* <h1>Singularity</h1> */}
-            {/* <h2>Singularity:<br/>The Center of Creation</h2> */}
+          <div className="keyword-container"> 
+            <p className="keyword kw-1">Interactive Web Experiences</p>
+            <p className="keyword kw-2">Frontend Engineering</p>
+            <p className="keyword kw-3">UX/UI Collaboration</p>
           </div>
-          <ul className="sub">
-            <li>Interactive Web Experiences</li>
-            <li>Frontend Engineering</li>
-            <li>UX/UI Collaboration</li>
-          </ul>
           <button ref={buttonWorksRef} className="btn-star btn-go-works">
-            <span className="text">:View Works</span>
+            <span className="text">View Works</span>
           </button>
           <button ref={buttonInfoRef} className="btn-star btn-go-info">
-            <span className="focus"></span>
-            <span className="text">:View Info</span>
+            <span className="text">View Info</span>
           </button>
         </section>
 
