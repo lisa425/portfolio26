@@ -141,9 +141,12 @@ export function generateNebulaParticles(options: NebulaGeneratorOptions) {
 
   // Pre-define the 3 aesthetic colors requested by user
   const palette = [
-    new THREE.Color("#ff8c00"), // Orange
-    new THREE.Color("#4e77ff"), // Blue
-    new THREE.Color("#9b5de5"), // Purple
+    new THREE.Color("#84f8ff"), // 1
+    new THREE.Color("#4ea7ff"), // 2
+    new THREE.Color("#ccfe69"), // 3
+    new THREE.Color("#feffed"), // 4
+    new THREE.Color("#ff8c00"), // 5
+    new THREE.Color("#c04b69"), // 6
   ];
 
   for (let i = 0; i < count; i++) {
@@ -165,8 +168,28 @@ export function generateNebulaParticles(options: NebulaGeneratorOptions) {
     positions[i * 3 + 2] = z + rz;
     randoms[i] = Math.random();
 
-    // Assign random color from palette
-    const color = palette[Math.floor(Math.random() * palette.length)];
+    // Assign color based on distance from center with weighted probability
+    // rootDist: 0 (center/inner) -> 1 (outer edge)
+    // Blue: higher probability near center (low rootDist)
+    // Orange: higher probability in middle distance
+    // Purple: higher probability at outer edge (high rootDist)
+    
+    const blueWeight = Math.pow(1 - rootDist, 2); // 높을수록 중앙에 가까움
+    const orangeWeight = rootDist * (1 - rootDist) * 4; // 중간 거리에서 최대 (0.5에서 최대값)
+    const purpleWeight = Math.pow(rootDist, 2); // 높을수록 멀리
+    
+    const totalWeight = blueWeight + orangeWeight + purpleWeight;
+    const random = Math.random() * totalWeight;
+    
+    let color;
+    if (random < blueWeight) {
+      color = palette[1]; // Blue (가운데)
+    } else if (random < blueWeight + orangeWeight) {
+      color = palette[0]; // Orange (중간)
+    } else {
+      color = palette[2]; // Purple (멀리)
+    }
+    
     colors[i * 3 + 0] = color.r;
     colors[i * 3 + 1] = color.g;
     colors[i * 3 + 2] = color.b;

@@ -153,12 +153,18 @@ varying float vAlpha;
 varying vec3 vColor;
 
 void main() {
-    // Render soft circular particles instead of squares
-    float dist = distance(gl_PointCoord, vec2(0.5));
-    if (dist > 0.5) discard;
+    // Render square particles
+    vec2 coord = gl_PointCoord;
     
-    // Smooth edges (Center is opaque, edges fade out gracefully)
-    float alpha = smoothstep(0.5, 0.1, dist) * vAlpha;
+    // Check if within square bounds (0.0 to 1.0)
+    if (coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0) {
+        discard;
+    }
+    
+    // Optional: smooth edges for softer square look
+    float edgeFade = 0.1; // Edge fade distance
+    float minDist = min(min(coord.x, 1.0 - coord.x), min(coord.y, 1.0 - coord.y));
+    float alpha = smoothstep(0.0, edgeFade, minDist) * vAlpha;
     
     gl_FragColor = vec4(vColor, alpha);
 }

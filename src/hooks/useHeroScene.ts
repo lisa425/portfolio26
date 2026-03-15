@@ -4,8 +4,8 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import {
+  generateStarParticles,
   generateNebulaParticles,
-  generateSupernovaParticles,
 } from "../utils/proceduralGenerators";
 import { createInteractiveParticleMaterial } from "../materials/interactiveParticleMaterial";
 
@@ -14,7 +14,7 @@ const heroConfig = {
     fov: 75,
     near: 0.1,
     far: 50, // Z depth
-    z: 11, // Move camera back to see the volumetric shapes
+    z: 20, // Move camera back to see the volumetric shapes
   },
   render: {
     maxPixelRatio: Math.min(window.devicePixelRatio, 1.5),
@@ -25,8 +25,8 @@ const heroConfig = {
   },
   particles: {
     coreStar: {
-      count: 12000,
-      radius: 7.0,
+      count: 4000,
+      radius: 8.5,
       innerRadiusRatio: 0.5,
       points: 5,
       thickness: 4.5, // Increased from 1.0. This directly controls the maximum Z-axis spread (depth)
@@ -34,24 +34,24 @@ const heroConfig = {
       rotationOffset: Math.PI / 2 + 0.3,
 
       material: {
-        size: 50.0, // Smaller particles reveal the shape better than huge overlapping ones
-        color: "#feffed", // Pure white/blue core
+        size: 75.0, // Smaller particles reveal the shape better than huge overlapping ones
+        color: "#cffcff", // Pure white/blue core
         noiseStrength: 0.2, // Less undulating so it doesn't distort the star shape too much
-        holeRadius: 3.0, // The exact coordinate size of the pushed hole
+        holeRadius: 8.0, // The exact coordinate size of the pushed hole
         repulsionForce: 0.5, // Reduced from 1.5 to 0.5 to make distance interaction weaker
       },
     },
     nebula: {
-      count: 12000, // Medium density spread over a huge area
+      count: 10000, // Medium density spread over a huge area
       radiusBase: 2.5, // Starts roughly outside the star
-      radiusSpread: 15.0, // Extends far out
-      thickness: 6.0, // Thick volumetric cloud (Increased from 4.0 to match the star's new depth)
+      radiusSpread: 20.0, // Extends far out
+      thickness: 10.0, // Thick volumetric cloud (Increased from 4.0 to match the star's new depth)
 
       material: {
-        size: 20.0,
+        size: 30.0,
         color: "#4e77ff", // Deep blue/purple cosmic cloud tone
         noiseStrength: 0.2, // Less wavey
-        holeRadius: 0, // Pushes nebula out slightly wider than the core
+        holeRadius: 9.0, // Pushes nebula out slightly wider than the core
         repulsionForce: 0.8, // Reduced from 2.5 to 0.8
       },
     },
@@ -59,7 +59,7 @@ const heroConfig = {
   postprocessing: {
     bloom: {
       enabled: true,
-      strength: 0.23, // Let the core star shine like crazy
+      strength: 0.3, // Let the core star shine like crazy
       radius: 0.7, // Spread the glow
       threshold: 0.1, // Catch most of the colored point particles
     },
@@ -123,10 +123,10 @@ export const useHeroScene = (
     // 5. MOUSE INTERACTION SETUP (Raycaster & Drag Rotation)
     // -------------------------------------------------------------
     const mouseParams = {
-      targetX: 0,
-      targetY: 0,
-      currentX: 0, // We lerp towards target for smoothness
-      currentY: 0,
+      targetX: 100, // 초기값을 멀리 설정하여 구멍이 생기지 않도록
+      targetY: 100,
+      currentX: 100, // We lerp towards target for smoothness
+      currentY: 100,
     };
 
     const dragParams = {
@@ -137,13 +137,16 @@ export const useHeroScene = (
       targetRotationY: 0,
     };
 
+    // Button hover state (드래그 비활성화를 위해 앞에 선언)
+    let isButtonHovered = false;
+
     const MAX_ROTATION = THREE.MathUtils.degToRad(10); // limit to ~15 degrees max in either direction
 
     // Create an invisible plane at Z=0 to cast rays against to know exactly where the mouse is in 3D world space
     const planeZ0 = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
     const raycaster = new THREE.Raycaster();
     const mouseVec2D = new THREE.Vector2(-9999, -9999); // Start offscreen
-
+    
     const handleMouseMove = (event: MouseEvent) => {
       // 1. Hole Repulsion Logic (Raycaster)
       const rect = container.getBoundingClientRect();
@@ -163,8 +166,8 @@ export const useHeroScene = (
         mouseParams.targetY = intersectPoint.y;
       }
 
-      // 2. Drag Rotation Logic
-      if (dragParams.isDragging) {
+      // 2. Drag Rotation Logic (버튼 호버 중에는 비활성화)
+      if (dragParams.isDragging && !isButtonHovered) {
         const deltaX = event.clientX - dragParams.previousX;
         const deltaY = event.clientY - dragParams.previousY;
 
@@ -190,10 +193,13 @@ export const useHeroScene = (
     };
 
     const handleMouseDown = (event: MouseEvent) => {
-      dragParams.isDragging = true;
-      dragParams.previousX = event.clientX;
-      dragParams.previousY = event.clientY;
-      container.style.cursor = "grabbing";
+      // 버튼 호버 중에는 드래그 비활성화
+      if (!isButtonHovered) {
+        dragParams.isDragging = true;
+        dragParams.previousX = event.clientX;
+        dragParams.previousY = event.clientY;
+        container.style.cursor = "grabbing";
+      }
     };
 
     const handleMouseUp = () => {
@@ -220,10 +226,15 @@ export const useHeroScene = (
     // -------------------------------------------------------------
     const clock = new THREE.Clock();
 
-    // LAYER 1: Pure Sphere Shape
-    const starData = generateSupernovaParticles({
+    // LAYER 1: Core Star Shape
+    const starData = generateStarParticles({
       count: heroConfig.particles.coreStar.count,
-      radius: 4.5, // Smaller than nebula, similar to original star size
+      radius: heroConfig.particles.coreStar.radius,
+      innerRadiusRatio: heroConfig.particles.coreStar.innerRadiusRatio,
+      points: heroConfig.particles.coreStar.points,
+      thickness: heroConfig.particles.coreStar.thickness,
+      jitter: heroConfig.particles.coreStar.jitter,
+      rotationOffset: heroConfig.particles.coreStar.rotationOffset,
     });
 
     const starGeo = new THREE.BufferGeometry();
@@ -249,7 +260,7 @@ export const useHeroScene = (
 
     // Button hover effect: 버튼에 마우스오버하면 구멍 효과 발생
     let targetButtonHover = 0.0; // 초기값은 0 (구멍 없음)
-    let isButtonHovered = false;
+    let targetNebulaHoleRadius = 0; // 초기값은 0 (구멍 없음)
     let buttonCleanup: (() => void) | null = null;
     
     if (buttonRef?.current) {
@@ -259,12 +270,18 @@ export const useHeroScene = (
         // 버튼 호버 시 구멍 효과 활성화 (uButtonHover를 1.0으로 트랜지션)
         isButtonHovered = true;
         targetButtonHover = 1.0;
+        targetNebulaHoleRadius = heroConfig.particles.nebula.material.holeRadius; // Nebula holeRadius 활성화
+        
+        // 별의 rotation을 0으로 초기화
+        dragParams.targetRotationX = 0;
+        dragParams.targetRotationY = 0;
       };
       
       const handleButtonMouseLeave = () => {
         // 버튼에서 벗어나면 구멍 효과 비활성화 (uButtonHover를 0.0으로 트랜지션)
         isButtonHovered = false;
         targetButtonHover = 0.0;
+        targetNebulaHoleRadius = 0; // Nebula holeRadius 비활성화
       };
       
       button.addEventListener("mouseenter", handleButtonMouseEnter);
@@ -302,7 +319,7 @@ export const useHeroScene = (
       size: heroConfig.particles.nebula.material.size,
       color: heroConfig.particles.nebula.material.color,
       noiseStrength: heroConfig.particles.nebula.material.noiseStrength,
-      holeRadius: heroConfig.particles.nebula.material.holeRadius,
+      holeRadius: 0, // 초기값은 0 (버튼 호버 시에만 구멍 생성)
       repulsionForce: heroConfig.particles.nebula.material.repulsionForce,
       useVertexColors: true, // Enable the per-vertex color macro in the shader
     });
@@ -358,6 +375,25 @@ export const useHeroScene = (
           mouseParams.currentX,
           mouseParams.currentY,
         );
+        
+        // Smooth lerp for uButtonHover transition (버튼 호버 시 0→1, 마우스아웃 시 1→0)
+        const currentNebulaButtonHover = nebulaMat.uniforms.uButtonHover.value;
+        nebulaMat.uniforms.uButtonHover.value += 
+          (targetButtonHover - currentNebulaButtonHover) * 0.1; // 부드러운 트랜지션 속도
+        
+        // Smooth lerp for nebula holeRadius transition
+        const currentNebulaHoleRadius = nebulaMat.uniforms.uHoleRadius.value;
+        nebulaMat.uniforms.uHoleRadius.value += 
+          (targetNebulaHoleRadius - currentNebulaHoleRadius) * 0.1; // 부드러운 트랜지션 속도
+      }
+
+      // Animate bloom strength: 0.2와 0.3 사이를 왔다갔다 반짝거리는 효과
+      if (bloomPass) {
+        const minStrength = 0.25;
+        const maxStrength = 0.3;
+        // sin 함수를 사용해서 0.2와 0.3 사이를 부드럽게 오가도록
+        const normalizedSin = (Math.sin(elapsedTime * 2.0) + 1) / 2; // 0 to 1
+        bloomPass.strength = minStrength + (maxStrength - minStrength) * normalizedSin;
       }
 
       // Apply drag rotation via smooth lerp EXCLUSIVELY to the Star (mesh) so the Nebula remains static
