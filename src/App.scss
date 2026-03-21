@@ -36,7 +36,60 @@ body {
   background-color: $bg-color;
   color: $text-primary;
   overflow: hidden;
-  cursor: none;
+  cursor: url("/assets/images/cursor.png"), auto;
+}
+
+// ─── Loading Overlay ───
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000;
+  background-color: $bg-color;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition:
+    opacity 0.5s ease,
+    visibility 0.5s ease;
+  opacity: 1;
+  visibility: visible;
+
+  &.loaded {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .loading-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 200px;
+  }
+
+  .loading-text {
+    font-family: "nbarchitekt", "Azeret Mono", monospace;
+    font-size: 14px;
+    color: rgba($text-primary, 0.6);
+  }
+
+  .loading-bar {
+    width: 100%;
+    height: 1px;
+    background-color: rgba($text-primary, 0.15);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .loading-bar-fill {
+    height: 100%;
+    background-color: $text-primary;
+    transition: width 0.3s ease-out;
+  }
 }
 
 .app-container {
@@ -64,11 +117,11 @@ body {
     will-change: transform;
     transition: 0.1s ease;
 
-    &.off{
+    &.off {
       opacity: 0;
       clip-path: inset(50% 50% 0% 0%);
     }
-    &.on{
+    &.on {
       opacity: 1;
       clip-path: inset(0% 0% 0% 0%);
     }
@@ -92,7 +145,7 @@ body {
       height: 100%;
     }
   }
-  
+
   .content {
     position: fixed;
     top: 0px;
@@ -106,8 +159,7 @@ body {
     pointer-events: none;
     /* Re-enable pointer events for interactive elements */
     .header,
-    .hero,
-    .works {
+    .hero {
       pointer-events: auto;
     }
 
@@ -127,63 +179,32 @@ body {
         rgba(0, 0, 0, 0)
       );
       font-size: max(vw(16, 1920), 16px);
+      z-index: 10;
 
       * {
         color: $text-primary;
       }
 
-      .menu-nav {
-        background: rgba(0, 0, 0, 0);
-        backdrop-filter: blur(5px);
-        border: 1px solid rgba($text-green, 0.2);
-        border-radius: 150px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 200px;
+      .logo {
+        cursor: pointer;
         height: 50px;
-        box-shadow: 0 0 50px 0 rgba($text-green, 0.3);
-        opacity: 0;
+      }
 
-        &.on{
-          opacity: 1;
-        }
-        
-        button {
-          transition: 0.3s;
-          width: auto;
-          height: auto;
-          position: relative;
-          &::after {
-            content: "";
-            display: block;
-            width: 100%;
-            height: 1px;
-            background-color: $text-green;
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            clip-path: inset(0% 100% 0% 0%);
-            transition: clip-path 0.3s ease;
-          }
-        }
-        button:hover {
-          color: $text-green;
-          &::after {
-            clip-path: inset(0% 0% 0% 0%);
-          }
-        }
+      .title {
+        display: flex;
+        height: 50px;
       }
 
       .menu-lang {
         display: flex;
-        justify-content: center;
         align-items: center;
+        justify-content: center;
         padding: 0 10px;
-        height: 50px;
-        button {
+        height: max(vw(16, 1920), 16px);
+        .btn-lang {
           color: rgba(255, 255, 255, 0.5);
           transition: 0.3s;
+          padding: 10px;
           &.on,
           &:hover {
             color: rgba(255, 255, 255, 1);
@@ -194,7 +215,6 @@ body {
       .divider {
         width: 1px;
         height: 10px;
-        margin: 0px 10px;
         background-color: #fff;
       }
     }
@@ -204,6 +224,11 @@ body {
       height: 100%;
       position: absolute;
       bottom: 0rem;
+      transition: opacity 0.4s ease;
+      &.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
       // .title {
       //   position: absolute;
       //   bottom: 3rem;
@@ -217,12 +242,12 @@ body {
       //     font-weight: 400;
       //   }
       // }
-      .keyword-container{
+      .keyword-container {
         width: 100%;
         position: fixed;
         padding: 2rem;
-        left: 50%; 
-        bottom: 0px; 
+        left: 50%;
+        bottom: 0px;
         transform: translateX(-50%);
         display: flex;
         justify-content: space-between;
@@ -232,38 +257,35 @@ body {
           font-size: max(vw(14, 1920), 14px);
           font-weight: 400;
           opacity: 0.5;
-          .space{
+          .space {
             display: inline-block;
             width: vw(20, 1920);
             height: 1px;
           }
         }
       }
-      .btn-star{
+      .btn-star {
         background: transparent;
         border: none;
-        cursor: pointer;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         gap: 15px;
-        width: max(vw(100), 150px);
-        height: max(vw(100), 150px);
+        width: max(vw(250), 250px);
+        height: max(vw(250), 250px);
         position: fixed;
-        left: 0; 
+        left: 0;
         top: 0;
         transform: translate(-50%, -50%); // JS에서 left, top을 별 중심으로 세팅
-        *{
+        * {
           flex-shrink: 0;
         }
-        
 
         .text {
           opacity: 0;
           font-family: inherit;
           font-size: max(vw(14, 1920), 14px);
-          letter-spacing: 0.15em;
           text-transform: uppercase;
           transition:
             opacity 0.5s ease,
@@ -306,6 +328,355 @@ body {
   }
 }
 
+.page-sub {
+  position: fixed;
+  inset: 0;
+  background-color: rgba($bg-color, 0.92);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease 0.2s;
+
+  &.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .inner {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    position: relative;
+  }
+  .btn-back {
+    background: transparent;
+    color: $text-primary;
+    font-family: inherit;
+    position: fixed;
+    padding: 2rem;
+    left: 0rem;
+    bottom: 0rem;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    &::before {
+      content: "";
+      display: block;
+      width: 10px;
+      height: 10px;
+      border-top: 1px solid #fff;
+      border-left: 1px solid #fff;
+      transform: rotate(-45deg);
+      margin-left: 4px; // 시각적 중앙 정렬을 위한 여백
+    }
+  }
+}
+
+// ─── Works Section ───
+.works {
+  &__inner {
+    display: grid;
+    place-items: center;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &__list {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    width: 100%;
+    height: auto;
+    padding: 2rem;
+    flex-wrap: no-wrap;
+  }
+
+  .work-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    width: max(vw(300, 1920), 300px);
+    // height: max(vw(300, 1920), 300px);
+
+    &__index {
+      opacity: 0.6;
+    }
+
+    &__thumb {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      width: 100%;
+      aspect-ratio: 3/4;
+      background-color: rgba($text-primary, 0.05);
+      overflow: hidden;
+      box-shadow: 0 0 0px 0px rgba($text-primary, 0.1);
+      filter: grayscale(50%);
+      transition:
+        filter 0.7s ease,
+        box-shadow 0.7s ease,
+        aspect-ratio 0.7s ease;
+
+      img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.8;
+        transition:
+          opacity 0.7s ease,
+          transform 0.7s ease;
+      }
+
+      &::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60%;
+        background: linear-gradient(to top, rgba($bg-color, 0.9), transparent);
+        pointer-events: none;
+      }
+    }
+
+    &:hover {
+      .work-card__thumb {
+        filter: grayscale(0%);
+        box-shadow: 0 0 50px 0px rgba($text-primary, 0.1);
+        img {
+          opacity: 1;
+          transform: scale(1.05);
+        }
+      }
+      .work-card__label {
+        opacity: 1;
+        transform: translateY(0px);
+      }
+    }
+
+    &__label {
+      position: relative;
+      z-index: 2;
+      font-size: max(vw(16, 1920), 16px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 2rem;
+      color: #fff;
+      opacity: 0;
+      transform: translateY(10px);
+      text-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.9),
+        0 2px 5px rgba(0, 0, 0, 0.8);
+      transition: 0.7s ease;
+    }
+
+    &__title {
+      text-align: center;
+      padding: 0 1rem;
+    }
+
+    &__stack {
+      margin-top: 0.5rem;
+      display: flex;
+      gap: 0.3rem;
+      span {
+        font-size: max(vw(12, 1920), 12px);
+        opacity: 0.8;
+      }
+    }
+  }
+
+  &__detail {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    background-color: rgba($bg-color, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    display: grid;
+    place-items: center;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    opacity: 0;
+    transition:
+      transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.6s ease;
+    pointer-events: none;
+    overflow-y: auto;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: rgba($text-primary, 0.2);
+      border-radius: 4px;
+    }
+
+    &.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .btn-close-detail {
+      position: absolute;
+      top: 2rem;
+      right: 2rem;
+      background: transparent;
+      border: 1px solid rgba($text-primary, 0.3);
+      color: $text-primary;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      transition:
+        border-color 0.3s,
+        background-color 0.3s;
+      z-index: 10;
+
+      &:hover {
+        border-color: $text-primary;
+        background-color: rgba($text-primary, 0.1);
+      }
+    }
+
+    .work-detail__content {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-top: 4rem;
+      padding-bottom: 2rem;
+      width: 50%;
+      max-width: 1000px;
+      min-width: 700px;
+
+      > div {
+        opacity: 0;
+        animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      .work-detail {
+        &__title {
+          --target-opacity: 1;
+          font-size: max(vw(24, 1920), 20px);
+          font-weight: 400;
+          line-height: 1.4;
+          animation-delay: 0s;
+        }
+        &__date {
+          --target-opacity: 0.5;
+          font-size: max(vw(14, 1920), 14px);
+
+          animation-delay: 0.1s;
+        }
+        &__description {
+          --target-opacity: 0.7;
+          font-size: max(vw(14, 1920), 14px);
+          line-height: 1.8;
+          word-break: keep-all;
+          animation-delay: 0.2s;
+        }
+        &__stack {
+          --target-opacity: 0.5;
+          font-size: max(vw(12, 1920), 12px);
+
+          animation-delay: 0.3s;
+        }
+        &__images {
+          --target-opacity: 1;
+          width: 100%;
+          animation-delay: 0.4s;
+          margin-top: 1.5rem;
+          img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ─── Info Section ───
+.info {
+  .info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    max-width: 800px;
+  }
+
+  .info-bio {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .info-name {
+    font-size: max(vw(36, 1920), 28px);
+    font-weight: 400;
+  }
+
+  .info-role {
+    font-size: max(vw(14, 1920), 14px);
+    opacity: 0.5;
+  }
+
+  .info-details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+
+  .info-block {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .info-block-title {
+    font-size: max(vw(12, 1920), 12px);
+    text-transform: uppercase;
+    opacity: 0.4;
+    font-weight: 400;
+  }
+
+  .info-block-body {
+    font-size: max(vw(14, 1920), 14px);
+    line-height: 1.8;
+    opacity: 0.7;
+  }
+
+  .info-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    li {
+      font-size: max(vw(14, 1920), 14px);
+      opacity: 0.7;
+    }
+  }
+}
+
 /* 맥박이 뛰듯 크기와 투명도가 부드럽게 변하는 애니메이션 (시선 유도) */
 @keyframes pulse {
   0% {
@@ -319,5 +690,16 @@ body {
   100% {
     transform: scale(1);
     opacity: 0.9;
+  }
+}
+
+@keyframes slideUpFade {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: var(--target-opacity, 1);
   }
 }

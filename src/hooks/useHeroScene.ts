@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import * as THREE from "three";
+import gsap from "gsap";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
@@ -57,7 +58,7 @@ const heroConfig = {
         color: "#4e77ff",
         noiseStrength: 0.2, // Less wavey
         holeRadius: 9.0, // 별 크기(radius)와 비슷하게 설정
-        repulsionForce: 0.8, // Reduced from 2.5 to 0.8
+        repulsionForce: 0, // 마우스 인터랙션 없음
       },
     },
   },
@@ -76,12 +77,35 @@ export const useHeroScene = (
   containerRef: React.RefObject<HTMLElement | null>,
   buttonWorksRef?: React.RefObject<HTMLElement | null>,
   buttonInfoRef?: React.RefObject<HTMLElement | null>,
-) => {
+  onProgress?: (progress: number) => void,
+  isHeroActiveRef?: React.RefObject<boolean>,
+): {
+  triggerWorksTransition: (onComplete: () => void) => void;
+  triggerInfoTransition: (onComplete: () => void) => void;
+  triggerHeroTransition: (onComplete: () => void) => void;
+} => {
+  const worksTransitionRef = useRef<((onComplete: () => void) => void) | null>(
+    null,
+  );
+  const infoTransitionRef = useRef<((onComplete: () => void) => void) | null>(
+    null,
+  );
+  const heroTransitionRef = useRef<((onComplete: () => void) => void) | null>(
+    null,
+  );
+
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
 
     const canvas = canvasRef.current;
     const container = containerRef.current;
+
+    // Progress tracking helper
+    const reportProgress = (value: number) => {
+      onProgress?.(Math.min(value, 100));
+    };
+
+    reportProgress(0);
 
     // 1. SCENE
     const scene = new THREE.Scene();
@@ -108,6 +132,8 @@ export const useHeroScene = (
     renderer.setPixelRatio(heroConfig.render.maxPixelRatio);
     renderer.setSize(container.clientWidth, container.clientHeight);
 
+    reportProgress(15); // Renderer ready
+
     // 4. POST-PROCESSING (Bloom Composer)
     const composer = new EffectComposer(renderer);
 
@@ -125,6 +151,8 @@ export const useHeroScene = (
       composer.addPass(bloomPass);
     }
 
+    reportProgress(25); // Post-processing ready
+
     // -------------------------------------------------------------
     // 5. MOUSE INTERACTION SETUP (Raycaster & Drag Rotation)
     // -------------------------------------------------------------
@@ -135,7 +163,7 @@ export const useHeroScene = (
       currentX: 100, // We lerp towards target for smoothness
       currentY: 100,
     };
-    
+
     const dragParams = {
       isDragging: false,
       previousX: 0,
@@ -147,6 +175,7 @@ export const useHeroScene = (
     // Button hover state (각 별별로 독립적으로 관리)
     let isButtonHoveredStar1 = false;
     let isButtonHoveredStar2 = false;
+    let isTransitioning = false;
 
     const MAX_ROTATION = THREE.MathUtils.degToRad(10); // limit to ~15 degrees max in either direction
 
@@ -154,8 +183,10 @@ export const useHeroScene = (
     const planeZ0 = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
     const raycaster = new THREE.Raycaster();
     const mouseVec2D = new THREE.Vector2(-9999, -9999); // Start offscreen
-    
+
     const handleMouseMove = (event: MouseEvent) => {
+      if (isHeroActiveRef?.current === false) return;
+
       // 1. Hole Repulsion Logic (Raycaster)
       const rect = container.getBoundingClientRect();
       const clientX = event.clientX - rect.left;
@@ -175,7 +206,11 @@ export const useHeroScene = (
       }
 
       // 2. Drag Rotation Logic (버튼 호버 중에는 비활성화)
-      if (dragParams.isDragging && !isButtonHoveredStar1 && !isButtonHoveredStar2) {
+      if (
+        dragParams.isDragging &&
+        !isButtonHoveredStar1 &&
+        !isButtonHoveredStar2
+      ) {
         const deltaX = event.clientX - dragParams.previousX;
         const deltaY = event.clientY - dragParams.previousY;
 
@@ -212,7 +247,7 @@ export const useHeroScene = (
 
     const handleMouseUp = () => {
       dragParams.isDragging = false;
-      container.style.cursor = "default";
+      container.style.cursor = "";
 
       // Optional: gracefully return to 0 rotation when mouse released
       // dragParams.targetRotationX = 0;
@@ -265,9 +300,15 @@ export const useHeroScene = (
     });
 
     const star1Points = new THREE.Points(star1Geo, star1Mat);
-    star1Points.position.set(heroConfig.particles.coreStar.starPosition.star1[0], heroConfig.particles.coreStar.starPosition.star1[1], heroConfig.particles.coreStar.starPosition.star1[2]); // 여기서 star1 위치 설정
+    star1Points.position.set(
+      heroConfig.particles.coreStar.starPosition.star1[0],
+      heroConfig.particles.coreStar.starPosition.star1[1],
+      heroConfig.particles.coreStar.starPosition.star1[2],
+    );
     star1Points.rotation.y = THREE.MathUtils.degToRad(30);
     scene.add(star1Points);
+
+    reportProgress(45); // Star 1 generated
 
     // LAYER 2: Star 2 (작은 별)
     const star2Data = generateStarParticles({
@@ -295,43 +336,52 @@ export const useHeroScene = (
       size: heroConfig.particles.coreStar.material.size * 0.8,
       color: heroConfig.particles.coreStar.material.color,
       noiseStrength: heroConfig.particles.coreStar.material.noiseStrength,
-      holeRadius: heroConfig.particles.coreStar.material.holeRadius * star2Scale, // star2Scale 적용
+      holeRadius:
+        heroConfig.particles.coreStar.material.holeRadius * star2Scale, // star2Scale 적용
       repulsionForce: heroConfig.particles.coreStar.material.repulsionForce,
       isCoreStar: true,
     });
 
     const star2Points = new THREE.Points(star2Geo, star2Mat);
-    star2Points.position.set(heroConfig.particles.coreStar.starPosition.star2[0], heroConfig.particles.coreStar.starPosition.star2[1], heroConfig.particles.coreStar.starPosition.star2[2]); // 위치 조정 (나중에 수정 가능)
+    star2Points.position.set(
+      heroConfig.particles.coreStar.starPosition.star2[0],
+      heroConfig.particles.coreStar.starPosition.star2[1],
+      heroConfig.particles.coreStar.starPosition.star2[2],
+    );
     star2Points.rotation.y = THREE.MathUtils.degToRad(-30);
     star2Points.rotation.z = THREE.MathUtils.degToRad(-30);
     scene.add(star2Points);
+
+    reportProgress(60); // Star 2 generated
 
     // Button hover effect: 버튼에 마우스오버하면 구멍 효과 발생
     let targetButtonHoverStar1 = 0.0; // star1용 (btn-go-works)
     let targetButtonHoverStar2 = 0.0; // star2용 (btn-go-info)
     let buttonCleanup: (() => void) | null = null;
-    
+
     // btn-go-works: star1에만 효과
     if (buttonWorksRef?.current) {
       const button = buttonWorksRef.current;
-      
+
       const handleButtonMouseEnter = () => {
+        if (isTransitioning) return;
         isButtonHoveredStar1 = true;
         targetButtonHoverStar1 = 1.0; // star1만 활성화
-        
+
         // 별의 rotation을 0으로 초기화
         dragParams.targetRotationX = 0;
         dragParams.targetRotationY = 0;
       };
-      
+
       const handleButtonMouseLeave = () => {
+        if (isTransitioning) return;
         isButtonHoveredStar1 = false;
         targetButtonHoverStar1 = 0.0; // star1 비활성화
       };
-      
+
       button.addEventListener("mouseenter", handleButtonMouseEnter);
       button.addEventListener("mouseleave", handleButtonMouseLeave);
-      
+
       if (!buttonCleanup) {
         buttonCleanup = () => {};
       }
@@ -342,28 +392,30 @@ export const useHeroScene = (
         button.removeEventListener("mouseleave", handleButtonMouseLeave);
       };
     }
-    
+
     // btn-go-info: star2에만 효과
     if (buttonInfoRef?.current) {
       const button = buttonInfoRef.current;
-      
+
       const handleButtonMouseEnter = () => {
+        if (isTransitioning) return;
         isButtonHoveredStar2 = true;
         targetButtonHoverStar2 = 1.0; // star2만 활성화
-        
+
         // 별의 rotation을 0으로 초기화
         dragParams.targetRotationX = 0;
         dragParams.targetRotationY = 0;
       };
-      
+
       const handleButtonMouseLeave = () => {
+        if (isTransitioning) return;
         isButtonHoveredStar2 = false;
         targetButtonHoverStar2 = 0.0; // star2 비활성화
       };
-      
+
       button.addEventListener("mouseenter", handleButtonMouseEnter);
       button.addEventListener("mouseleave", handleButtonMouseLeave);
-      
+
       if (!buttonCleanup) {
         buttonCleanup = () => {};
       }
@@ -410,6 +462,8 @@ export const useHeroScene = (
     const nebulaPoints = new THREE.Points(nebulaGeo, nebulaMat);
     scene.add(nebulaPoints);
 
+    reportProgress(80); // Nebula generated
+
     // -------------------------------------------------------------
     // 7. ANIMATION LOOP
     // -------------------------------------------------------------
@@ -418,17 +472,23 @@ export const useHeroScene = (
     const update = () => {
       const elapsedTime = clock.getElapsedTime();
 
+      // hero가 아닐 때 마우스를 멀리 보내서 파티클 인터랙션 비활성화
+      if (isHeroActiveRef?.current === false) {
+        mouseParams.targetX = 100;
+        mouseParams.targetY = 100;
+      }
+
       // Smooth lerp for mouse coordinates to avoid jerky jumps
       // 버튼 호버 중이 아닐 때만 마우스 위치 업데이트
       if (!isButtonHoveredStar1 && !isButtonHoveredStar2) {
         // 마우스가 멀리 떨어져 있을 때는 더 느리게 전환 (부드러운 아웃 트랜지션)
         const targetDistance = Math.sqrt(
-          mouseParams.targetX * mouseParams.targetX + 
-          mouseParams.targetY * mouseParams.targetY
+          mouseParams.targetX * mouseParams.targetX +
+            mouseParams.targetY * mouseParams.targetY,
         );
         // 타겟이 멀리 있으면 더 느리게 전환 (마우스아웃 시 부드러운 트랜지션)
         const lerpSpeed = targetDistance > 10 ? 0.05 : 0.1;
-        
+
         mouseParams.currentX +=
           (mouseParams.targetX - mouseParams.currentX) * lerpSpeed;
         mouseParams.currentY +=
@@ -438,7 +498,7 @@ export const useHeroScene = (
         // star1 호버 중이면 star1 위치로, star2 호버 중이면 star2 위치로
         let targetMouseX = mouseParams.targetX;
         let targetMouseY = mouseParams.targetY;
-        
+
         if (isButtonHoveredStar1) {
           targetMouseX = star1Points.position.x;
           targetMouseY = star1Points.position.y;
@@ -447,7 +507,7 @@ export const useHeroScene = (
           targetMouseX = star2Points.position.x;
           targetMouseY = star2Points.position.y;
         }
-        
+
         mouseParams.currentX += (targetMouseX - mouseParams.currentX) * 0.1;
         mouseParams.currentY += (targetMouseY - mouseParams.currentY) * 0.1;
       }
@@ -456,77 +516,79 @@ export const useHeroScene = (
       // 각 별의 마우스 좌표를 별의 로컬 좌표계로 변환 (별의 위치를 빼서 상대 좌표로)
       if (star1Mat) {
         // star1은 0.1초 늦게 시작 (타이밍 차이)
-        star1Mat.uniforms.uTime.value = elapsedTime
+        star1Mat.uniforms.uTime.value = elapsedTime;
         // star1의 로컬 좌표계로 변환 (별의 위치를 빼서)
         star1Mat.uniforms.uMouse.value.set(
           mouseParams.currentX - star1Points.position.x,
           mouseParams.currentY - star1Points.position.y,
         );
-        
+
         // Smooth lerp for uButtonHover transition (btn-go-works 호버 시 0→1, 마우스아웃 시 1→0)
         const currentButtonHover = star1Mat.uniforms.uButtonHover.value;
-        star1Mat.uniforms.uButtonHover.value += 
+        star1Mat.uniforms.uButtonHover.value +=
           (targetButtonHoverStar1 - currentButtonHover) * 0.1; // 부드러운 트랜지션 속도
-        
+
         // 별의 구멍 효과를 위한 uniform 전달 (별의 로컬 좌표계에서는 중심이 0,0)
         star1Mat.uniforms.uStar1Position.value.set(0, 0);
         star1Mat.uniforms.uStar2Position.value.set(0, 0);
-        const currentButtonHoverStar1 = star1Mat.uniforms.uButtonHoverStar1.value;
-        star1Mat.uniforms.uButtonHoverStar1.value += 
+        const currentButtonHoverStar1 =
+          star1Mat.uniforms.uButtonHoverStar1.value;
+        star1Mat.uniforms.uButtonHoverStar1.value +=
           (targetButtonHoverStar1 - currentButtonHoverStar1) * 0.1;
         star1Mat.uniforms.uButtonHoverStar2.value = 0.0; // star1에는 star2 호버 효과 없음
       }
       if (star2Mat) {
         // star2는 즉시 시작 (기본 타이밍)
-        star2Mat.uniforms.uTime.value = elapsedTime 
+        star2Mat.uniforms.uTime.value = elapsedTime;
         // star2의 로컬 좌표계로 변환 (별의 위치를 빼서)
         star2Mat.uniforms.uMouse.value.set(
           mouseParams.currentX - star2Points.position.x,
           mouseParams.currentY - star2Points.position.y,
         );
-        
+
         // Smooth lerp for uButtonHover transition (btn-go-info 호버 시 0→1, 마우스아웃 시 1→0)
         const currentButtonHover = star2Mat.uniforms.uButtonHover.value;
-        star2Mat.uniforms.uButtonHover.value += 
+        star2Mat.uniforms.uButtonHover.value +=
           (targetButtonHoverStar2 - currentButtonHover) * 0.1; // 부드러운 트랜지션 속도
-        
+
         // 별의 구멍 효과를 위한 uniform 전달 (별의 로컬 좌표계에서는 중심이 0,0)
         star2Mat.uniforms.uStar1Position.value.set(0, 0);
         star2Mat.uniforms.uStar2Position.value.set(0, 0);
         star2Mat.uniforms.uButtonHoverStar1.value = 0.0; // star2에는 star1 호버 효과 없음
-        const currentButtonHoverStar2 = star2Mat.uniforms.uButtonHoverStar2.value;
-        star2Mat.uniforms.uButtonHoverStar2.value += 
+        const currentButtonHoverStar2 =
+          star2Mat.uniforms.uButtonHoverStar2.value;
+        star2Mat.uniforms.uButtonHoverStar2.value +=
           (targetButtonHoverStar2 - currentButtonHoverStar2) * 0.1;
       }
       if (nebulaMat) {
-        nebulaMat.uniforms.uTime.value = elapsedTime;
-        nebulaMat.uniforms.uMouse.value.set(
-          mouseParams.currentX,
-          mouseParams.currentY,
-        );
-        
+        nebulaMat.uniforms.uTime.value = elapsedTime * 0.4;
+
         // Star1과 Star2의 실제 위치를 nebula에 전달 (Points 객체에서 직접 읽어 항상 동기화)
         nebulaMat.uniforms.uStar1Position.value.set(
           star1Points.position.x,
-          star1Points.position.y
+          star1Points.position.y,
         );
         nebulaMat.uniforms.uStar2Position.value.set(
           star2Points.position.x,
-          star2Points.position.y
+          star2Points.position.y,
         );
-        
+
         // 각 별의 버튼 호버 상태를 nebula에 전달 (부드러운 트랜지션)
-        const currentButtonHoverStar1 = nebulaMat.uniforms.uButtonHoverStar1.value;
-        nebulaMat.uniforms.uButtonHoverStar1.value += 
+        const currentButtonHoverStar1 =
+          nebulaMat.uniforms.uButtonHoverStar1.value;
+        nebulaMat.uniforms.uButtonHoverStar1.value +=
           (targetButtonHoverStar1 - currentButtonHoverStar1) * 0.1;
-        
-        const currentButtonHoverStar2 = nebulaMat.uniforms.uButtonHoverStar2.value;
-        nebulaMat.uniforms.uButtonHoverStar2.value += 
+
+        const currentButtonHoverStar2 =
+          nebulaMat.uniforms.uButtonHoverStar2.value;
+        nebulaMat.uniforms.uButtonHoverStar2.value +=
           (targetButtonHoverStar2 - currentButtonHoverStar2) * 0.1;
-        
+
         // Nebula holeRadius: star1은 원본, star2는 star2Scale 적용
-        nebulaMat.uniforms.uHoleRadius.value = heroConfig.particles.nebula.material.holeRadius;
-        nebulaMat.uniforms.uHoleRadiusStar2.value = heroConfig.particles.nebula.material.holeRadius * star2Scale;
+        nebulaMat.uniforms.uHoleRadius.value =
+          heroConfig.particles.nebula.material.holeRadius;
+        nebulaMat.uniforms.uHoleRadiusStar2.value =
+          heroConfig.particles.nebula.material.holeRadius * star2Scale;
       }
 
       // Animate bloom strength: 0.2와 0.3 사이를 왔다갔다 반짝거리는 효과
@@ -535,7 +597,8 @@ export const useHeroScene = (
         const maxStrength = 0.25;
         // sin 함수를 사용해서 0.2와 0.3 사이를 부드럽게 오가도록
         const normalizedSin = (Math.sin(elapsedTime * 2.0) + 1) / 2; // 0 to 1
-        bloomPass.strength = minStrength + (maxStrength - minStrength) * normalizedSin;
+        bloomPass.strength =
+          minStrength + (maxStrength - minStrength) * normalizedSin;
       }
 
       // Apply drag rotation via smooth lerp EXCLUSIVELY to the Stars (mesh) so the Nebula remains static
@@ -543,7 +606,7 @@ export const useHeroScene = (
         (dragParams.targetRotationX - star1Points.rotation.x) * 0.1;
       star1Points.rotation.y +=
         (dragParams.targetRotationY - star1Points.rotation.y) * 0.1;
-      
+
       star2Points.rotation.x +=
         (dragParams.targetRotationX - star2Points.rotation.x) * 0.1;
       star2Points.rotation.y +=
@@ -560,12 +623,16 @@ export const useHeroScene = (
       };
 
       if (buttonWorksRef?.current) {
-        const screen1 = projectHoleToScreen(nebulaMat.uniforms.uStar1Position.value);
+        const screen1 = projectHoleToScreen(
+          nebulaMat.uniforms.uStar1Position.value,
+        );
         buttonWorksRef.current.style.left = `${screen1.x}px`;
         buttonWorksRef.current.style.top = `${screen1.y}px`;
       }
       if (buttonInfoRef?.current) {
-        const screen2 = projectHoleToScreen(nebulaMat.uniforms.uStar2Position.value);
+        const screen2 = projectHoleToScreen(
+          nebulaMat.uniforms.uStar2Position.value,
+        );
         buttonInfoRef.current.style.left = `${screen2.x}px`;
         buttonInfoRef.current.style.top = `${screen2.y}px`;
       }
@@ -581,10 +648,157 @@ export const useHeroScene = (
       render();
     };
 
+    // 첫 프레임 렌더 후 컴파일 완료 → 로딩 100%
+    composer.render();
+    reportProgress(100);
+
     animate();
 
     // -------------------------------------------------------------
-    // 8. RESIZE HANDLER
+    // INTRO ANIMATION: 응축 → 폭발 → 안정
+    // -------------------------------------------------------------
+    const introTl = gsap.timeline({ delay: 0.5 });
+
+    introTl
+      .from([star1Points.scale, star2Points.scale], {
+        x: 0,
+        y: 0,
+        z: 0,
+        duration: 3.0,
+        ease: "elastic.out(1, 100)",
+        stagger: 0.1,
+      })
+      .from(
+        star1Points.rotation,
+        {
+          z: THREE.MathUtils.degToRad(-200),
+          duration: 3.5,
+          ease: "elastic.out(1, 100)",
+        },
+        "<",
+      )
+      .from(
+        star2Points.rotation,
+        {
+          z: THREE.MathUtils.degToRad(180),
+          duration: 3.5,
+          ease: "elastic.out(1, 100)",
+        },
+        "<",
+      );
+
+    // -------------------------------------------------------------
+    // 8. TRANSITION TRIGGERS
+    // -------------------------------------------------------------
+    worksTransitionRef.current = (onComplete: () => void) => {
+      isTransitioning = true;
+      introTl.kill();
+      // Open the hole in star1 and lock mouse to star1 center
+      targetButtonHoverStar1 = 1.0;
+      isButtonHoveredStar1 = true;
+
+      const star1Pos = heroConfig.particles.coreStar.starPosition.star1;
+      const tl = gsap.timeline({
+        onComplete: () => {
+          isTransitioning = false;
+          targetButtonHoverStar1 = 0.0;
+          isButtonHoveredStar1 = false;
+          onComplete();
+        },
+      });
+      tl.to(
+        camera.position,
+        {
+          x: star1Pos[0],
+          y: star1Pos[1],
+          z: 1.0,
+          duration: 1.8,
+          ease: "power4.in",
+        },
+        0,
+      );
+      tl.to(
+        camera,
+        {
+          fov: 8,
+          duration: 1.8,
+          ease: "power4.in",
+          onUpdate: () => camera.updateProjectionMatrix(),
+        },
+        0,
+      );
+    };
+
+    infoTransitionRef.current = (onComplete: () => void) => {
+      isTransitioning = true;
+      introTl.kill();
+      targetButtonHoverStar2 = 1.0;
+      isButtonHoveredStar2 = true;
+
+      const star2Pos = heroConfig.particles.coreStar.starPosition.star2;
+      const tl = gsap.timeline({
+        onComplete: () => {
+          isTransitioning = false;
+          targetButtonHoverStar2 = 0.0;
+          isButtonHoveredStar2 = false;
+          onComplete();
+        },
+      });
+      tl.to(
+        camera.position,
+        {
+          x: star2Pos[0],
+          y: star2Pos[1],
+          z: 1.0,
+          duration: 1.8,
+          ease: "power4.in",
+        },
+        0,
+      );
+      tl.to(
+        camera,
+        {
+          fov: 8,
+          duration: 1.8,
+          ease: "power4.in",
+          onUpdate: () => camera.updateProjectionMatrix(),
+        },
+        0,
+      );
+    };
+
+    heroTransitionRef.current = (onComplete: () => void) => {
+      targetButtonHoverStar1 = 0.0;
+      isButtonHoveredStar1 = false;
+      targetButtonHoverStar2 = 0.0;
+      isButtonHoveredStar2 = false;
+
+      const tl = gsap.timeline({ onComplete });
+      tl.to(
+        camera.position,
+        {
+          x: 0,
+          y: 0,
+          z: heroConfig.camera.z,
+          duration: 1.5,
+          ease: "power3.out",
+        },
+        0,
+      );
+      tl.to(
+        camera,
+        {
+          fov: heroConfig.camera.fov,
+          duration: 1.5,
+          ease: "power3.out",
+          onUpdate: () => camera.updateProjectionMatrix(),
+        },
+        0,
+      );
+    };
+
+    // -------------------------------------------------------------
+    // 9. RESIZE HANDLER
     // -------------------------------------------------------------
     const handleResize = () => {
       if (!container) return;
@@ -600,14 +814,19 @@ export const useHeroScene = (
 
     window.addEventListener("resize", handleResize);
 
-    // 9. CLEANUP
+    // 10. CLEANUP
     return () => {
+      worksTransitionRef.current = null;
+      infoTransitionRef.current = null;
+      heroTransitionRef.current = null;
+      introTl.kill();
+
       window.removeEventListener("resize", handleResize);
       container.removeEventListener("mousemove", handleMouseMove);
       container.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mouseup", handleMouseUp);
       container.removeEventListener("mouseleave", handleMouseLeave);
-      
+
       if (buttonCleanup) {
         buttonCleanup();
       }
@@ -634,5 +853,24 @@ export const useHeroScene = (
 
       scene.clear();
     };
-  }, [canvasRef, containerRef, buttonWorksRef, buttonInfoRef]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvasRef, containerRef, buttonWorksRef, buttonInfoRef, isHeroActiveRef]);
+
+  const triggerWorksTransition = useCallback((onComplete: () => void) => {
+    worksTransitionRef.current?.(onComplete);
+  }, []);
+
+  const triggerInfoTransition = useCallback((onComplete: () => void) => {
+    infoTransitionRef.current?.(onComplete);
+  }, []);
+
+  const triggerHeroTransition = useCallback((onComplete: () => void) => {
+    heroTransitionRef.current?.(onComplete);
+  }, []);
+
+  return {
+    triggerWorksTransition,
+    triggerInfoTransition,
+    triggerHeroTransition,
+  };
 };

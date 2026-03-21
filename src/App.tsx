@@ -4,6 +4,8 @@ import gsap from "gsap";
 import type { LangType } from "./types";
 import "./App.scss";
 import { useHeroScene } from "./hooks/useHeroScene";
+import Works from "./components/Works";
+import Info from "./components/Info";
 
 function App() {
   const { i18n } = useTranslation();
@@ -12,17 +14,66 @@ function App() {
   const textRef = useRef<HTMLHeadingElement>(null);
   const buttonWorksRef = useRef<HTMLButtonElement>(null);
   const buttonInfoRef = useRef<HTMLButtonElement>(null);
-  const focusRef = useRef<HTMLSpanElement>(null);
 
   const [language, setLanguage] = useState(i18n.language);
+  const [loadProgress, setLoadProgress] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [view, setView] = useState<"hero" | "transitioning" | "works" | "info">(
+    "hero",
+  );
+  const isHeroActiveRef = useRef(true);
 
   const changeLanguage = (lang: LangType) => {
     i18n.changeLanguage(lang);
     setLanguage(lang);
   };
 
+  // Loading progress handler
+  const handleProgress = useCallback((progress: number) => {
+    setLoadProgress(progress);
+    if (progress >= 100) {
+      // 폰트 로딩까지 대기 후, 100%가 화면에 렌더된 뒤 fade-out 시작
+      document.fonts.ready.then(() => {
+        setTimeout(() => setIsLoaded(true), 500);
+      });
+    }
+  }, []);
+
   // Three.js Scene
-  useHeroScene(canvasRef, containerRef, buttonWorksRef, buttonInfoRef);
+  const {
+    triggerWorksTransition,
+    triggerInfoTransition,
+    triggerHeroTransition,
+  } = useHeroScene(
+    canvasRef,
+    containerRef,
+    buttonWorksRef,
+    buttonInfoRef,
+    handleProgress,
+    isHeroActiveRef,
+  );
+
+  useEffect(() => {
+    isHeroActiveRef.current = view === "hero";
+  }, [view]);
+
+  const handleGoWorks = useCallback(() => {
+    if (view !== "hero") return;
+    setView("transitioning");
+    triggerWorksTransition(() => setView("works"));
+  }, [view, triggerWorksTransition]);
+
+  const handleGoInfo = useCallback(() => {
+    if (view !== "hero") return;
+    setView("transitioning");
+    triggerInfoTransition(() => setView("info"));
+  }, [view, triggerInfoTransition]);
+
+  const handleGoHero = useCallback(() => {
+    if (view === "hero" || view === "transitioning") return;
+    setView("transitioning");
+    triggerHeroTransition(() => setView("hero"));
+  }, [view, triggerHeroTransition]);
 
   // GSAP Animation
   useEffect(() => {
@@ -35,81 +86,29 @@ function App() {
     }
   }, [language]);
 
-  // .focus 요소가 마우스를 따라다니도록 (rAF로 최적화)
-  const mousePos = useRef({ x: 0, y: 0 });
-  const rafId = useRef<number>(0);
-  const isRafScheduled = useRef(false);
-
-  const updateFocusPosition = useCallback(() => {
-    if (focusRef.current) {
-      focusRef.current.style.transform = `translate(${mousePos.current.x}px, ${mousePos.current.y}px)`;
-    }
-    isRafScheduled.current = false;
-  }, []);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      mousePos.current.x = e.clientX;
-      mousePos.current.y = e.clientY;
-
-      if (!isRafScheduled.current) {
-        isRafScheduled.current = true;
-        rafId.current = requestAnimationFrame(updateFocusPosition);
-      }
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-
-    // 인터랙티브 요소(button, a 등 cursor:pointer) 호버 시 .focus 숨기기
-    const isInteractive = (el: EventTarget | null): boolean => {
-      if (!el || !(el instanceof HTMLElement)) return false;
-      let node: HTMLElement | null = el;
-      while (node && node !== document.body) {
-        const tag = node.tagName;
-        if (tag === "BUTTON" || tag === "A" || node.getAttribute("role") === "button") return true;
-        if (window.getComputedStyle(node).cursor === "pointer") return true;
-        node = node.parentElement;
-      }
-      return false;
-    };
-
-    const handleMouseOver = (e: MouseEvent) => {
-      if (focusRef.current && isInteractive(e.target)) {
-        focusRef.current.className = "focus off";
-      }
-    };
-    const handleMouseOut = (e: MouseEvent) => {
-      if (focusRef.current && isInteractive(e.target)) {
-        focusRef.current.className = "focus on";
-      }
-    };
-
-    document.addEventListener("mouseover", handleMouseOver);
-    document.addEventListener("mouseout", handleMouseOut);
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      cancelAnimationFrame(rafId.current);
-      document.removeEventListener("mouseover", handleMouseOver);
-      document.removeEventListener("mouseout", handleMouseOut);
-    };
-  }, [updateFocusPosition]);
-
   return (
     <div className="app-container" ref={containerRef}>
       <canvas className="webgl-canvas" ref={canvasRef} />
 
-      <span className="focus" ref={focusRef}></span>
-      
+      {/* Loading Overlay */}
+      <div className={`loading-overlay${isLoaded ? " loaded" : ""}`}>
+        <div className="loading-inner">
+          <span className="loading-text">{Math.round(loadProgress)}%</span>
+          <div className="loading-bar">
+            <div
+              className="loading-bar-fill"
+              style={{ width: `${loadProgress}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="content">
         <header className="header">
-          <div className="logo">Chaewon Im</div>
-          {/* <div className="menu-nav">
-            <button className="btn-nav">WORKS</button>
-            <span className="divider"></span>
-            <button className="btn-nav">INFO</button>
-          </div> */}
-          <div className="logo">Singularity:The Center of Creation</div>
+          <div className="logo" onClick={handleGoHero}>
+            Chaewon Im
+          </div>
+          <div className="title">Singularity:The Center of Creation</div>
           <div className="menu-lang">
             <button
               className={language === "ko" ? "btn-lang on" : "btn-lang"}
@@ -127,21 +126,39 @@ function App() {
           </div>
         </header>
 
-        <section className="hero">
-          <div className="keyword-container"> 
+        <section className={`hero${view !== "hero" ? " hidden" : ""}`}>
+          <div className="keyword-container">
             <p className="keyword kw-1">Interactive Web Experiences</p>
             <p className="keyword kw-2">Frontend Engineering</p>
             <p className="keyword kw-3">UX/UI Collaboration</p>
           </div>
-          <button ref={buttonWorksRef} className="btn-star btn-go-works">
+          <button
+            ref={buttonWorksRef}
+            className="btn-star btn-go-works"
+            onClick={handleGoWorks}
+          >
             <span className="text">View Works</span>
           </button>
-          <button ref={buttonInfoRef} className="btn-star btn-go-info">
+          <button
+            ref={buttonInfoRef}
+            className="btn-star btn-go-info"
+            onClick={handleGoInfo}
+          >
             <span className="text">View Info</span>
           </button>
         </section>
 
-        <section className="works"></section>
+        <section
+          className={`page-sub works${view === "works" ? " visible" : ""}`}
+        >
+          <Works isActive={view === "works"} onBack={handleGoHero} />
+        </section>
+
+        <section
+          className={`page-sub info${view === "info" ? " visible" : ""}`}
+        >
+          <Info onBack={handleGoHero} />
+        </section>
       </div>
     </div>
   );

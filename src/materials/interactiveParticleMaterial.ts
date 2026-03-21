@@ -209,7 +209,7 @@ export function createInteractiveParticleMaterial(
       uMouse: { value: new THREE.Vector2(0, 0) },
       uHoleRadius: { value: options.holeRadius || 0.5 },
       uHoleRadiusStar2: { value: options.holeRadiusStar2 || options.holeRadius || 0.5 },
-      uRepulsionForce: { value: options.repulsionForce || 0.1 },
+      uRepulsionForce: { value: options.repulsionForce ?? 0.1 },
       uButtonHover: { value: 0.0 },
       uIsCoreStar: { value: options.isCoreStar ? 1.0 : 0.0 },
       uStar1Position: { value: new THREE.Vector2(0, 0) },
