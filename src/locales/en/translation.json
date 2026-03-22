@@ -1,5 +1,81 @@
 {
-  "greeting": "Hello, Welcome to My Portfolio! ",
-  "subtitle": "I",
-  "description": ""
+  "works": {},
+  "info": {
+    "name": "Chaewon Im",
+    "role": "Frontend Engineer | Creative Developer",
+    "contact": {
+      "email": "codnjs984@gmail.com",
+      "phone": "+82 10-9902-7913"
+    },
+    "about": "Frontend Engineer with 4+ years of experience contributing to large-scale web services at Nexon Korea. Skilled in frontend architecture, legacy system modernization, and workflow automation, delivering practical solutions under tight timelines. With a background in design, I collaborate closely with UX/UI designers to create visually engaging and performance-conscious web experiences. Committed to improving development processes and enabling teams to work more efficiently.",
+    "workExperience": {
+      "title": "WORK EXPERIENCE",
+      "jobs": [
+        {
+          "company": "NEXON Korea",
+          "role": "Frontend Engineer",
+          "period": "May 2022 – May 2026",
+          "location": "Seoul, South Korea",
+          "projects": [
+            {
+              "name": "Mabinogi Heroes (KR/NA) – Website Modernization & Automation",
+              "bullets": [
+                "Led modernization of a legacy website into a React + Vite architecture",
+                "Designed branch strategy separating development and production environments, improving security stability by 30%",
+                "Built automated build and deployment scripts, reducing deployment process timelines by 80%",
+                "Standardized reusable event templates and shared component structures, reducing development timelines by 50%",
+                "Developed internal automation tools using Figma API and Python, reducing repetitive publishing tasks by over 90%"
+              ]
+            },
+            {
+              "name": "Azure Promilia (KR) – Official Website Launch (Frontend Lead)",
+              "bullets": [
+                "Led frontend development from project initiation to launch",
+                "Designed scalable project structure and reusable component architecture",
+                "Implemented validation layer for internal API integration",
+                "Built and optimize interactive UI features (character sliders, animated map interactions)",
+                "Established load testing strategy for up to 5,000 concurrent users",
+                "Reduced delivery timeline by 50% through structured planning and cross-functional collaboration"
+              ]
+            },
+            {
+              "name": "NEXON Official Game Website Maintenance & Development Interactive Web Campaigns",
+              "bullets": [
+                "Implemented the organization’s first three.js-based 3D web gallery",
+                "Developed interactive card-combination logic for Mabinogi Mobile pre-registration event",
+                "Built in-game connected web event experience for Mabinogi Heroes",
+                "Handled multilingual localization for global game event websites, including MapleStory M and Blue Archive"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "skills": {
+      "title": "SKILLS",
+      "categories": [
+        {
+          "name": "Frontend",
+          "items": "TypeScript, React, Next.js, Vue.js, Nuxt.js"
+        },
+        {
+          "name": "Backend & Automation",
+          "items": "Node.js, Python, CI/CD scripting"
+        },
+        {
+          "name": "Collaboration & Design",
+          "items": "GitHub, GitLab, Figma, Adobe Photoshop"
+        }
+      ]
+    },
+    "education": {
+      "title": "EDUCATION",
+      "school": "Sookmyung Women’s University",
+      "period": "Mar 2017 – Aug 2022 | Seoul, South Korea",
+      "bullets": [
+        "Bachelor of Arts in Visual & Multimedia Design",
+        "Bachelor of Science in IT Engineering"
+      ]
+    }
+  }
 }
