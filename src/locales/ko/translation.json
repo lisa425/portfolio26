@@ -1,5 +1,78 @@
 {
-  "introduce": "안녕하세요, 제 포트폴리오에 오신 것을 환영합니다!",
-  "subtitle": "",
-  "description": ""
+  "info": {
+    "name": "임채원",
+    "role": "Frontend Engineer | Creative Developer",
+    "contact": {
+      "email": "codnjs984@gmail.com",
+      "phone": "010-9902-7913"
+    },
+    "about": "4년 이상의 대규모 웹 서비스 구축 및 운영 경험을 가진 프론트엔드 엔지니어입니다. 프론트엔드 아키텍처 설계, 레거시 시스템 모던화, 워크플로우 자동화에 능숙하며, 촉박한 일정 속에서도 실용적이고 안정적인 솔루션을 제시합니다. 디자인 백그라운드를 바탕으로 UX/UI 디자이너와 긴밀히 협업하여 시각적으로 매력적이면서도 성능에 최적화된 웹 경험을 제공합니다. 개발 프로세스를 개선하여 팀 전체가 더 효율적으로 일할 수 있는 환경을 구축하는 데 기여합니다.",
+    "workExperience": {
+      "title": "WORK EXPERIENCE",
+      "jobs": [
+        {
+          "company": "넥슨코리아 (NEXON Korea)",
+          "role": "프론트엔드 엔지니어",
+          "period": "2022.05 – 2026.05",
+          "location": "대한민국 서울",
+          "projects": [
+            {
+              "name": "아주르 프로밀리아 (한국) – 공식 웹사이트 론칭",
+              "bullets": [
+                "프로젝트 초기 기획 단계부터 론칭까지 프론트엔드 개발 리드",
+                "확장성을 고려한 프로젝트 구조 설계 및 재사용 가능한 컴포넌트 아키텍처 구축",
+                "사내 API 연동을 위한 데이터 유효성 검증(Validation) 레이어 구현",
+                "인터랙티브 UI (캐릭터 슬라이더, 애니메이션 맵 인터랙션 등) 구축 및 최적화",
+                "최대 5,000명의 동시 접속자를 대비한 부하 테스트 전략 수립",
+                "체계적인 계획 수립과 타 직군과의 긴밀한 협업을 통해 개발 일정을 50% 단축"
+              ]
+            },
+            {
+              "name": "넥슨 공식 게임 웹사이트 운영 및 웹 프로모션 개발",
+              "bullets": [
+                "바람의 나라 three.js 기반의 3D 웹 갤러리 프로모션 구현",
+                "마비노기 모바일 사전등록 이벤트의 인터랙티브 카드 조합 로직 개발",
+                "메이플스토리M, 블루 아카이브 등 글로벌 게임 이벤트 웹사이트의 다국어 로컬라이징 담당"
+              ]
+            },
+            {
+              "name": "마비노기 영웅전 (한국/북미) – 개발 환경 개선 및 자동화",
+              "bullets": [
+                "기존 레거시 웹사이트를 React + Vite 아키텍처로 전환 및 모던화 주도",
+                "개발 및 서비스 환경을 분리하는 브랜치 전략 설계로 보안 안정성 30% 향상",
+                "빌드 및 배포 자동화 스크립트 구축을 통해 배포 프로세스 소요 시간 80% 단축",
+                "재사용 가능한 이벤트 템플릿 및 공통 컴포넌트 구조 표준화로 개발 시간 50% 단축"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "skills": {
+      "title": "SKILLS",
+      "categories": [
+        {
+          "name": "Frontend",
+          "items": "TypeScript, React, Next.js, Vue.js, Nuxt.js"
+        },
+        {
+          "name": "Backend & Automation",
+          "items": "Node.js, Python, CI/CD scripting"
+        },
+        {
+          "name": "Collaboration & Design",
+          "items": "GitHub, GitLab, Figma, Adobe Photoshop"
+        }
+      ]
+    },
+    "education": {
+      "title": "EDUCATION",
+      "school": "숙명여자대학교 (Sookmyung Women’s University)",
+      "period": "2017.03 – 2022.08 | 대한민국 서울",
+      "bullets": [
+        "시각•영상디자인학과 미술학사",
+        "IT공학전공 공학학사 (복수전공)"
+      ]
+    }
+  }
 }

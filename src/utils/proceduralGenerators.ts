@@ -141,28 +141,22 @@ export function generateNebulaParticles(options: NebulaGeneratorOptions) {
 
   // Pre-define the 3 aesthetic colors requested by user
   const palette = [
-    new THREE.Color("#ff8c00"), // Orange
-    new THREE.Color("#4e77ff"), // Blue
-    new THREE.Color("#9b5de5"), // Purple
+    // new THREE.Color("#dedde7"), 
+    // new THREE.Color("#c7c5d2"),
+    // new THREE.Color("#9e9cb0"),
+    new THREE.Color("#ffffff"),
   ];
 
   for (let i = 0; i < count; i++) {
-    const a = Math.random() * Math.PI * 2;
-    // Push particles out past radiusBase, then feather out
-    const r = radiusBase + Math.random() * Math.random() * radiusSpread; // Math.random() twice biases to the inner edge of the nebula ring
+    // 화면 전체에 균일하게 퍼지도록 직교좌표 랜덤 분포
+    const totalSpread = radiusBase + radiusSpread;
+    const x = (Math.random() - 0.5) * 2.0 * totalSpread;
+    const y = (Math.random() - 0.5) * 2.0 * totalSpread;
+    const z = (Math.random() - 0.5) * thickness;
 
-    const rootDist = Math.sqrt(r - radiusBase) / Math.sqrt(radiusSpread); // Density falloff
-    
-    // Z-thickness, thicker in the outer edge forming an accretion disk / cloud
-    const zThickness = thickness * (0.2 + rootDist); 
-    let z = (Math.random() - 0.5) * zThickness;
-
-    // Add extra volumetric noise
-    const rz = (Math.random() - 0.5) * (thickness * 0.5);
-
-    positions[i * 3 + 0] = r * Math.cos(a);
-    positions[i * 3 + 1] = r * Math.sin(a);
-    positions[i * 3 + 2] = z + rz;
+    positions[i * 3 + 0] = x;
+    positions[i * 3 + 1] = y;
+    positions[i * 3 + 2] = z;
     randoms[i] = Math.random();
 
     // Assign random color from palette

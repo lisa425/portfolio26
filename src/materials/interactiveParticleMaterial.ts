@@ -16,9 +16,15 @@ uniform float uNoiseStrength;
 
 // Mouse Interaction Uniforms
 uniform vec2 uMouse;             // Normalized mouse coordinates (-1 to 1)
-uniform float uHoleRadius;       // How wide the hole becomes
+uniform float uHoleRadius;       // Star1 hole radius
+uniform float uHoleRadiusStar2;  // Star2 hole radius (star2Scale 적용)
 uniform float uRepulsionForce;   // Base repulsion everywhere
 uniform float uButtonHover;      // Button hover state (0.0 to 1.0, with smooth transition)
+uniform float uIsCoreStar;       // 1.0 if coreStar, 0.0 if other particles
+uniform vec2 uStar1Position;     // Star1 위치 (nebula 구멍용)
+uniform vec2 uStar2Position;     // Star2 위치 (nebula 구멍용)
+uniform float uButtonHoverStar1; // Star1 버튼 호버 상태 (nebula 구멍용)
+uniform float uButtonHoverStar2; // Star2 버튼 호버 상태 (nebula 구멍용)
 
 attribute vec3 position; // Initial mathematically generated 3D position
 attribute float randomScale; // Individual randomness pre-calculated
@@ -83,57 +89,58 @@ float snoise(vec3 v) {
 }
 
 void main() {
-    // 1. Time-based noise undulation
+    // 1. Time-based noise undulation (Z축 노이즈 제거 → snoise 2회만 호출)
     vec3 animatedPos = position;
     float noise1 = snoise(vec3(position.xy * 2.0, uTime * 0.2));
     float noise2 = snoise(vec3(position.yx * 1.5, uTime * 0.3 + 100.0));
     
     animatedPos.x += noise1 * uNoiseStrength;
     animatedPos.y += noise2 * uNoiseStrength;
-    animatedPos.z += snoise(vec3(position.z, uTime * 0.1, randomScale)) * uNoiseStrength * 2.0;
+    // Z축은 noise1을 재활용하여 추가 snoise 호출 제거
+    animatedPos.z += noise1 * uNoiseStrength * randomScale;
 
-    // 2. Mouse Interaction
-    // A subtle global push based on mouse
-    vec2 dirToMouse = animatedPos.xy - uMouse; // Vector pointing from mouse to particle
+    // 2. Mouse Interaction (분기 없이 smoothstep 사용)
+    vec2 dirToMouse = animatedPos.xy - uMouse;
     float distToMouse = length(dirToMouse);
     float globalPush = smoothstep(2.0, 0.0, distToMouse) * uRepulsionForce;
     
-    vec2 pushDir = normalize(dirToMouse + vec2(0.001)); // push away from mouse
+    vec2 pushDir = normalize(dirToMouse + vec2(0.001));
     animatedPos.xy += pushDir * globalPush;
 
-    // 3. Central Hole Effect (Black hole punch ONLY when mouse is near center OR button is hovered)
-    float distFromCenter = length(animatedPos.xy);
-    float mouseFromCenter = length(uMouse);
+    // 3. Hole Effect (if 분기 대신 step/smoothstep으로 branchless 처리)
+    // Star1 구멍 효과
+    vec2 dirToStar1 = animatedPos.xy - uStar1Position;
+    float distToStar1 = length(dirToStar1);
+    float holeMask1 = smoothstep(uHoleRadius, 0.0, distToStar1) * uButtonHoverStar1;
+    vec2 star1Dir = normalize(dirToStar1 + vec2(0.001));
+    animatedPos.xy += star1Dir * (uHoleRadius - distToStar1) * holeMask1 * 1.5;
+    animatedPos.z -= (uHoleRadius - distToStar1) * holeMask1;
     
-    // Activate black hole if mouse is near center (radius 0.3) OR button is hovered
-    float holeActivation = max(
-      smoothstep(0.4, 0.1, mouseFromCenter),
-      uButtonHover
-    ); 
-    
-    // Force particles out of the center hole
-    if (distFromCenter < uHoleRadius && holeActivation > 0.0) {
-       // Push out completely to uHoleRadius bounds
-       float pushOut = (uHoleRadius - distFromCenter);
-       vec2 centerDir = normalize(animatedPos.xy + vec2(0.001));
-       
-       // Squeeze geometry back creating an edge ridge
-       animatedPos.xy += centerDir * pushOut * holeActivation * 1.5;
-       animatedPos.z -= pushOut * holeActivation; // Push them slightly backwards in Z too
-    }
+    // Star2 구멍 효과 (star2용 별도 holeRadius 사용)
+    vec2 dirToStar2 = animatedPos.xy - uStar2Position;
+    float distToStar2 = length(dirToStar2);
+    float holeMask2 = smoothstep(uHoleRadiusStar2, 0.0, distToStar2) * uButtonHoverStar2;
+    vec2 star2Dir = normalize(dirToStar2 + vec2(0.001));
+    animatedPos.xy += star2Dir * (uHoleRadiusStar2 - distToStar2) * holeMask2 * 1.5;
+    animatedPos.z -= (uHoleRadiusStar2 - distToStar2) * holeMask2;
 
     vec4 mvPosition = modelViewMatrix * vec4(animatedPos, 1.0);
     
-    // Distance attenuation for size (closer particles are bigger)
-    gl_PointSize = (uParticleSize * (1.0 + randomScale * 2.0)) * (1.0 / -mvPosition.z);
+    // Distance attenuation for size
+    float finalSize = uParticleSize;
+    
+    gl_PointSize = (finalSize * (1.0 + randomScale * 2.0)) * (1.0 / -mvPosition.z);
     gl_Position = projectionMatrix * mvPosition;
     
-    // Pass to fragment shader
-    // Fade out particles that were hard-pushed by the black hole
-    vAlpha = 1.0;
-    if (holeActivation > 0.0 && length(position.xy) < uHoleRadius) {
-       vAlpha = mix(1.0, 0.2, holeActivation); 
-    }
+    // 구멍 효과 페이드아웃 (nebula에만 적용, branchless)
+    float isNebula = step(0.5, 1.0 - uIsCoreStar); // uIsCoreStar < 0.5이면 1.0
+    float totalHoleActivation = max(holeMask1, holeMask2);
+    // 각 별의 holeRadius 기준으로 내부 여부 판단
+    float insideStar1 = step(distToStar1, uHoleRadius);
+    float insideStar2 = step(distToStar2, uHoleRadiusStar2);
+    float insideHole = max(insideStar1, insideStar2);
+    float holeAlphaFade = mix(1.0, 0.2, totalHoleActivation * insideHole);
+    vAlpha = mix(1.0, holeAlphaFade, isNebula);
     
 #ifdef USE_VERTEX_COLORS
     vColor = aColor;
@@ -153,12 +160,18 @@ varying float vAlpha;
 varying vec3 vColor;
 
 void main() {
-    // Render soft circular particles instead of squares
-    float dist = distance(gl_PointCoord, vec2(0.5));
-    if (dist > 0.5) discard;
+    // Render square particles
+    vec2 coord = gl_PointCoord;
     
-    // Smooth edges (Center is opaque, edges fade out gracefully)
-    float alpha = smoothstep(0.5, 0.1, dist) * vAlpha;
+    // Check if within square bounds (0.0 to 1.0)
+    if (coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0) {
+        discard;
+    }
+    
+    // Optional: smooth edges for softer square look
+    float edgeFade = 0.1; // Edge fade distance
+    float minDist = min(min(coord.x, 1.0 - coord.x), min(coord.y, 1.0 - coord.y));
+    float alpha = smoothstep(0.0, edgeFade, minDist) * vAlpha;
     
     gl_FragColor = vec4(vColor, alpha);
 }
@@ -172,8 +185,10 @@ export interface InteractiveParticleOptions {
   color: string | THREE.Color;
   noiseStrength: number;
   holeRadius?: number;
+  holeRadiusStar2?: number; // star2용 별도 holeRadius
   repulsionForce?: number;
   useVertexColors?: boolean;
+  isCoreStar?: boolean; // true if coreStar, false otherwise
 }
 
 export function createInteractiveParticleMaterial(
@@ -193,8 +208,14 @@ export function createInteractiveParticleMaterial(
       uNoiseStrength: { value: options.noiseStrength },
       uMouse: { value: new THREE.Vector2(0, 0) },
       uHoleRadius: { value: options.holeRadius || 0.5 },
-      uRepulsionForce: { value: options.repulsionForce || 0.1 },
+      uHoleRadiusStar2: { value: options.holeRadiusStar2 || options.holeRadius || 0.5 },
+      uRepulsionForce: { value: options.repulsionForce ?? 0.1 },
       uButtonHover: { value: 0.0 },
+      uIsCoreStar: { value: options.isCoreStar ? 1.0 : 0.0 },
+      uStar1Position: { value: new THREE.Vector2(0, 0) },
+      uStar2Position: { value: new THREE.Vector2(0, 0) },
+      uButtonHoverStar1: { value: 0.0 },
+      uButtonHoverStar2: { value: 0.0 },
     },
   });
 }
