@@ -163,11 +163,42 @@ body {
       pointer-events: auto;
     }
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      padding: 2rem;
+    .hud-corners {
       position: absolute;
+      top: 1.5rem;
+      left: 1.5rem;
+      right: 1.5rem;
+      bottom: 1.5rem;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0.6;
+
+      $corner-size: 15px;
+      $border-width: 1px;
+      $c: rgba(255, 255, 255, 0.9);
+
+      background:
+        linear-gradient(to right, $c, $c) top left / $corner-size $border-width
+          no-repeat,
+        linear-gradient(to bottom, $c, $c) top left / $border-width $corner-size
+          no-repeat,
+        linear-gradient(to left, $c, $c) top right / $corner-size $border-width
+          no-repeat,
+        linear-gradient(to bottom, $c, $c) top right / $border-width
+          $corner-size no-repeat,
+        linear-gradient(to right, $c, $c) bottom left / $corner-size
+          $border-width no-repeat,
+        linear-gradient(to top, $c, $c) bottom left / $border-width $corner-size
+          no-repeat,
+        linear-gradient(to left, $c, $c) bottom right / $corner-size
+          $border-width no-repeat,
+        linear-gradient(to top, $c, $c) bottom right / $border-width
+          $corner-size no-repeat;
+    }
+
+    .header {
+      padding: 2rem;
+      position: fixed;
       top: 0px;
       left: 0px;
       width: 100%;
@@ -188,11 +219,16 @@ body {
       .logo {
         cursor: pointer;
         height: 50px;
+        position: absolute;
+        left: 2rem;
       }
 
       .title {
         display: flex;
         height: 50px;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
       }
 
       .menu-lang {
@@ -201,6 +237,8 @@ body {
         justify-content: center;
         padding: 0 10px;
         height: max(vw(16, 1920), 16px);
+        position: absolute;
+        right: 1rem;
         .btn-lang {
           color: rgba(255, 255, 255, 0.5);
           transition: 0.3s;
@@ -535,24 +573,21 @@ body {
       top: 2rem;
       right: 2rem;
       background: transparent;
-      border: 1px solid rgba($text-primary, 0.3);
+      // border: 1px solid rgba($text-primary, 0.3);
       color: $text-primary;
       width: 40px;
       height: 40px;
-      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 1rem;
-      transition:
-        border-color 0.3s,
-        background-color 0.3s;
+      opacity: 0.7;
+      font-size: 1.5rem;
+      transition: opacity 0.3s;
       z-index: 10;
 
       &:hover {
-        border-color: $text-primary;
-        background-color: rgba($text-primary, 0.1);
+        opacity: 1;
       }
     }
 
@@ -616,63 +651,223 @@ body {
 
 // ─── Info Section ───
 .info {
-  .info-content {
-    display: flex;
-    flex-direction: column;
-    gap: 3rem;
-    max-width: 800px;
+  // font-family: "Azeret Mono", monospace;
+  padding: 2rem;
+
+  .info-inner {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-top: 5vh;
+
+    // Top fade-out mask
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 20%,
+      black 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 20%,
+      black 100%
+    );
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
-  .info-bio {
+  // --- Right Fixed Navigation ---
+  .info-nav {
+    position: fixed;
+    left: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+
+    ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin: 0;
+      padding: 0;
+    }
+
+    li {
+      font-size: max(vw(14, 1920), 13px);
+      text-transform: uppercase;
+      opacity: 0.5;
+      cursor: pointer;
+      font-weight: 400;
+      transition: color 0.3s ease;
+
+      &:hover {
+        color: rgba(255, 255, 255, 1);
+      }
+    }
+  }
+
+  // --- 50% Right Aligned Content ---
+  .info-content-scroll {
+    width: 45%;
+    min-width: 450px;
+    max-width: 650px;
+    margin-left: auto; // align right
+    margin-right: 10%;
+    padding-top: 20vh;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 8rem;
+  }
+  .info-in {
+    margin-left: 2rem;
+  }
+  .info-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 50vh;
+    justify-content: center;
   }
 
   .info-name {
-    font-size: max(vw(36, 1920), 28px);
+    font-family: "nbarchitekt", sans-serif;
+    font-size: max(vw(25, 1920), 25px);
     font-weight: 400;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.5rem 0;
   }
 
   .info-role {
-    font-size: max(vw(14, 1920), 14px);
+    font-size: max(vw(18, 1920), 18px);
     opacity: 0.5;
+    margin: 0 0 2rem 0;
   }
 
-  .info-details {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
+  .info-about {
+    font-size: max(vw(16, 1920), 16px);
+    opacity: 0.8;
+    line-height: 1.8;
+    word-break: keep-all;
+    max-width: 90%;
   }
 
-  .info-block {
+  .info-contact {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem;
+    font-size: max(vw(18, 1920), 16px);
+    opacity: 0.9;
+
+    .btn-contact {
+      margin: 0;
+    }
   }
 
   .info-block-title {
-    font-size: max(vw(12, 1920), 12px);
+    font-size: max(vw(20, 1920), 18px);
     text-transform: uppercase;
     opacity: 0.4;
     font-weight: 400;
+    margin-bottom: 2rem;
+    letter-spacing: 0.05em;
   }
 
-  .info-block-body {
-    font-size: max(vw(14, 1920), 14px);
-    line-height: 1.8;
-    opacity: 0.7;
+  // Column 1: Experience
+  .job-entry {
+    margin-bottom: 3rem;
+
+    &__header {
+      margin-bottom: 1.5rem;
+
+      h4 {
+        font-size: max(vw(22, 1920), 20px);
+        font-weight: 400;
+        margin: 0 0 0.4rem 0;
+      }
+
+      .job-entry__meta {
+        font-size: max(vw(15, 1920), 14px);
+        opacity: 0.5;
+        margin: 0;
+      }
+    }
+
+    .project-entry {
+      margin-bottom: 1.5rem;
+
+      h5 {
+        font-size: max(vw(18, 1920), 16px);
+        font-weight: 400;
+        margin: 0 0 0.6rem 0;
+        color: rgba($text-primary, 0.9);
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 1.2rem;
+
+        li {
+          font-size: max(vw(16, 1920), 16px);
+          opacity: 0.7;
+          margin-bottom: 0.4rem;
+          line-height: 1.5;
+          word-break: keep-all;
+        }
+      }
+    }
   }
 
-  .info-list {
-    list-style: none;
+  // Column 2: Skills
+  .skills-list {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 2rem;
 
-    li {
-      font-size: max(vw(14, 1920), 14px);
-      opacity: 0.7;
+    .skill-category {
+      strong {
+        display: block;
+        font-size: max(vw(18, 1920), 16px);
+        font-weight: 400;
+        margin-bottom: 0.5rem;
+        color: rgba($text-primary, 0.9);
+      }
+
+      span {
+        display: block;
+        font-size: max(vw(16, 1920), 16px);
+        opacity: 0.7;
+        line-height: 1.6;
+      }
+    }
+  }
+
+  // Column 3: Education
+  .education-entry {
+    h4 {
+      font-size: max(vw(20, 1920), 18px);
+      font-weight: 400;
+      margin: 0 0 0.4rem 0;
+    }
+
+    &__meta {
+      font-size: max(vw(15, 1920), 14px);
+      opacity: 0.5;
+      margin: 0 0 1rem 0;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 1.2rem;
+
+      li {
+        font-size: max(vw(16, 1920), 16px);
+        opacity: 0.7;
+        margin-bottom: 0.4rem;
+        line-height: 1.5;
+      }
     }
   }
 }

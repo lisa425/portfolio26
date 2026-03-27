@@ -18,6 +18,7 @@ function App() {
   const [language, setLanguage] = useState(i18n.language);
   const [loadProgress, setLoadProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [locationStr, setLocationStr] = useState("Chaewon Im");
   const [view, setView] = useState<"hero" | "transitioning" | "works" | "info">(
     "hero",
   );
@@ -36,6 +37,37 @@ function App() {
       document.fonts.ready.then(() => {
         setTimeout(() => setIsLoaded(true), 500);
       });
+    }
+  }, []);
+
+  // Geolocation
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+
+          const formatCoord = (coord: number) => {
+            const [int, dec] = Math.abs(coord).toFixed(6).split(".");
+            const formattedInt = String(int).padStart(2, "0");
+            return `${formattedInt}.${dec.slice(0, 3)}.${dec.slice(3)}`;
+          };
+
+          const dirLat = lat >= 0 ? "N" : "S";
+          const dirLng = lng >= 0 ? "E" : "W";
+
+          setLocationStr(
+            `[${formatCoord(lat)}${dirLat} ${formatCoord(lng)}${dirLng}]`,
+          );
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          setLocationStr("[ 37.566.535N 126.977.969E ]");
+        },
+      );
+    } else {
+      setLocationStr("[ 37.566.535N 126.977.969E ]");
     }
   }, []);
 
@@ -104,11 +136,21 @@ function App() {
       </div>
 
       <div className="content">
+        <div className="hud-corners" style={{ display: "none" }}></div>
         <header className="header">
-          <div className="logo" onClick={handleGoHero}>
-            Chaewon Im
+          <div
+            className="logo"
+            onClick={handleGoHero}
+            style={{
+              fontSize: "0.85em",
+              letterSpacing: "0.05em",
+              opacity: 0.8,
+            }}
+          >
+            {locationStr}
           </div>
-          <div className="title">Singularity:The Center of Creation</div>
+          {/* <div className="title">Singularity:The Center of Creation</div> */}
+          <div className="title">Chaewon Im Portfolio</div>
           <div className="menu-lang">
             <button
               className={language === "ko" ? "btn-lang on" : "btn-lang"}
@@ -157,7 +199,7 @@ function App() {
         <section
           className={`page-sub info${view === "info" ? " visible" : ""}`}
         >
-          <Info onBack={handleGoHero} />
+          <Info isActive={view === "info"} onBack={handleGoHero} />
         </section>
       </div>
     </div>
