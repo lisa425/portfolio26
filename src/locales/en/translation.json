@@ -1,5 +1,58 @@
 {
-  "works": {},
+  "works": {
+    "items": [
+      {
+        "id": 1,
+        "game": "Azure Promilia",
+        "title": "Official Website",
+        "date": "2025.11 - 2025.12",
+        "description": "Official promotional website for the game 'Azure Promilia'. Implemented rich interactions and 3D scenes to provide an immersive user experience.",
+        "stack": "Next.js · Three.js · GSAP",
+        "img": "/images/meta_azur.jpg",
+        "url": "https://azurpromilia.nexon.com/events/2025/12/preregistration"
+      },
+      {
+        "id": 2,
+        "game": "Baram",
+        "title": "Anchor Remaster Teaser",
+        "date": "2022.11 - 2022.12",
+        "description": "A visionary project demonstrating advanced web graphics for a cyberpunk themed experience.",
+        "stack": "JavaScript · Three.js · GSAP",
+        "img": "/images/meta_baram.jpg",
+        "url": "https://baram.nexon.com/E221215/Intro"
+      },
+      {
+        "id": 3,
+        "game": "Blue Archive",
+        "title": "Code:BOX Roadmap Promotion",
+        "date": "2025.07",
+        "description": "Interactive portfolio layout utilizing particle systems and custom shaders to visualize a universe.",
+        "stack": "Vue.js · Nuxt.js",
+        "img": "/images/meta_ba.jpg",
+        "url": "https://bluearchive.nexon.com/events/2025/07/update"
+      },
+      {
+        "id": 4,
+        "game": "Vindictus",
+        "title": "New Character 'Neamhain'",
+        "date": "2025.01",
+        "description": "3D virtual exhibition gallery for digital artists to showcase their artworks in a virtual space.",
+        "stack": "React · TypeScript",
+        "img": "/images/meta_mm.jpg",
+        "url": "http://vindictus.nexon.net/event/2025/0121/neamhain"
+      },
+      {
+        "id": 5,
+        "game": "Mabinogi Mobile",
+        "title": "1st Anniversary Update",
+        "date": "2026.03",
+        "description": "3D virtual exhibition gallery for digital artists to showcase their artworks in a virtual space.",
+        "stack": "React · TypeScript",
+        "img": "/images/meta_mm.jpg",
+        "url": "https://mabinogimobile.nexon.com/events2026/0326/1stanniversary"
+      }
+    ]
+  },
   "info": {
     "name": "Chaewon Im",
     "role": "Frontend Engineer | Creative Developer",
@@ -18,7 +71,7 @@
           "location": "Seoul, South Korea",
           "projects": [
             {
-              "name": "Azure Promilia (KR) – Official Website Launch",
+              "name": "Azure Promilia (KR) – Official Website Launch (Frontend Lead)",
               "bullets": [
                 "Led frontend development from project initiation to launch",
                 "Designed scalable project structure and reusable component architecture",
@@ -58,11 +111,11 @@
           "items": "TypeScript, React, Next.js, Vue.js, Nuxt.js"
         },
         {
-          "name": "Backend & Automation",
-          "items": "Node.js, Python, CI/CD scripting"
+          "name": "Automation & AI",
+          "items": "Python, Node.js, CI/CD, Cursor AI, Claude API"
         },
         {
-          "name": "Collaboration & Design",
+          "name": "Tools",
           "items": "GitHub, GitLab, Figma, Adobe Photoshop"
         }
       ]
@@ -71,10 +124,7 @@
       "title": "EDUCATION",
       "school": "Sookmyung Women’s University",
       "period": "Mar 2017 – Aug 2022 | Seoul, South Korea",
-      "bullets": [
-        "Bachelor of Arts in Visual & Multimedia Design",
-        "Bachelor of Science in IT Engineering"
-      ]
+      "bullets": ["Bachelor of Arts in Visual & Multimedia Design", "Bachelor of Science in IT Engineering"]
     }
   }
 }

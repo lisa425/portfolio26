@@ -1,14 +1,14 @@
-@use "sass:math";
-@import url("https://fonts.googleapis.com/css2?family=Azeret+Mono:ital,wght@0,100..900;1,100..900&display=swap");
+@use 'sass:math';
+@import url('https://fonts.googleapis.com/css2?family=Azeret+Mono:ital,wght@0,100..900;1,100..900&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Outfit:wght@100..900&family=Space+Grotesk:wght@300..700&display=swap');
 @font-face {
-  font-family: "nbarchitekt";
-  src: url(assets/fonts/NBArchitektStd-Regular.woff2) format("woff2");
+  font-family: 'nbarchitekt';
+  src: url(assets/fonts/NBArchitektStd-Regular.woff2) format('woff2');
   font-style: normal;
   font-weight: 400;
 }
 @font-face {
-  font-family: "nbarchitekt";
-  src: url(assets/fonts/NBArchitektStd-Bold.woff2) format("woff2");
+  font-family: 'nbarchitekt';
+  src: url(assets/fonts/NBArchitektStd-Bold.woff2) format('woff2');
   font-style: normal;
   font-weight: 700;
 }
@@ -24,6 +24,17 @@ $text-primary: #ffffff;
 $text-secondary: #cccccc;
 $text-green: #dedde7;
 $accent-gradient: linear-gradient(135deg, #fff 0%, #a5a5a5 100%);
+$neon-green: #00ff6a;
+$neon-green-dim: rgba(0, 255, 106, 0.15);
+
+$font-display: 'nbarchitekt', 'Azeret Mono', monospace;
+$font-body: 'Space Grotesk', 'IBM Plex Mono', 'Outfit', 'Inter', sans-serif;
+
+.text-body {
+  font-family: $font-body;
+  text-transform: none;
+  letter-spacing: max(-0.5px, -0.03em);
+}
 
 * {
   margin: 0;
@@ -32,11 +43,11 @@ $accent-gradient: linear-gradient(135deg, #fff 0%, #a5a5a5 100%);
 }
 
 body {
-  font-family: "nbarchitekt", "Azeret Mono", monospace;
+  font-family: 'nbarchitekt', 'Azeret Mono', monospace;
   background-color: $bg-color;
   color: $text-primary;
   overflow: hidden;
-  cursor: url("/assets/images/cursor.png"), auto;
+  cursor: url('/assets/images/cursor.png'), auto;
 }
 
 // ─── Loading Overlay ───
@@ -72,7 +83,7 @@ body {
   }
 
   .loading-text {
-    font-family: "nbarchitekt", "Azeret Mono", monospace;
+    font-family: 'nbarchitekt', 'Azeret Mono', monospace;
     font-size: 14px;
     color: rgba($text-primary, 0.6);
   }
@@ -128,7 +139,7 @@ body {
 
     &::before,
     &::after {
-      content: "";
+      content: '';
       position: absolute;
       top: 50%;
       left: 50%;
@@ -178,22 +189,14 @@ body {
       $c: rgba(255, 255, 255, 0.9);
 
       background:
-        linear-gradient(to right, $c, $c) top left / $corner-size $border-width
-          no-repeat,
-        linear-gradient(to bottom, $c, $c) top left / $border-width $corner-size
-          no-repeat,
-        linear-gradient(to left, $c, $c) top right / $corner-size $border-width
-          no-repeat,
-        linear-gradient(to bottom, $c, $c) top right / $border-width
-          $corner-size no-repeat,
-        linear-gradient(to right, $c, $c) bottom left / $corner-size
-          $border-width no-repeat,
-        linear-gradient(to top, $c, $c) bottom left / $border-width $corner-size
-          no-repeat,
-        linear-gradient(to left, $c, $c) bottom right / $corner-size
-          $border-width no-repeat,
-        linear-gradient(to top, $c, $c) bottom right / $border-width
-          $corner-size no-repeat;
+        linear-gradient(to right, $c, $c) top left / $corner-size $border-width no-repeat,
+        linear-gradient(to bottom, $c, $c) top left / $border-width $corner-size no-repeat,
+        linear-gradient(to left, $c, $c) top right / $corner-size $border-width no-repeat,
+        linear-gradient(to bottom, $c, $c) top right / $border-width $corner-size no-repeat,
+        linear-gradient(to right, $c, $c) bottom left / $corner-size $border-width no-repeat,
+        linear-gradient(to top, $c, $c) bottom left / $border-width $corner-size no-repeat,
+        linear-gradient(to left, $c, $c) bottom right / $corner-size $border-width no-repeat,
+        linear-gradient(to top, $c, $c) bottom right / $border-width $corner-size no-repeat;
     }
 
     .header {
@@ -204,11 +207,7 @@ body {
       width: 100%;
       height: vh(180);
       max-height: 200px;
-      background: linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, 0.5),
-        rgba(0, 0, 0, 0)
-      );
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
       font-size: max(vw(16, 1920), 16px);
       z-index: 10;
 
@@ -398,7 +397,7 @@ body {
     align-items: center;
     gap: 10px;
     &::before {
-      content: "";
+      content: '';
       display: block;
       width: 10px;
       height: 10px;
@@ -413,123 +412,260 @@ body {
 // ─── Works Section ───
 .works {
   &__inner {
-    display: grid;
-    place-items: center;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+
     &::-webkit-scrollbar {
-      display: none;
+      width: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: rgba($neon-green, 0.15);
+      border-radius: 4px;
     }
   }
 
-  &__list {
+  // ─── Terminal Progress Bar ───
+  .works-progress {
+    position: sticky;
+    top: 0;
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 1.5rem;
-    width: 100%;
-    height: auto;
-    padding: 2rem;
-    flex-wrap: no-wrap;
-  }
+    gap: 0.8rem;
+    padding: 1.2rem 2rem;
+    font-size: max(vw(12, 1920), 12px);
+    color: $neon-green;
+    white-space: nowrap;
+    opacity: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba($bg-color, 0.95) 60%,
+      transparent
+    );
+    backdrop-filter: blur(4px);
 
-  .work-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.5rem;
-    flex-shrink: 0;
-    width: max(vw(300, 1920), 300px);
-    // height: max(vw(300, 1920), 300px);
-
-    &__index {
+    &__label {
       opacity: 0.6;
     }
 
-    &__thumb {
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: flex-end;
-      width: 100%;
-      aspect-ratio: 3/4;
-      background-color: rgba($text-primary, 0.05);
-      overflow: hidden;
-      box-shadow: 0 0 0px 0px rgba($text-primary, 0.1);
-      filter: grayscale(50%);
+    &__bar {
+      letter-spacing: 1px;
+    }
+
+    &__info {
+      opacity: 0.8;
+      color: rgba($neon-green, 0.7);
+    }
+  }
+
+  // ─── Constellation Map ───
+  .constellation-map {
+    position: relative;
+    width: 100%;
+    height: 250vh;
+    background-image: linear-gradient(
+        rgba($neon-green, 0.025) 1px,
+        transparent 1px
+      ),
+      linear-gradient(90deg, rgba($neon-green, 0.025) 1px, transparent 1px),
+      linear-gradient(rgba($neon-green, 0.012) 1px, transparent 1px),
+      linear-gradient(90deg, rgba($neon-green, 0.012) 1px, transparent 1px);
+    background-size:
+      200px 200px,
+      200px 200px,
+      40px 40px,
+      40px 40px;
+  }
+
+  .constellation-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  // ─── Grid coordinate labels ───
+  .constellation-grid-label {
+    position: absolute;
+    font-size: 10px;
+    color: rgba($neon-green, 0.2);
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+
+    &.top-left {
+      top: 1rem;
+      left: 1rem;
+    }
+    &.top-right {
+      top: 1rem;
+      right: 1rem;
+    }
+    &.bottom-left {
+      bottom: 1rem;
+      left: 1rem;
+    }
+    &.bottom-right {
+      bottom: 1rem;
+      right: 1rem;
+    }
+  }
+
+  // ─── SVG Lines ───
+  .constellation-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .constellation-line {
+    stroke: rgba($neon-green, 0.1);
+    stroke-width: 0.15;
+    fill: none;
+    transition: stroke 0.5s ease;
+
+    &.active {
+      stroke: rgba($neon-green, 0.5);
+      filter: drop-shadow(0 0 4px rgba($neon-green, 0.3));
+    }
+  }
+
+  // ─── Constellation Nodes ───
+  .constellation-node {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 1.2rem;
+
+    &__point {
+      width: 10px;
+      height: 10px;
+      border-radius: 1px;
+      background: $neon-green;
+      box-shadow: 0 0 8px rgba($neon-green, 0.4);
+      flex-shrink: 0;
+      margin-top: 2px;
       transition:
-        filter 0.7s ease,
-        box-shadow 0.7s ease,
-        aspect-ratio 0.7s ease;
-
-      img {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        opacity: 0.8;
-        transition:
-          opacity 0.7s ease,
-          transform 0.7s ease;
-      }
-
-      &::after {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 60%;
-        background: linear-gradient(to top, rgba($bg-color, 0.9), transparent);
-        pointer-events: none;
-      }
+        width 0.4s ease,
+        height 0.4s ease,
+        box-shadow 0.4s ease;
+      animation: nodePulse 3s ease-in-out infinite;
     }
 
-    &:hover {
-      .work-card__thumb {
-        filter: grayscale(0%);
-        box-shadow: 0 0 50px 0px rgba($text-primary, 0.1);
-        img {
-          opacity: 1;
-          transform: scale(1.05);
-        }
-      }
-      .work-card__label {
-        opacity: 1;
-        transform: translateY(0px);
-      }
-    }
-
-    &__label {
-      position: relative;
-      z-index: 2;
-      font-size: max(vw(16, 1920), 16px);
+    &__info {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      margin-bottom: 2rem;
-      color: #fff;
+      gap: 0.2rem;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    &__index {
+      font-size: max(vw(12, 1920), 11px);
+      color: $neon-green;
+      opacity: 0.6;
+    }
+
+    &__game {
+      font-size: max(vw(16, 1920), 14px);
+      color: $text-primary;
       opacity: 0;
-      transform: translateY(10px);
-      text-shadow:
-        0 4px 15px rgba(0, 0, 0, 0.9),
-        0 2px 5px rgba(0, 0, 0, 0.8);
-      transition: 0.7s ease;
+      transform: translateX(-8px);
+      transition:
+        opacity 0.4s ease,
+        transform 0.4s ease;
     }
 
     &__title {
-      text-align: center;
-      padding: 0 1rem;
+      font-size: max(vw(12, 1920), 11px);
+      color: rgba($text-primary, 0.5);
+      opacity: 0;
+      transform: translateX(-8px);
+      transition:
+        opacity 0.4s ease 0.05s,
+        transform 0.4s ease 0.05s;
     }
 
     &__stack {
+      font-size: max(vw(11, 1920), 10px);
+      color: rgba($neon-green, 0.4);
+      opacity: 0;
+      transform: translateX(-8px);
+      transition:
+        opacity 0.4s ease 0.1s,
+        transform 0.4s ease 0.1s;
+    }
+
+    &__thumb {
+      width: max(vw(200, 1920), 160px);
+      aspect-ratio: 3 / 4;
+      overflow: hidden;
+      border: 1px solid rgba($neon-green, 0.15);
       margin-top: 0.5rem;
-      display: flex;
-      gap: 0.3rem;
-      span {
-        font-size: max(vw(12, 1920), 12px);
-        opacity: 0.8;
+      opacity: 0;
+      transform: translateY(8px);
+      transition:
+        opacity 0.5s ease 0.1s,
+        transform 0.5s ease 0.1s;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: grayscale(60%);
+        transition: filter 0.5s ease;
       }
+    }
+
+    // Hover state
+    &.hovered {
+      .constellation-node__point {
+        width: 14px;
+        height: 14px;
+        box-shadow:
+          0 0 20px rgba($neon-green, 0.6),
+          0 0 50px rgba($neon-green, 0.15);
+        animation: none;
+      }
+
+      .constellation-node__game,
+      .constellation-node__title,
+      .constellation-node__stack {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .constellation-node__thumb {
+        opacity: 1;
+        transform: translateY(0);
+        border-color: rgba($neon-green, 0.3);
+        box-shadow: 0 0 30px rgba($neon-green, 0.08);
+
+        img {
+          filter: grayscale(0%);
+        }
+      }
+    }
+  }
+
+  @keyframes nodePulse {
+    0%,
+    100% {
+      box-shadow: 0 0 8px rgba($neon-green, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 18px rgba($neon-green, 0.7);
     }
   }
 
@@ -601,7 +737,7 @@ body {
       max-width: 1000px;
       min-width: 700px;
 
-      > div {
+      > div, > a {
         opacity: 0;
         animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
@@ -633,6 +769,24 @@ body {
 
           animation-delay: 0.3s;
         }
+        &__link {
+          --target-opacity: 1;
+          display: inline-block;
+          font-family: $font-body;
+          font-size: max(vw(14, 1920), 14px);
+          color: $text-primary;
+          text-decoration: none;
+          border: 1px solid rgba(white, 0.3);
+          padding: 0.6rem 1.4rem;
+          border-radius: 2px;
+          transition: border-color 0.3s ease, opacity 0.3s ease;
+          animation-delay: 0.35s;
+          width: fit-content;
+
+          &:hover {
+            border-color: white;
+          }
+        }
         &__images {
           --target-opacity: 1;
           width: 100%;
@@ -661,18 +815,8 @@ body {
     margin-top: 5vh;
 
     // Top fade-out mask
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      transparent 0%,
-      black 20%,
-      black 100%
-    );
-    mask-image: linear-gradient(
-      to bottom,
-      transparent 0%,
-      black 20%,
-      black 100%
-    );
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
 
     &::-webkit-scrollbar {
       display: none;
@@ -714,7 +858,7 @@ body {
   .info-content-scroll {
     width: 45%;
     min-width: 450px;
-    max-width: 650px;
+    // max-width: 650px;
     margin-left: auto; // align right
     margin-right: 10%;
     padding-top: 20vh;
@@ -733,7 +877,7 @@ body {
   }
 
   .info-name {
-    font-family: "nbarchitekt", sans-serif;
+    font-family: 'nbarchitekt', sans-serif;
     font-size: max(vw(25, 1920), 25px);
     font-weight: 400;
     letter-spacing: -0.02em;
@@ -741,8 +885,8 @@ body {
   }
 
   .info-role {
-    font-size: max(vw(18, 1920), 18px);
-    opacity: 0.5;
+    font-size: max(vw(16, 1920), 16px);
+    color: rgba($text-primary, 0.5);
     margin: 0 0 2rem 0;
   }
 
@@ -767,12 +911,12 @@ body {
   }
 
   .info-block-title {
-    font-size: max(vw(20, 1920), 18px);
+    font-size: max(vw(22, 1920), 20px);
     text-transform: uppercase;
-    opacity: 0.4;
+    color: rgba($text-primary, 0.5);
     font-weight: 400;
     margin-bottom: 2rem;
-    letter-spacing: 0.05em;
+    letter-spacing: -0.05em;
   }
 
   // Column 1: Experience
@@ -783,7 +927,7 @@ body {
       margin-bottom: 1.5rem;
 
       h4 {
-        font-size: max(vw(22, 1920), 20px);
+        font-size: max(vw(20, 1920), 18px);
         font-weight: 400;
         margin: 0 0 0.4rem 0;
       }
