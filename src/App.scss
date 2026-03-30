@@ -24,7 +24,8 @@ $text-primary: #ffffff;
 $text-secondary: #cccccc;
 $text-green: #dedde7;
 $accent-gradient: linear-gradient(135deg, #fff 0%, #a5a5a5 100%);
-$neon-green: #00ff6a;
+// $neon-green: #00ff6a;
+$neon-green: #ffffff;
 $neon-green-dim: rgba(0, 255, 106, 0.15);
 
 $font-display: 'nbarchitekt', 'Azeret Mono', monospace;
@@ -205,12 +206,21 @@ body {
       top: 0px;
       left: 0px;
       width: 100%;
-      height: vh(180);
-      max-height: 200px;
-      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
       font-size: max(vw(16, 1920), 16px);
       z-index: 10;
 
+      &::before {
+        content: '';
+        display: block;
+        width: 100%;
+        height: min(vh(180), 200px);
+        max-height: 200px;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+      }
       * {
         color: $text-primary;
       }
@@ -390,7 +400,7 @@ body {
     position: fixed;
     padding: 2rem;
     left: 0rem;
-    bottom: 0rem;
+    top: calc(2rem + 50px);
     z-index: 10;
     display: flex;
     justify-content: center;
@@ -441,11 +451,7 @@ body {
     color: $neon-green;
     white-space: nowrap;
     opacity: 0;
-    background: linear-gradient(
-      to bottom,
-      rgba($bg-color, 0.95) 60%,
-      transparent
-    );
+    background: linear-gradient(to bottom, rgba($bg-color, 0.95) 60%, transparent);
     backdrop-filter: blur(4px);
 
     &__label {
@@ -467,10 +473,8 @@ body {
     position: relative;
     width: 100%;
     height: 250vh;
-    background-image: linear-gradient(
-        rgba($neon-green, 0.025) 1px,
-        transparent 1px
-      ),
+    background-image:
+      linear-gradient(rgba($neon-green, 0.025) 1px, transparent 1px),
       linear-gradient(90deg, rgba($neon-green, 0.025) 1px, transparent 1px),
       linear-gradient(rgba($neon-green, 0.012) 1px, transparent 1px),
       linear-gradient(90deg, rgba($neon-green, 0.012) 1px, transparent 1px);
@@ -527,13 +531,14 @@ body {
   }
 
   .constellation-line {
-    stroke: rgba($neon-green, 0.1);
-    stroke-width: 0.15;
+    stroke: rgba($neon-green, 0.5);
+    stroke-width: 1px;
     fill: none;
+    vector-effect: non-scaling-stroke;
     transition: stroke 0.5s ease;
 
     &.active {
-      stroke: rgba($neon-green, 0.5);
+      stroke: rgba($neon-green, 1);
       filter: drop-shadow(0 0 4px rgba($neon-green, 0.3));
     }
   }
@@ -544,18 +549,16 @@ body {
     transform: translate(-50%, -50%);
     z-index: 3;
     cursor: pointer;
+    padding: 3rem;
     display: flex;
-    align-items: flex-start;
-    gap: 1.2rem;
+    align-items: center;
+    justify-content: center;
 
     &__point {
       width: 10px;
       height: 10px;
-      border-radius: 1px;
       background: $neon-green;
       box-shadow: 0 0 8px rgba($neon-green, 0.4);
-      flex-shrink: 0;
-      margin-top: 2px;
       transition:
         width 0.4s ease,
         height 0.4s ease,
@@ -563,18 +566,28 @@ body {
       animation: nodePulse 3s ease-in-out infinite;
     }
 
+    &__index {
+      position: absolute;
+      bottom: 36%;
+      left: 64%;
+      // transform: translateX(-50%);
+      margin-bottom: 6px;
+      font-size: max(vw(12, 1920), 11px);
+      color: $neon-green;
+      opacity: 0.6;
+      white-space: nowrap;
+    }
+
     &__info {
+      position: absolute;
+      left: calc(100% + 1.2rem);
+      top: 50%;
+      transform: translateY(-50%);
       display: flex;
       flex-direction: column;
       gap: 0.2rem;
       white-space: nowrap;
       pointer-events: none;
-    }
-
-    &__index {
-      font-size: max(vw(12, 1920), 11px);
-      color: $neon-green;
-      opacity: 0.6;
     }
 
     &__game {
@@ -737,7 +750,8 @@ body {
       max-width: 1000px;
       min-width: 700px;
 
-      > div, > a {
+      > div,
+      > a {
         opacity: 0;
         animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
@@ -779,7 +793,9 @@ body {
           border: 1px solid rgba(white, 0.3);
           padding: 0.6rem 1.4rem;
           border-radius: 2px;
-          transition: border-color 0.3s ease, opacity 0.3s ease;
+          transition:
+            border-color 0.3s ease,
+            opacity 0.3s ease;
           animation-delay: 0.35s;
           width: fit-content;
 

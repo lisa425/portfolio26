@@ -169,8 +169,6 @@ function Info({ onBack, isActive }: InfoProps) {
         ref={contentRef}
         style={{ width: '100%', position: 'relative' }}
       >
-        <BtnBack onClick={onBack} />
-
         {/* Right Side Fixed Navigation */}
         <nav className="info-nav">
           <ul>

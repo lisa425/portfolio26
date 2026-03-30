@@ -22,18 +22,18 @@ type WorkType = {
 
 // Spread vertically across 250vh tall map
 const CONSTELLATION_POSITIONS = [
-  { x: 30, y: 9.7 },
+  { x: 36, y: 9.7 },
   { x: 68, y: 26.7 },
-  { x: 22, y: 45.7 },
-  { x: 72, y: 63.7 },
-  { x: 35, y: 81.7 },
+  { x: 42, y: 40.7 },
+  { x: 62, y: 53.7 },
+  { x: 35, y: 71.7 },
 ]
 
 const CONSTELLATION_LINES: [number, number][] = [
   [0, 1],
   [0, 2],
   [1, 2],
-  [1, 3],
+  // [1, 3],
   [2, 3],
   [3, 4],
 ]
@@ -131,8 +131,8 @@ function Works({ onBack, isActive }: WorksProps) {
         ctx.translate(p.x, p.y)
         ctx.rotate(p.rotation)
         ctx.shadowBlur = 12
-        ctx.shadowColor = `rgba(0, 255, 106, ${alpha})`
-        ctx.fillStyle = `rgba(0, 255, 106, ${alpha})`
+        ctx.shadowColor = `rgba(0, 255, 255, ${alpha})`
+        ctx.fillStyle = `rgba(0, 255, 255, ${alpha})`
         ctx.fillRect(-half, -half, half * 2, half * 2)
         ctx.restore()
         return true
@@ -275,13 +275,12 @@ function Works({ onBack, isActive }: WorksProps) {
             onMouseLeave={() => handleNodeHover(null)}
             onClick={() => handleWorkClick(work)}
           >
+            <span className="constellation-node__index">{String(idx + 1).padStart(2, '0')}</span>
             <div className="constellation-node__point" />
             <div className="constellation-node__info">
-              <span className="constellation-node__index">{String(idx + 1).padStart(2, '0')}</span>
               <span className="constellation-node__game">{work.game}</span>
               <span className="constellation-node__title text-body">{work.title}</span>
               <span className="constellation-node__stack text-body">{work.stack}</span>
-              {/* Thumbnail preview on hover */}
               <div className="constellation-node__thumb">
                 <img
                   src={work.img}
