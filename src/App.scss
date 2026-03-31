@@ -35,6 +35,7 @@ $font-body: 'Space Grotesk', 'IBM Plex Mono', 'Outfit', 'Inter', sans-serif;
   font-family: $font-body;
   text-transform: none;
   letter-spacing: max(-0.5px, -0.03em);
+  text-align: justify;
 }
 
 * {
@@ -208,6 +209,9 @@ body {
       width: 100%;
       font-size: max(vw(16, 1920), 16px);
       z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
 
       &::before {
         content: '';
@@ -225,19 +229,8 @@ body {
         color: $text-primary;
       }
 
-      .logo {
-        cursor: pointer;
-        height: 50px;
-        position: absolute;
-        left: 2rem;
-      }
-
       .title {
-        display: flex;
-        height: 50px;
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
+        cursor: pointer;
       }
 
       .menu-lang {
@@ -251,7 +244,7 @@ body {
         .btn-lang {
           color: rgba(255, 255, 255, 0.5);
           transition: 0.3s;
-          padding: 10px;
+          padding: 0 10px;
           &.on,
           &:hover {
             color: rgba(255, 255, 255, 1);
@@ -425,138 +418,263 @@ body {
     position: relative;
     width: 100%;
     height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-
-    &::-webkit-scrollbar {
-      width: 4px;
-    }
-    &::-webkit-scrollbar-thumb {
-      background: rgba($neon-green, 0.15);
-      border-radius: 4px;
-    }
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   // ─── Terminal Progress Bar ───
   .works-progress {
-    position: sticky;
-    top: 0;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     z-index: 10;
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 0.8rem;
     padding: 1.2rem 2rem;
     font-size: max(vw(12, 1920), 12px);
     color: $neon-green;
     white-space: nowrap;
     opacity: 0;
-    background: linear-gradient(to bottom, rgba($bg-color, 0.95) 60%, transparent);
-    backdrop-filter: blur(4px);
+    pointer-events: none;
 
     &__label {
       opacity: 0.6;
     }
-
     &__bar {
       letter-spacing: 1px;
     }
-
     &__info {
       opacity: 0.8;
       color: rgba($neon-green, 0.7);
     }
   }
 
-  // ─── Constellation Map ───
-  .constellation-map {
-    position: relative;
-    width: 100%;
-    height: 250vh;
-    background-image:
-      linear-gradient(rgba($neon-green, 0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba($neon-green, 0.025) 1px, transparent 1px),
-      linear-gradient(rgba($neon-green, 0.012) 1px, transparent 1px),
-      linear-gradient(90deg, rgba($neon-green, 0.012) 1px, transparent 1px);
-    background-size:
-      200px 200px,
-      200px 200px,
-      40px 40px,
-      40px 40px;
+  // ─── Telemetry Panel ───
+  .works-telemetry {
+    position: absolute;
+    right: 2rem;
+    bottom: 2rem;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0rem 1rem;
+    font-family: $font-display;
+    font-size: max(vw(11, 1920), 10px);
+    color: rgba($neon-green, 0.5);
+    pointer-events: none;
+    opacity: 0;
+    border-left: 1px solid rgba($neon-green, 0.15);
+
+    .telemetry__title {
+      color: rgba($neon-green, 0.3);
+      font-size: max(vw(10, 1920), 9px);
+      margin-bottom: 0.3rem;
+      letter-spacing: 0.08em;
+    }
+
+    .telemetry__row {
+      display: flex;
+      gap: 0.6rem;
+      align-items: baseline;
+      line-height: 1;
+    }
+
+    .telemetry__label {
+      color: rgba($neon-green, 0.35);
+      min-width: 2.2em;
+    }
+
+    .telemetry__val {
+      color: rgba($neon-green, 0.6);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+      white-space: pre;
+    }
+
+    .telemetry__row--vel {
+      margin-top: 0.2rem;
+      padding-top: 0.3rem;
+      border-top: 1px solid rgba($neon-green, 0.08);
+
+      .telemetry__val {
+        color: rgba($neon-green, 0.4);
+      }
+    }
   }
 
+  // ─── 3D Scene Container ───
+  .constellation-scene {
+    flex: 1;
+    position: relative;
+    perspective: 2000px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    user-select: none;
+    overflow: hidden;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  // ─── Particle Canvas ───
   .constellation-canvas {
     position: absolute;
     top: 0;
     left: 0;
     pointer-events: none;
-    z-index: 2;
+    z-index: 5;
   }
 
-  // ─── Grid coordinate labels ───
-  .constellation-grid-label {
-    position: absolute;
-    font-size: 10px;
-    color: rgba($neon-green, 0.2);
-    z-index: 1;
-    pointer-events: none;
-    opacity: 0;
+  // (SVG lines removed)
 
-    &.top-left {
-      top: 1rem;
-      left: 1rem;
-    }
-    &.top-right {
-      top: 1rem;
-      right: 1rem;
-    }
-    &.bottom-left {
-      bottom: 1rem;
-      left: 1rem;
-    }
-    &.bottom-right {
-      bottom: 1rem;
-      right: 1rem;
-    }
-  }
-
-  // ─── SVG Lines ───
-  .constellation-svg {
+  // ─── 3D World ───
+  .scene-3d {
     position: absolute;
-    inset: 0;
     width: 100%;
     height: 100%;
-    z-index: 1;
-    pointer-events: none;
+    transform-style: preserve-3d;
+    transform-origin: center center;
   }
 
-  .constellation-line {
-    stroke: rgba($neon-green, 0.5);
-    stroke-width: 1px;
-    fill: none;
-    vector-effect: non-scaling-stroke;
-    transition: stroke 0.5s ease;
+  // ─── Entry Bloom (inside scene-3d, inherits 3D tilt) ───
+  .works-bloom {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1200px;
+    height: 1200px;
+    transform: translate(-50%, -50%) rotateX(-20deg) rotateY(20deg);
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 0;
+    background: radial-gradient(
+      circle,
+      rgba($neon-green, 0.18) 0%,
+      rgba($neon-green, 0.08) 25%,
+      rgba($neon-green, 0.02) 50%,
+      transparent 70%
+    );
+    will-change: opacity;
+
+    &.pulsing {
+      animation: bloomPulse 4s ease-in-out infinite;
+    }
+  }
+
+  @keyframes bloomPulse {
+    0%,
+    100% {
+      opacity: 0.12;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  // ─── Center Glow (Wormhole Core) ───
+  .scene-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba($neon-green, 0.7) 0%, rgba($neon-green, 0.5) 70%, rgba(#fff, 0) 100%);
+    box-shadow:
+      0 0 60px rgba($neon-green, 0.5),
+      0 0 130px rgba($neon-green, 0.2),
+      0 0 240px rgba($neon-green, 0.08);
+    z-index: 2;
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+
+  // ─── Orbital Rings ───
+  .orbital-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    border: 1px solid rgba($neon-green, 1);
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: var(--ring-opacity, 0.1);
+    box-shadow: 0 0 10px rgba($neon-green, 0.2);
+    transform-style: preserve-3d;
+    will-change: transform, opacity;
+    mask-image: conic-gradient(#fff var(--sweep, 360deg), transparent var(--sweep, 360deg));
+    -webkit-mask-image: conic-gradient(#fff var(--sweep, 360deg), transparent var(--sweep, 360deg));
+  }
+
+  .orbital-ring-highlight {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    border-radius: 50%;
+    pointer-events: none;
+    transform-style: preserve-3d;
+    border: 1px solid rgba($neon-green, 0.8);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    will-change: opacity;
+    mask-image: conic-gradient(
+      from var(--start-angle, 0deg),
+      rgba(255, 255, 255, 0.2) 0deg,
+      #fff var(--draw-sweep, 0deg),
+      transparent var(--draw-sweep, 0deg)
+    );
+    -webkit-mask-image: conic-gradient(
+      from var(--start-angle, 0deg),
+      rgba(255, 255, 255, 0.2) 0deg,
+      #fff var(--draw-sweep, 0deg),
+      transparent var(--draw-sweep, 0deg)
+    );
 
     &.active {
-      stroke: rgba($neon-green, 1);
-      filter: drop-shadow(0 0 4px rgba($neon-green, 0.3));
+      opacity: 1;
+      filter: drop-shadow(0 0 10px rgba($neon-green, 0.6)) drop-shadow(0 0 20px rgba($neon-green, 0.4));
     }
   }
 
   // ─── Constellation Nodes ───
+  .node-positioner {
+    pointer-events: none;
+  }
+
   .constellation-node {
+    pointer-events: auto;
     position: absolute;
-    transform: translate(-50%, -50%);
-    z-index: 3;
+    left: 50%;
+    top: 50%;
+    z-index: 10;
     cursor: pointer;
-    padding: 3rem;
+    padding: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    transform-style: flat;
+    will-change: transform, opacity;
+
+    &.hovered {
+      z-index: 100;
+      .constellation-node__point {
+        width: 18px;
+        height: 18px;
+        box-shadow: 0 0 16px rgba($neon-green, 0.8);
+      }
+    }
 
     &__point {
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       background: $neon-green;
       box-shadow: 0 0 8px rgba($neon-green, 0.4);
       transition:
@@ -568,19 +686,17 @@ body {
 
     &__index {
       position: absolute;
-      bottom: 36%;
-      left: 64%;
-      // transform: translateX(-50%);
-      margin-bottom: 6px;
-      font-size: max(vw(12, 1920), 11px);
+      bottom: 32%;
+      left: 75%;
+      font-size: max(vw(16, 1920), 14px);
       color: $neon-green;
-      opacity: 0.6;
+      opacity: 0.5;
       white-space: nowrap;
     }
 
     &__info {
       position: absolute;
-      left: calc(100% + 1.2rem);
+      left: calc(100% + 1rem);
       top: 50%;
       transform: translateY(-50%);
       display: flex;
@@ -591,7 +707,7 @@ body {
     }
 
     &__game {
-      font-size: max(vw(16, 1920), 14px);
+      font-size: max(vw(18, 1920), 16px);
       color: $text-primary;
       opacity: 0;
       transform: translateX(-8px);
@@ -599,9 +715,8 @@ body {
         opacity 0.4s ease,
         transform 0.4s ease;
     }
-
     &__title {
-      font-size: max(vw(12, 1920), 11px);
+      font-size: max(vw(15, 1920), 14px);
       color: rgba($text-primary, 0.5);
       opacity: 0;
       transform: translateX(-8px);
@@ -609,9 +724,8 @@ body {
         opacity 0.4s ease 0.05s,
         transform 0.4s ease 0.05s;
     }
-
     &__stack {
-      font-size: max(vw(11, 1920), 10px);
+      font-size: max(vw(13, 1920), 12px);
       color: rgba($neon-green, 0.4);
       opacity: 0;
       transform: translateX(-8px);
@@ -619,9 +733,8 @@ body {
         opacity 0.4s ease 0.1s,
         transform 0.4s ease 0.1s;
     }
-
     &__thumb {
-      width: max(vw(200, 1920), 160px);
+      width: max(vw(180, 1920), 140px);
       aspect-ratio: 3 / 4;
       overflow: hidden;
       border: 1px solid rgba($neon-green, 0.15);
@@ -631,7 +744,6 @@ body {
       transition:
         opacity 0.5s ease 0.1s,
         transform 0.5s ease 0.1s;
-
       img {
         width: 100%;
         height: 100%;
@@ -641,30 +753,27 @@ body {
       }
     }
 
-    // Hover state
+    // Hover
     &.hovered {
       .constellation-node__point {
-        width: 14px;
-        height: 14px;
+        width: 12px;
+        height: 12px;
         box-shadow:
           0 0 20px rgba($neon-green, 0.6),
           0 0 50px rgba($neon-green, 0.15);
         animation: none;
       }
-
       .constellation-node__game,
       .constellation-node__title,
       .constellation-node__stack {
         opacity: 1;
         transform: translateX(0);
       }
-
       .constellation-node__thumb {
         opacity: 1;
         transform: translateY(0);
         border-color: rgba($neon-green, 0.3);
         box-shadow: 0 0 30px rgba($neon-green, 0.08);
-
         img {
           filter: grayscale(0%);
         }
@@ -911,7 +1020,7 @@ body {
     opacity: 0.8;
     line-height: 1.8;
     word-break: keep-all;
-    max-width: 90%;
+    width: max(vw(400, 1920), 400px);
   }
 
   .info-contact {
@@ -938,6 +1047,7 @@ body {
   // Column 1: Experience
   .job-entry {
     margin-bottom: 3rem;
+    width: max(vw(550, 1920), 544px);
 
     &__header {
       margin-bottom: 1.5rem;
