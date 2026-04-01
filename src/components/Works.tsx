@@ -2,10 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import gsap from 'gsap'
 import { createPortal } from 'react-dom'
-import BtnBack from './BtnBack'
 
 interface WorksProps {
-  onBack: () => void
   isActive: boolean
 }
 
@@ -22,7 +20,7 @@ type WorkType = {
 
 // ─── 3D Configuration ───
 const DEG = Math.PI / 180
-const INITIAL_ROT = { x: -70, y: 30 }
+const INITIAL_ROT = { x: -50, y: 43 }
 const AUTO_ROTATE_SPEED = 0.06
 const DRAG_SENSITIVITY = 0.35
 const MOMENTUM_DECAY = 0.94
@@ -69,14 +67,37 @@ function getPointOnRing(ringIndex: number, angleDeg: number) {
 // Node positions explicitly mapped strictly to the inner 5 rings to ensure they are always visible
 const NODE_3D = ORBITAL_RINGS.slice(0, 5).map((ring, i) => getPointOnRing(i, ring.angle))
 
+const SCENE_PERSPECTIVE = 2000 // matches CSS perspective: 2000px
+const HOVER_RADIUS = 60 // screen-space px threshold
+
+// Project a 3D node position through scene rotation to 2D screen coords (origin = scene center)
+// scene-3d transform: rotateX(rx) rotateY(ry) → matrix = Rx * Ry → applied as Rx(Ry(p))
+function projectToScreen(
+  pos: { x: number; y: number; z: number },
+  rxDeg: number,
+  ryDeg: number,
+): { sx: number; sy: number } {
+  const rx = rxDeg * DEG
+  const ry = ryDeg * DEG
+  const x1 = pos.x * Math.cos(ry) + pos.z * Math.sin(ry)
+  const y1 = pos.y
+  const z1 = -pos.x * Math.sin(ry) + pos.z * Math.cos(ry)
+  const x2 = x1
+  const y2 = y1 * Math.cos(rx) - z1 * Math.sin(rx)
+  const z2 = y1 * Math.sin(rx) + z1 * Math.cos(rx)
+  const scale = SCENE_PERSPECTIVE / (SCENE_PERSPECTIVE - z2)
+  return { sx: x2 * scale, sy: y2 * scale }
+}
+
 // ─── Component ───
-function Works({ onBack, isActive }: WorksProps) {
+function Works({ isActive }: WorksProps) {
   const { t } = useTranslation()
   const works = t('works.items', { returnObjects: true }) as WorkType[]
 
   const [activeWork, setActiveWork] = useState<WorkType | null>(null)
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null) // ring highlight effects
   const hoveredIndexRef = useRef<number | null>(null) // sync for animation loop
+  const [previewIndex, setPreviewIndex] = useState<number>(0) // progress bar display
   const [isOpen, setIsOpen] = useState(false)
 
   // DOM refs
@@ -85,14 +106,19 @@ function Works({ onBack, isActive }: WorksProps) {
   const ringEls = useRef<(HTMLDivElement | null)[]>([])
   const ringHighlightEls = useRef<(HTMLDivElement | null)[]>([])
   const telemetryRef = useRef<HTMLDivElement>(null)
+  // One ref per work panel — show/hide managed via direct DOM (no React re-render)
+  const panelRefs = useRef<(HTMLDivElement | null)[]>([])
+  const activePanelIdxRef = useRef<number | null>(null)
 
   // Animation state (refs for perf — no re-renders during drag)
   const rotRef = useRef({ ...INITIAL_ROT })
   const isDragRef = useRef(false)
+  const hasDraggedRef = useRef(false)
   const dragStartRef = useRef({ mx: 0, my: 0, rx: 0, ry: 0 })
   const velRef = useRef({ x: 0, y: 0 })
-  const prevMouseRef = useRef({ x: 0, y: 0 })
   const isActiveRef = useRef(false)
+  const worksRef = useRef<WorkType[]>([])
+  worksRef.current = works
   const entryDoneRef = useRef(false)
   const entryTlRef = useRef<gsap.core.Timeline | null>(null)
 
@@ -173,167 +199,271 @@ function Works({ onBack, isActive }: WorksProps) {
     return () => clearInterval(telemetryIntervalRef.current)
   }, [])
 
-  // ─── Drag handlers ───
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    // Don't start drag on interactive node children
-    if ((e.target as HTMLElement).closest('.constellation-node')) return
-    isDragRef.current = true
-    dragStartRef.current = {
-      mx: e.clientX,
-      my: e.clientY,
-      rx: rotRef.current.x,
-      ry: rotRef.current.y,
-    }
-    velRef.current = { x: 0, y: 0 }
-    prevMouseRef.current = { x: e.clientX, y: e.clientY }
-    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-  }, [])
-
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!isDragRef.current) return
-    const dx = e.clientX - dragStartRef.current.mx
-    const dy = e.clientY - dragStartRef.current.my
-    const newRx = dragStartRef.current.rx + dy * DRAG_SENSITIVITY
-    const clampedRx = Math.max(-90, Math.min(-50, newRx))
-    const newRy = dragStartRef.current.ry + dx * DRAG_SENSITIVITY
-    velRef.current = {
-      x: (clampedRx - rotRef.current.x) * 0.6,
-      y: (newRy - rotRef.current.y) * 0.6,
-    }
-    rotRef.current.x = clampedRx
-    rotRef.current.y = newRy
-    prevMouseRef.current = { x: e.clientX, y: e.clientY }
-  }, [])
-
-  const handlePointerUp = useCallback(() => {
-    isDragRef.current = false
-  }, [])
-
   // ─── Hover states ───
+  // Updates ring highlight effects via React state; panel show/hide handled separately via DOM.
   const handleNodeHover = useCallback((idx: number | null) => {
     setHoveredIndex(idx)
     hoveredIndexRef.current = idx
+    if (idx !== null) setPreviewIndex(idx)
   }, [])
+
+  const handleWorkClick = useCallback((work: WorkType) => {
+    setActiveWork(work)
+    setIsOpen(true)
+  }, [])
+
+  // ─── Projected hover detection ───
+  // Uses 3D→2D projection to find the hovered node, then directly manipulates
+  // the mapped panel DOM element — zero React re-renders for panel show/hide.
+  const calculateHover = useCallback(
+    (clientX: number, clientY: number) => {
+      const scene = sceneRef.current
+      if (!scene) return
+      const rect = scene.getBoundingClientRect()
+      const mx = clientX - rect.left - rect.width / 2
+      const my = clientY - rect.top - rect.height / 2
+
+      const candidates: { idx: number; dist: number; sx: number; sy: number }[] = []
+      NODE_3D.forEach((pos, idx) => {
+        const { sx, sy } = projectToScreen(pos, rotRef.current.x, rotRef.current.y)
+        const dist = Math.sqrt((mx - sx) ** 2 + (my - sy) ** 2)
+        if (dist <= HOVER_RADIUS) candidates.push({ idx, dist, sx, sy })
+      })
+
+      let bestIdx: number | null = null
+      if (candidates.length > 0) {
+        candidates.sort((a, b) => (Math.abs(a.dist - b.dist) < 20 ? a.idx - b.idx : a.dist - b.dist))
+        bestIdx = candidates[0].idx
+
+        const nodeScreenX = rect.left + rect.width / 2 + candidates[0].sx
+        const nodeScreenY = rect.top + rect.height / 2 + candidates[0].sy
+        const side = nodeScreenX < window.innerWidth / 2 ? 'left' : 'right'
+
+        // Hide previous panel if switching nodes
+        if (activePanelIdxRef.current !== null && activePanelIdxRef.current !== bestIdx) {
+          panelRefs.current[activePanelIdxRef.current]?.classList.remove('active')
+        }
+        // Position and show new panel
+        const panel = panelRefs.current[bestIdx]
+        if (panel) {
+          panel.style.top = `${nodeScreenY}px`
+          panel.style.left = side === 'right' ? `${nodeScreenX + 60}px` : 'auto'
+          panel.style.right = side === 'left' ? `${window.innerWidth - nodeScreenX + 60}px` : 'auto'
+          panel.classList.add('active')
+        }
+        activePanelIdxRef.current = bestIdx
+      } else {
+        // No node — hide active panel
+        if (activePanelIdxRef.current !== null) {
+          panelRefs.current[activePanelIdxRef.current]?.classList.remove('active')
+          activePanelIdxRef.current = null
+        }
+      }
+
+      handleNodeHover(bestIdx)
+      scene.style.cursor = bestIdx !== null ? 'pointer' : 'grab'
+    },
+    [handleNodeHover],
+  )
+
+  // ─── Pointer handlers ───
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      isDragRef.current = true
+      hasDraggedRef.current = false
+      // Hide active panel when drag starts
+      if (activePanelIdxRef.current !== null) {
+        panelRefs.current[activePanelIdxRef.current]?.classList.remove('active')
+        activePanelIdxRef.current = null
+      }
+      handleNodeHover(null)
+      dragStartRef.current = {
+        mx: e.clientX,
+        my: e.clientY,
+        rx: rotRef.current.x,
+        ry: rotRef.current.y,
+      }
+      velRef.current = { x: 0, y: 0 }
+      if (sceneRef.current) sceneRef.current.style.cursor = 'grabbing'
+      ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    },
+    [handleNodeHover],
+  )
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (isDragRef.current) {
+        const dx = e.clientX - dragStartRef.current.mx
+        const dy = e.clientY - dragStartRef.current.my
+        if (Math.abs(dx) + Math.abs(dy) > 5) hasDraggedRef.current = true
+        const newRx = dragStartRef.current.rx + dy * DRAG_SENSITIVITY
+        const clampedRx = Math.max(-90, Math.min(-50, newRx))
+        const newRy = dragStartRef.current.ry + dx * DRAG_SENSITIVITY
+        velRef.current = {
+          x: (clampedRx - rotRef.current.x) * 0.6,
+          y: (newRy - rotRef.current.y) * 0.6,
+        }
+        rotRef.current.x = clampedRx
+        rotRef.current.y = newRy
+        return
+      }
+      calculateHover(e.clientX, e.clientY)
+    },
+    [calculateHover],
+  )
+
+  const handlePointerUp = useCallback(() => {
+    if (!isDragRef.current) return
+    isDragRef.current = false
+    if (!hasDraggedRef.current && hoveredIndexRef.current !== null) {
+      const work = worksRef.current[hoveredIndexRef.current]
+      if (work) handleWorkClick(work)
+    }
+    if (sceneRef.current) {
+      sceneRef.current.style.cursor = hoveredIndexRef.current !== null ? 'pointer' : 'grab'
+    }
+  }, [handleWorkClick])
+
+  const handlePointerLeave = useCallback(() => {
+    isDragRef.current = false
+    if (activePanelIdxRef.current !== null) {
+      panelRefs.current[activePanelIdxRef.current]?.classList.remove('active')
+      activePanelIdxRef.current = null
+    }
+    handleNodeHover(null)
+    if (sceneRef.current) sceneRef.current.style.cursor = 'grab'
+  }, [handleNodeHover])
 
   // ─── Entry / exit animations ───
   useEffect(() => {
     if (isActive) {
       // StrictMode guard: skip if entry animation is already playing
-      if (entryTlRef.current?.isActive()) return;
+      if (entryTlRef.current?.isActive()) return
 
-      entryTlRef.current?.kill();
-      rotRef.current = { ...INITIAL_ROT };
-      velRef.current = { x: 0, y: 0 };
-      entryDoneRef.current = false;
+      entryTlRef.current?.kill()
+      rotRef.current = { ...INITIAL_ROT }
+      velRef.current = { x: 0, y: 0 }
+      entryDoneRef.current = false
 
       if (scene3dRef.current) {
-        scene3dRef.current.style.transform = `rotateX(${INITIAL_ROT.x}deg) rotateY(${INITIAL_ROT.y}deg)`;
-        scene3dRef.current.style.setProperty('--rx', `${INITIAL_ROT.x}deg`);
-        scene3dRef.current.style.setProperty('--ry', `${INITIAL_ROT.y}deg`);
+        scene3dRef.current.style.transform = `rotateX(${INITIAL_ROT.x}deg) rotateY(${INITIAL_ROT.y}deg)`
+        scene3dRef.current.style.setProperty('--rx', `${INITIAL_ROT.x}deg`)
+        scene3dRef.current.style.setProperty('--ry', `${INITIAL_ROT.y}deg`)
       }
 
       const tl = gsap.timeline({
-        onComplete: () => { entryDoneRef.current = true; },
-      });
-      entryTlRef.current = tl;
+        onComplete: () => {
+          entryDoneRef.current = true
+        },
+      })
+      entryTlRef.current = tl
 
       ORBITAL_RINGS.forEach((_, i) => {
         if (ringEls.current[i]) {
-          ringEls.current[i]!.style.setProperty('--sweep', '360deg');
+          ringEls.current[i]!.style.setProperty('--sweep', '360deg')
         }
-      });
+      })
 
+      // Phase 1: Everything fades/scales in together (no mask repaints)
       tl.fromTo(
         '.scene-center',
         { scale: 0, opacity: 0.6 },
-        { scale: 1, opacity: 1, duration: 1.6, ease: 'power3.out' },
+        { scale: 1, opacity: 1, duration: 1.4, ease: 'power3.out' },
         0,
-      );
-
-      tl.fromTo(
-        '.orbital-ring',
-        { scale: 0 },
-        { scale: 1, duration: 1.2, stagger: 0.06, ease: 'power2.out' },
-        0.1,
-      );
-
-      tl.add(() => {
-        ORBITAL_RINGS.forEach((_, i) => {
-          if (ringEls.current[i]) {
-            ringEls.current[i]!.style.setProperty('--sweep', '0deg');
-          }
-        });
-      }, 0.8);
-
-      const sweeps = ORBITAL_RINGS.map(() => ({ val: 0 }));
-      tl.to(sweeps, {
-        val: 360,
-        duration: 1.8,
-        stagger: 0.06,
-        ease: 'power2.out',
-        onUpdate() {
-          sweeps.forEach((sw, i) => {
-            if (ringEls.current[i]) {
-              ringEls.current[i]!.style.setProperty('--sweep', `${sw.val}deg`);
-            }
-          });
-        },
-      }, 0.8);
-
+      )
+      tl.fromTo('.orbital-ring', { scale: 0 }, { scale: 1, duration: 1.0, stagger: 0.05, ease: 'power2.out' }, 0.1)
       tl.fromTo(
         '.constellation-node',
         { xPercent: -50, yPercent: -50, scale: 0, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.6, stagger: 0.08, ease: 'back.out(1.5)' },
-        1.0,
-      );
-
-      tl.fromTo('.works-telemetry', { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.6 }, 1.2);
-      tl.fromTo('.works-progress', { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.6 }, 1.3);
+        { scale: 1, opacity: 1, duration: 0.6, stagger: 0.06, ease: 'back.out(1.5)' },
+        0.3,
+      )
+      tl.fromTo('.works-telemetry', { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.5 }, 0.5)
+      tl.fromTo('.works-progress', { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.5 }, 0.6)
     } else {
-      entryTlRef.current?.kill();
-      entryTlRef.current = null;
-      entryDoneRef.current = false;
+      entryTlRef.current?.kill()
+      entryTlRef.current = null
+      entryDoneRef.current = false
 
-      gsap.set('.orbital-ring', { scale: 0 });
-      gsap.set('.scene-center', { scale: 0, opacity: 0 });
+      gsap.set('.orbital-ring', { scale: 0 })
+      gsap.set('.scene-center', { scale: 0, opacity: 0 })
       gsap.set('.constellation-node', {
-        xPercent: -50, yPercent: -50, scale: 0, opacity: 0,
-      });
-      gsap.set('.works-progress', { opacity: 0 });
-      gsap.set('.works-telemetry', { opacity: 0 });
+        xPercent: -50,
+        yPercent: -50,
+        scale: 0,
+        opacity: 0,
+      })
+      gsap.set('.works-progress', { opacity: 0 })
+      gsap.set('.works-telemetry', { opacity: 0 })
 
       ORBITAL_RINGS.forEach((_, i) => {
         if (ringEls.current[i]) {
-          ringEls.current[i]!.style.setProperty('--sweep', '0deg');
+          ringEls.current[i]!.style.setProperty('--sweep', '0deg')
         }
-      });
+      })
     }
   }, [isActive])
 
-  const handleWorkClick = (work: WorkType) => {
-    setActiveWork(work)
-    setIsOpen(true)
-  }
   const closeDetail = () => {
     setIsOpen(false)
   }
 
   return (
     <div className="inner works__inner">
-      {/* <BtnBack onClick={onBack} /> */}
-
       {/* Terminal Progress Bar */}
-      <div className="works-progress">
-        <span className="works-progress__label">&gt; WORK LIST ───</span>
-        <span className="works-progress__bar">
-          [{works.map((_, i) => (hoveredIndex !== null && i <= hoveredIndex ? '█' : '░')).join('')}]
-        </span>
+      <div className="terminal-bar works-progress">
+        <span className="terminal-bar__label">&gt; WORK LIST ───</span>
+        <span className="terminal-bar__bar">[{works.map((_, i) => (i <= previewIndex ? '█' : '░')).join('')}]</span>
         <span className="works-progress__info text-body">
-          {hoveredIndex !== null
-            ? `${String(hoveredIndex + 1).padStart(2, '0')}/${String(works.length).padStart(2, '0')} ─── ${works[hoveredIndex].game}`
-            : `00/${String(works.length).padStart(2, '0')} ─── SELECT TARGET`}
+          {`${String(previewIndex + 1).padStart(2, '0')}/${String(works.length).padStart(2, '0')} ─── ${works[previewIndex]?.game ?? ''}`}
         </span>
       </div>
+
+      {/* Preview Panels — one per work, each managed via DOM ref (no re-render on hover) */}
+      {works.map((work, idx) => (
+        <div
+          key={`preview-${work.id}`}
+          className="works-preview"
+          ref={(el) => {
+            panelRefs.current[idx] = el
+          }}
+        >
+          <div className="works-preview__header">
+            <span className="works-preview__panel-id">◼︎ TARGET NODE</span>
+            <span className="works-preview__index">
+              {String(idx + 1).padStart(2, '0')}/{String(works.length).padStart(2, '0')}
+            </span>
+          </div>
+          <div className="works-preview__thumb">
+            <img
+              src={work.img}
+              alt={work.title}
+            />
+            <div className="works-preview__thumb-scan" />
+          </div>
+          <div className="works-preview__data">
+            <div className="works-preview__row">
+              <span className="works-preview__key">GAME</span>
+              <span className="works-preview__val">{work.game}</span>
+            </div>
+            <div className="works-preview__row">
+              <span className="works-preview__key">NAME</span>
+              <span className="works-preview__val works-preview__val--title">{work.title}</span>
+            </div>
+            <div className="works-preview__row">
+              <span className="works-preview__key">TECH</span>
+              <span className="works-preview__val">{work.stack}</span>
+            </div>
+          </div>
+          <div className="works-preview__footer">
+            <span className="works-preview__status">
+              <span className="works-preview__dot" />
+              ONLINE
+            </span>
+            <span className="works-preview__action">[ ENTER ]</span>
+          </div>
+        </div>
+      ))}
 
       {/* Telemetry Panel */}
       <div
@@ -348,7 +478,7 @@ function Works({ onBack, isActive }: WorksProps) {
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
       >
         {/* Fixed overlays (not affected by drag rotation) */}
         <div className="works-bloom pulsing" />
@@ -416,25 +546,9 @@ function Works({ onBack, isActive }: WorksProps) {
                   transform: `translate3d(${pos.x}px, ${pos.y}px, ${pos.z}px) rotateY(calc(-1 * var(--ry, 30deg))) rotateX(calc(-1 * var(--rx, -18deg)))`,
                 }}
               >
-                <div
-                  className={`constellation-node ${hoveredIndex === idx ? 'hovered' : ''}`}
-                  onMouseEnter={() => handleNodeHover(idx)}
-                  onMouseLeave={() => handleNodeHover(null)}
-                  onClick={() => handleWorkClick(work)}
-                >
-                  <span className="constellation-node__index">{String(idx + 1).padStart(2, '0')}</span>
+                <div className={`constellation-node ${hoveredIndex === idx ? 'hovered' : ''}`}>
+                  <span className="constellation-node__index">{String(idx + 1).padStart(3, '0')}</span>
                   <div className="constellation-node__point" />
-                  <div className="constellation-node__info">
-                    <span className="constellation-node__game">{work.game}</span>
-                    <span className="constellation-node__title text-body">{work.title}</span>
-                    <span className="constellation-node__stack text-body">{work.stack}</span>
-                    <div className="constellation-node__thumb">
-                      <img
-                        src={work.img}
-                        alt={work.title}
-                      />
-                    </div>
-                  </div>
                 </div>
               </div>
             )

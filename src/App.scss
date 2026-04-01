@@ -38,6 +38,30 @@ $font-body: 'Space Grotesk', 'IBM Plex Mono', 'Outfit', 'Inter', sans-serif;
   text-align: justify;
 }
 
+// ─── Shared Terminal Bar ───
+.terminal-bar {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 2rem;
+  font-size: max(vw(12, 1920), 12px);
+  color: $neon-green;
+  white-space: nowrap;
+  z-index: 100;
+
+  .terminal-bar__label {
+    opacity: 0.6;
+  }
+
+  .terminal-bar__bar {
+    letter-spacing: 1px;
+  }
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -49,7 +73,7 @@ body {
   background-color: $bg-color;
   color: $text-primary;
   overflow: hidden;
-  cursor: url('/assets/images/cursor.png'), auto;
+  // cursor: url('/assets/images/cursor.png'), auto;
 }
 
 // ─── Loading Overlay ───
@@ -212,6 +236,13 @@ body {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      pointer-events: none;
+
+      .title,
+      .menu-lang,
+      .menu-nav {
+        pointer-events: auto;
+      }
 
       &::before {
         content: '';
@@ -423,29 +454,213 @@ body {
     flex-direction: column;
   }
 
+  // ─── HUD Preview Panel ───
+  .works-preview {
+    position: fixed;
+    z-index: 100;
+    width: max(vw(300, 1920), 300px);
+    background: rgba(0, 0, 0, 0.75);
+    box-shadow: 0 0 50px 20px rgba(0, 0, 0, 0.2);
+    font-family: $font-display;
+    opacity: 0;
+    // -50% centers panel on node vertically; 6px is slide-in offset
+    transform: translateY(calc(-50% + 6px));
+    transition:
+      opacity 0.15s ease,
+      transform 0.15s ease;
+    pointer-events: none;
+    border: 1px solid rgba($neon-green, 0.12);
+
+    // 4-corner bracket system via gradient trick (no extra elements needed)
+    // &::before {
+    //   content: '';
+    //   position: absolute;
+    //   inset: -10px;
+    //   pointer-events: none;
+    //   opacity: 0.15;
+    //   background:
+    //     // top-left corner
+    //     linear-gradient($neon-green, $neon-green) top left / 10px 1.5px no-repeat,
+    //     linear-gradient($neon-green, $neon-green) top left / 1.5px 10px no-repeat,
+    //     // top-right corner
+    //     linear-gradient($neon-green, $neon-green) top right / 10px 1.5px no-repeat,
+    //     linear-gradient($neon-green, $neon-green) top right / 1.5px 10px no-repeat,
+    //     // bottom-left corner
+    //     linear-gradient($neon-green, $neon-green) bottom left / 10px 1.5px no-repeat,
+    //     linear-gradient($neon-green, $neon-green) bottom left / 1.5px 10px no-repeat,
+    //     // bottom-right corner
+    //     linear-gradient($neon-green, $neon-green) bottom right / 10px 1.5px no-repeat,
+    //     linear-gradient($neon-green, $neon-green) bottom right / 1.5px 10px no-repeat;
+    // }
+
+    &.active {
+      opacity: 1;
+      transform: translateY(-50%);
+    }
+
+    // ── header bar ──
+    &__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 0.6rem;
+      border-bottom: 1px solid rgba($neon-green, 0.12);
+      background: rgba($neon-green, 0.04);
+    }
+
+    &__panel-id {
+      font-size: max(vw(12, 1920), 11px);
+      color: $neon-green;
+      letter-spacing: 0.1em;
+    }
+
+    &__index {
+      font-size: max(vw(12, 1920), 11px);
+      color: rgba($neon-green, 0.45);
+      letter-spacing: 0.05em;
+    }
+
+    // ── thumbnail ──
+    &__thumb {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: grayscale(40%) brightness(0.8);
+        display: block;
+      }
+    }
+
+    // Scanline overlay on thumbnail
+    &__thumb-scan {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 3px,
+        rgba(0, 0, 0, 0.18) 3px,
+        rgba(0, 0, 0, 0.18) 4px
+      );
+      pointer-events: none;
+
+      // Top-left coord marker
+      &::before {
+        content: '+ + +';
+        position: absolute;
+        top: 0.4rem;
+        left: 0.5rem;
+        font-size: 8px;
+        color: rgba($neon-green, 0.35);
+        letter-spacing: 0.3em;
+      }
+      // Bottom-right coord marker
+      &::after {
+        content: attr(data-coords);
+        position: absolute;
+        bottom: 0.4rem;
+        right: 0.5rem;
+        font-size: 8px;
+        color: rgba($neon-green, 0.25);
+        letter-spacing: 0.05em;
+      }
+    }
+
+    // ── data rows ──
+    &__data {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 1px;
+    }
+
+    &__row {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      padding: 0.3rem 0.6rem;
+      border-bottom: 1px solid rgba($neon-green, 0.06);
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    &__key {
+      font-size: max(vw(10, 1920), 10px);
+      color: rgba($neon-green, 0.3);
+      letter-spacing: 0.12em;
+      flex-shrink: 0;
+      width: 2.4em;
+    }
+
+    &__val {
+      font-size: max(vw(10, 1920), 10px);
+      color: rgba($neon-green, 0.65);
+      letter-spacing: 0.04em;
+      line-height: 1.3;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    // ── footer status bar ──
+    &__footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.35rem 0.6rem;
+      border-top: 1px solid rgba($neon-green, 0.12);
+      background: rgba($neon-green, 0.03);
+    }
+
+    &__status {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: max(vw(10, 1920), 10px);
+      color: rgba($neon-green, 0.45);
+      letter-spacing: 0.1em;
+    }
+
+    &__dot {
+      width: 5px;
+      height: 5px;
+      background: $neon-green;
+      border-radius: 50%;
+      box-shadow: 0 0 6px $neon-green;
+      animation: dotBlink 2s ease-in-out infinite;
+      margin-top: 1px;
+    }
+
+    &__action {
+      font-size: max(vw(10, 1920), 10px);
+      color: rgba($neon-green, 0.25);
+      letter-spacing: 0.1em;
+    }
+  }
+
+  @keyframes dotBlink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.3;
+    }
+  }
+
   // ─── Terminal Progress Bar ───
   .works-progress {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
     z-index: 10;
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    padding: 1.2rem 2rem;
-    font-size: max(vw(12, 1920), 12px);
-    color: $neon-green;
-    white-space: nowrap;
     opacity: 0;
     pointer-events: none;
 
-    &__label {
-      opacity: 0.6;
-    }
-    &__bar {
-      letter-spacing: 1px;
-    }
     &__info {
       opacity: 0.8;
       color: rgba($neon-green, 0.7);
@@ -645,18 +860,19 @@ body {
   }
 
   // ─── Constellation Nodes ───
+  // All pointer events handled at scene level via 3D→2D projection.
+  // Nodes must never intercept events themselves to avoid 3D stacking issues.
   .node-positioner {
     pointer-events: none;
   }
 
   .constellation-node {
-    pointer-events: auto;
+    pointer-events: none;
     position: absolute;
     left: 50%;
     top: 50%;
     z-index: 10;
-    cursor: pointer;
-    padding: 1rem;
+    padding: 1.8rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -666,117 +882,47 @@ body {
     &.hovered {
       z-index: 100;
       .constellation-node__point {
-        width: 18px;
-        height: 18px;
-        box-shadow: 0 0 16px rgba($neon-green, 0.8);
+        width: 20px;
+        height: 20px;
+        box-shadow:
+          0 0 20px rgba($neon-green, 0.9),
+          0 0 40px rgba($neon-green, 0.4);
+      }
+      .constellation-node__index {
+        opacity: 1;
       }
     }
 
     &__point {
-      width: 12px;
-      height: 12px;
+      width: 14px;
+      height: 14px;
       background: $neon-green;
-      box-shadow: 0 0 8px rgba($neon-green, 0.4);
+      box-shadow: 0 0 10px rgba($neon-green, 0.5);
       transition:
-        width 0.4s ease,
-        height 0.4s ease,
-        box-shadow 0.4s ease;
+        width 0.3s ease,
+        height 0.3s ease,
+        box-shadow 0.3s ease;
       animation: nodePulse 3s ease-in-out infinite;
     }
 
     &__index {
       position: absolute;
-      bottom: 32%;
-      left: 75%;
+      bottom: 28%;
+      left: 72%;
       font-size: max(vw(16, 1920), 14px);
       color: $neon-green;
       opacity: 0.5;
       white-space: nowrap;
+      transition: opacity 0.3s ease;
     }
 
-    &__info {
-      position: absolute;
-      left: calc(100% + 1rem);
-      top: 50%;
-      transform: translateY(-50%);
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-      white-space: nowrap;
-      pointer-events: none;
-    }
-
-    &__game {
-      font-size: max(vw(18, 1920), 16px);
-      color: $text-primary;
-      opacity: 0;
-      transform: translateX(-8px);
-      transition:
-        opacity 0.4s ease,
-        transform 0.4s ease;
-    }
-    &__title {
-      font-size: max(vw(15, 1920), 14px);
-      color: rgba($text-primary, 0.5);
-      opacity: 0;
-      transform: translateX(-8px);
-      transition:
-        opacity 0.4s ease 0.05s,
-        transform 0.4s ease 0.05s;
-    }
-    &__stack {
-      font-size: max(vw(13, 1920), 12px);
-      color: rgba($neon-green, 0.4);
-      opacity: 0;
-      transform: translateX(-8px);
-      transition:
-        opacity 0.4s ease 0.1s,
-        transform 0.4s ease 0.1s;
-    }
-    &__thumb {
-      width: max(vw(180, 1920), 140px);
-      aspect-ratio: 3 / 4;
-      overflow: hidden;
-      border: 1px solid rgba($neon-green, 0.15);
-      margin-top: 0.5rem;
-      opacity: 0;
-      transform: translateY(8px);
-      transition:
-        opacity 0.5s ease 0.1s,
-        transform 0.5s ease 0.1s;
-      img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        filter: grayscale(60%);
-        transition: filter 0.5s ease;
-      }
-    }
-
-    // Hover
+    // Hover: point glow boost
     &.hovered {
       .constellation-node__point {
-        width: 12px;
-        height: 12px;
         box-shadow:
           0 0 20px rgba($neon-green, 0.6),
           0 0 50px rgba($neon-green, 0.15);
         animation: none;
-      }
-      .constellation-node__game,
-      .constellation-node__title,
-      .constellation-node__stack {
-        opacity: 1;
-        transform: translateX(0);
-      }
-      .constellation-node__thumb {
-        opacity: 1;
-        transform: translateY(0);
-        border-color: rgba($neon-green, 0.3);
-        box-shadow: 0 0 30px rgba($neon-green, 0.08);
-        img {
-          filter: grayscale(0%);
-        }
       }
     }
   }
@@ -948,57 +1094,104 @@ body {
     }
   }
 
-  // --- Right Fixed Navigation ---
+  // --- Terminal Progress Nav (bottom bar) ---
   .info-nav {
-    position: fixed;
-    left: 2rem;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 100;
-
-    ul {
-      list-style: none;
+    &__sections {
       display: flex;
-      flex-direction: column;
-      gap: 5px;
-      margin: 0;
-      padding: 0;
+      gap: 1.2rem;
+      margin-left: 0.5rem;
     }
 
-    li {
-      font-size: max(vw(14, 1920), 13px);
-      text-transform: uppercase;
-      opacity: 0.5;
+    &__item {
+      opacity: 0.35;
       cursor: pointer;
-      font-weight: 400;
-      transition: color 0.3s ease;
+      text-transform: uppercase;
+      color: $text-primary;
+      transition: none;
 
       &:hover {
-        color: rgba(255, 255, 255, 1);
+        opacity: 0.8;
+      }
+
+      &.active {
+        opacity: 1;
       }
     }
   }
 
-  // --- 50% Right Aligned Content ---
+  // --- SVG Lines ---
+  .info-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: visible;
+  }
+
+  .info-line {
+    stroke: rgba($neon-green, 0.15);
+    stroke-width: 1;
+    fill: none;
+  }
+
+  // --- Constellation Layout Content ---
   .info-content-scroll {
-    width: 45%;
-    min-width: 450px;
-    // max-width: 650px;
-    margin-left: auto; // align right
-    margin-right: 10%;
+    width: 100%;
     padding-top: 20vh;
     display: flex;
     flex-direction: column;
-    gap: 8rem;
+    gap: max(vh(200, 1080), 200px);
+    position: relative;
+    z-index: 1;
   }
+
   .info-in {
     margin-left: 2rem;
   }
+
   .info-section {
     display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1.5rem;
+    max-width: 550px;
+    min-height: 30vh;
+  }
+
+  .info-section__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  // --- Node Points ---
+  .info-node {
+    display: flex;
     flex-direction: column;
-    min-height: 50vh;
+    align-items: center;
     justify-content: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+    height: max(vw(32, 1920), 30px);
+
+    &__point {
+      width: 15px;
+      height: 15px;
+      background: $neon-green;
+      box-shadow: 0 0 8px rgba($neon-green, 0.4);
+      animation: infoNodePulse 3s ease-in-out infinite;
+    }
+  }
+
+  @keyframes infoNodePulse {
+    0%,
+    100% {
+      box-shadow: 0 0 8px rgba($neon-green, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 18px rgba($neon-green, 0.7);
+    }
   }
 
   .info-name {
@@ -1021,6 +1214,7 @@ body {
     line-height: 1.8;
     word-break: keep-all;
     width: max(vw(400, 1920), 400px);
+    padding-bottom: max(vh(130, 1080), 130px);
   }
 
   .info-contact {

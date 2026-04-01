@@ -183,10 +183,7 @@ function App() {
         </section>
 
         <section className={`page-sub works${view === 'works' ? ' visible' : ''}`}>
-          <Works
-            isActive={view === 'works'}
-            onBack={handleGoHero}
-          />
+          <Works isActive={view === 'works'} />
         </section>
 
         <section className={`page-sub info${view === 'info' ? ' visible' : ''}`}>
