@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import gsap from 'gsap'
+import { SplitText } from 'gsap/SplitText'
 import { createPortal } from 'react-dom'
+
+gsap.registerPlugin(SplitText)
 
 interface WorksProps {
   isActive: boolean
@@ -121,6 +124,7 @@ function Works({ isActive }: WorksProps) {
   worksRef.current = works
   const entryDoneRef = useRef(false)
   const entryTlRef = useRef<gsap.core.Timeline | null>(null)
+  const indexSplitRef = useRef<InstanceType<typeof SplitText> | null>(null)
 
   // Line animation states
   const ringHighlightSweeps = useRef<number[]>([0, 0, 0, 0, 0])
@@ -237,18 +241,40 @@ function Works({ isActive }: WorksProps) {
 
         const nodeScreenX = rect.left + rect.width / 2 + candidates[0].sx
         const nodeScreenY = rect.top + rect.height / 2 + candidates[0].sy
-        const side = nodeScreenX < window.innerWidth / 2 ? 'left' : 'right'
+        const GAP = 30
+        const preferredSide = nodeScreenX < window.innerWidth / 2 ? 'left' : 'right'
 
         // Hide previous panel if switching nodes
         if (activePanelIdxRef.current !== null && activePanelIdxRef.current !== bestIdx) {
           panelRefs.current[activePanelIdxRef.current]?.classList.remove('active')
         }
-        // Position and show new panel
+        // Position and show new panel — flip side / clamp vertically if it would overflow
         const panel = panelRefs.current[bestIdx]
         if (panel) {
-          panel.style.top = `${nodeScreenY}px`
-          panel.style.left = side === 'right' ? `${nodeScreenX + 60}px` : 'auto'
-          panel.style.right = side === 'left' ? `${window.innerWidth - nodeScreenX + 60}px` : 'auto'
+          const panelW = panel.offsetWidth || 220
+          const panelH = panel.offsetHeight || 300
+
+          // ── horizontal: flip side if panel would leave viewport ──
+          let side = preferredSide
+          if (side === 'left' && nodeScreenX - GAP - panelW < 0) side = 'right'
+          else if (side === 'right' && nodeScreenX + GAP + panelW > window.innerWidth) side = 'left'
+
+          // ── vertical: CSS has translateY(-50%), so actual edges are:
+          //   top edge  = top - panelH/2
+          //   btm edge  = top + panelH/2
+          // Adjust `top` to clamp without touching the animation transform. ──
+          let adjustedTop = nodeScreenY
+          if (nodeScreenY - panelH / 2 < 0) {
+            // Panel would go above screen → align panel top with node position
+            adjustedTop = nodeScreenY + panelH / 2
+          } else if (nodeScreenY + panelH / 2 > window.innerHeight) {
+            // Panel would go below screen → align panel bottom with node position
+            adjustedTop = nodeScreenY - panelH / 2
+          }
+
+          panel.style.top = `${adjustedTop}px`
+          panel.style.left = side === 'right' ? `${nodeScreenX + GAP + 30}px` : 'auto'
+          panel.style.right = side === 'left' ? `${window.innerWidth - nodeScreenX + GAP}px` : 'auto'
           panel.classList.add('active')
         }
         activePanelIdxRef.current = bestIdx
@@ -267,35 +293,36 @@ function Works({ isActive }: WorksProps) {
   )
 
   // ─── Pointer handlers ───
-  const handlePointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      isDragRef.current = true
-      hasDraggedRef.current = false
-      // Hide active panel when drag starts
-      if (activePanelIdxRef.current !== null) {
-        panelRefs.current[activePanelIdxRef.current]?.classList.remove('active')
-        activePanelIdxRef.current = null
-      }
-      handleNodeHover(null)
-      dragStartRef.current = {
-        mx: e.clientX,
-        my: e.clientY,
-        rx: rotRef.current.x,
-        ry: rotRef.current.y,
-      }
-      velRef.current = { x: 0, y: 0 }
-      if (sceneRef.current) sceneRef.current.style.cursor = 'grabbing'
-      ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-    },
-    [handleNodeHover],
-  )
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    isDragRef.current = true
+    hasDraggedRef.current = false
+    // Do NOT clear hoveredIndexRef here — handlePointerUp needs it for click detection.
+    // Panel hide happens only when actual drag movement exceeds threshold (handlePointerMove).
+    dragStartRef.current = {
+      mx: e.clientX,
+      my: e.clientY,
+      rx: rotRef.current.x,
+      ry: rotRef.current.y,
+    }
+    velRef.current = { x: 0, y: 0 }
+    if (sceneRef.current) sceneRef.current.style.cursor = 'grabbing'
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  }, [])
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (isDragRef.current) {
         const dx = e.clientX - dragStartRef.current.mx
         const dy = e.clientY - dragStartRef.current.my
-        if (Math.abs(dx) + Math.abs(dy) > 5) hasDraggedRef.current = true
+        if (Math.abs(dx) + Math.abs(dy) > 5 && !hasDraggedRef.current) {
+          hasDraggedRef.current = true
+          // Hide panel and clear hover only when drag actually starts
+          if (activePanelIdxRef.current !== null) {
+            panelRefs.current[activePanelIdxRef.current]?.classList.remove('active')
+            activePanelIdxRef.current = null
+          }
+          handleNodeHover(null)
+        }
         const newRx = dragStartRef.current.rx + dy * DRAG_SENSITIVITY
         const clampedRx = Math.max(-90, Math.min(-50, newRx))
         const newRy = dragStartRef.current.ry + dx * DRAG_SENSITIVITY
@@ -309,7 +336,7 @@ function Works({ isActive }: WorksProps) {
       }
       calculateHover(e.clientX, e.clientY)
     },
-    [calculateHover],
+    [calculateHover, handleNodeHover],
   )
 
   const handlePointerUp = useCallback(() => {
@@ -358,28 +385,56 @@ function Works({ isActive }: WorksProps) {
       })
       entryTlRef.current = tl
 
+      // Rings start invisible (sweep=0) — will draw themselves in
       ORBITAL_RINGS.forEach((_, i) => {
         if (ringEls.current[i]) {
-          ringEls.current[i]!.style.setProperty('--sweep', '360deg')
+          ringEls.current[i]!.style.setProperty('--sweep', '0deg')
         }
       })
 
-      // Phase 1: Everything fades/scales in together (no mask repaints)
+      // Phase 1: scene-center core appears
       tl.fromTo(
         '.scene-center',
         { scale: 0, opacity: 0.6 },
         { scale: 1, opacity: 1, duration: 1.4, ease: 'power3.out' },
         0,
       )
-      tl.fromTo('.orbital-ring', { scale: 0 }, { scale: 1, duration: 1.0, stagger: 0.05, ease: 'power2.out' }, 0.1)
+
+      // Phase 2: rings scale in + draw themselves simultaneously
+      tl.fromTo('.orbital-ring', { scale: 0 }, { scale: 1, duration: 0.55, stagger: 0.07, ease: 'power2.out' }, 0.1)
+      ringEls.current.forEach((el, i) => {
+        if (!el) return
+        const proxy = { val: 0 }
+        tl.to(
+          proxy,
+          {
+            val: 360,
+            duration: 0.55,
+            ease: 'power2.inOut',
+            onUpdate() {
+              el.style.setProperty('--sweep', `${proxy.val}deg`)
+            },
+          },
+          0.1 + i * 0.07,
+        )
+      })
+
+      // Phase 3: nodes appear after inner rings are mostly drawn
       tl.fromTo(
         '.constellation-node',
         { xPercent: -50, yPercent: -50, scale: 0, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.6, stagger: 0.06, ease: 'back.out(1.5)' },
-        0.3,
+        { scale: 1, opacity: 1, duration: 0.5, stagger: 0.07, ease: 'back.out(1.5)' },
+        0.75,
       )
-      tl.fromTo('.works-telemetry', { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.5 }, 0.5)
-      tl.fromTo('.works-progress', { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.5 }, 0.6)
+
+      // Phase 4: typewriter via SplitText — chars fire when last nodes are appearing
+      indexSplitRef.current?.revert()
+      const indexSplit = new SplitText('.constellation-node__index', { type: 'chars' })
+      indexSplitRef.current = indexSplit
+      tl.fromTo(indexSplit.chars, { opacity: 0 }, { opacity: 1, duration: 0.001, stagger: 0.05 }, 1.3)
+
+      tl.fromTo('.works-telemetry', { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.5 }, 0.6)
+      tl.fromTo('.works-progress', { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.75)
     } else {
       entryTlRef.current?.kill()
       entryTlRef.current = null
@@ -393,9 +448,12 @@ function Works({ isActive }: WorksProps) {
         scale: 0,
         opacity: 0,
       })
+      indexSplitRef.current?.revert()
+      indexSplitRef.current = null
       gsap.set('.works-progress', { opacity: 0 })
       gsap.set('.works-telemetry', { opacity: 0 })
 
+      // Reset ring sweep to 0 (invisible) — no scale reset needed
       ORBITAL_RINGS.forEach((_, i) => {
         if (ringEls.current[i]) {
           ringEls.current[i]!.style.setProperty('--sweep', '0deg')
@@ -415,7 +473,7 @@ function Works({ isActive }: WorksProps) {
         <span className="terminal-bar__label">&gt; WORK LIST ───</span>
         <span className="terminal-bar__bar">[{works.map((_, i) => (i <= previewIndex ? '█' : '░')).join('')}]</span>
         <span className="works-progress__info text-body">
-          {`${String(previewIndex + 1).padStart(2, '0')}/${String(works.length).padStart(2, '0')} ─── ${works[previewIndex]?.game ?? ''}`}
+          {`${String(previewIndex + 1).padStart(3, '0')}/${String(works.length).padStart(3, '0')} ─── ${works[previewIndex]?.game ?? ''}`}
         </span>
       </div>
 
@@ -431,7 +489,7 @@ function Works({ isActive }: WorksProps) {
           <div className="works-preview__header">
             <span className="works-preview__panel-id">◼︎ TARGET NODE</span>
             <span className="works-preview__index">
-              {String(idx + 1).padStart(2, '0')}/{String(works.length).padStart(2, '0')}
+              {String(idx + 1).padStart(3, '0')}/{String(works.length).padStart(3, '0')}
             </span>
           </div>
           <div className="works-preview__thumb">
@@ -559,41 +617,86 @@ function Works({ isActive }: WorksProps) {
       {/* Detail Modal */}
       {createPortal(
         <div className={`works__detail ${isOpen ? 'active' : ''}`}>
-          <button
-            className="btn-close-detail"
+          <div
+            className="works__detail-overlay"
             onClick={closeDetail}
-          >
-            ✕
-          </button>
-          {activeWork && (
-            <div
-              className="work-detail__content"
-              key={activeWork.id}
-            >
-              <div className="work-detail__title">{activeWork.title}</div>
-              <div className="work-detail__date text-body">{activeWork.date}</div>
-              <div className="work-detail__description text-body">{activeWork.description}</div>
-              <div className="work-detail__stack">{activeWork.stack}</div>
-              {activeWork.url && (
-                <a
-                  className="work-detail__link"
-                  href={activeWork.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Visit Site →
-                </a>
-              )}
-              <div className="work-detail__images">
-                {activeWork.img && (
-                  <img
-                    src={activeWork.img}
-                    alt="thumbnail"
-                  />
-                )}
-              </div>
+          />
+          <div className="works__detail-panel">
+            {/* Panel Header */}
+            <div className="panel-header">
+              <span className="panel-id">SYSTEM // DETAIL_VIEW_PORT</span>
+              <button
+                className="btn-close-panel"
+                onClick={closeDetail}
+              >
+                [ X ] CLOSE
+              </button>
             </div>
-          )}
+
+            {/* Panel Body */}
+            {activeWork && (
+              <div
+                className="panel-body"
+                key={activeWork.id}
+              >
+                <div className="panel-body__left">
+                  <div className="panel-image-container">
+                    <span className="corner top-left"></span>
+                    <span className="corner top-right"></span>
+                    <span className="corner bottom-left"></span>
+                    <span className="corner bottom-right"></span>
+                    <div className="image-wrapper">
+                      {activeWork.img && (
+                        <img
+                          src={activeWork.img}
+                          alt="thumbnail"
+                        />
+                      )}
+                      <div className="panel-image-scan"></div>
+                    </div>
+                  </div>
+
+                  <div className="panel-tech">
+                    <div className="tech-header">TECH_STACK //</div>
+                    <div className="tech-content text-body">{activeWork.stack}</div>
+                  </div>
+                </div>
+
+                <div className="panel-body__right">
+                  <div className="panel-meta">
+                    <div className="meta-row">
+                      <span className="meta-label">ID_CODE</span>{' '}
+                      <span className="meta-val">{String(activeWork.id).padStart(3, '0')}</span>
+                    </div>
+                    <div className="meta-row">
+                      <span className="meta-label">DATE_RECORDED</span>{' '}
+                      <span className="meta-val">{activeWork.date}</span>
+                    </div>
+                  </div>
+
+                  <div className="panel-title-wrapper">
+                    <h2 className="panel-game">{activeWork.game}</h2>
+                    <h1 className="panel-title">{activeWork.title}</h1>
+                  </div>
+
+                  <div className="panel-description text-body">{activeWork.description}</div>
+
+                  {activeWork.url && (
+                    <div className="panel-action">
+                      <a
+                        href={activeWork.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-launch"
+                      >
+                        [ LAUNCH_PROJECT ] <span className="arrow">↗</span>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>,
         document.body,
       )}

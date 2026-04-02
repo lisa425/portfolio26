@@ -3,12 +3,10 @@ import { useTranslation } from 'react-i18next'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
-import BtnBack from './BtnBack'
 
 gsap.registerPlugin(ScrollTrigger)
 
 interface InfoProps {
-  onBack: () => void
   isActive?: boolean
 }
 
@@ -20,7 +18,7 @@ const SECTIONS = [
   { id: 'contact', label: 'Contact', offsetX: 38 },
 ]
 
-function Info({ onBack, isActive }: InfoProps) {
+function Info({ isActive }: InfoProps) {
   const { t, i18n } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -298,12 +296,23 @@ function Info({ onBack, isActive }: InfoProps) {
                   nodeRefs.current[0] = el
                 }}
               >
-                <div className="info-node__point" />
+                <div className="info-node__point">
+                  <span className="bracket">[</span> <span className="mark">+</span> <span className="bracket">]</span>
+                </div>
               </div>
               <div className="info-section__body">
-                <h2 className="info-name">{t('info.name')}</h2>
-                <p className="info-role">{t('info.role')}</p>
-                <p className="info-about text-body">{t('info.about')}</p>
+                <div className="info-section__header">
+                  <span className="info-section__id">SYS.LOC // PROFILE_DATA</span>
+                </div>
+                <div className="info-section__content">
+                  <span className="corner top-left"></span>
+                  <span className="corner top-right"></span>
+                  <span className="corner bottom-left"></span>
+                  <span className="corner bottom-right"></span>
+                  <h2 className="info-name">{t('info.name')}</h2>
+                  <p className="info-role">ROLE // {t('info.role')}</p>
+                  <p className="info-about text-body">{t('info.about')}</p>
+                </div>
               </div>
             </section>
 
@@ -319,36 +328,49 @@ function Info({ onBack, isActive }: InfoProps) {
                   nodeRefs.current[1] = el
                 }}
               >
-                <div className="info-node__point" />
+                <div className="info-node__point">
+                  <span className="bracket">[</span> <span className="mark">+</span> <span className="bracket">]</span>
+                </div>
               </div>
               <div className="info-section__body">
-                <h3 className="info-block-title">{workExperience.title}</h3>
-                {workExperience.jobs.map((job: any, jIdx: number) => (
-                  <div
-                    key={jIdx}
-                    className="job-entry info-in"
-                  >
-                    <div className="job-entry__header">
-                      <h4>{job.company}</h4>
-                      <p className="job-entry__meta">
-                        {job.role} &nbsp;|&nbsp; {job.period} &nbsp;|&nbsp; {job.location}
-                      </p>
-                    </div>
-                    {job.projects.map((proj: any, pIdx: number) => (
-                      <div
-                        key={pIdx}
-                        className="project-entry text-body"
-                      >
-                        <h5>■ {proj.name}</h5>
-                        <ul>
-                          {proj.bullets.map((bullet: string, bIdx: number) => (
-                            <li key={bIdx}>{bullet}</li>
-                          ))}
-                        </ul>
+                <div className="info-section__header">
+                  <span className="info-section__id">SYS.LOC // EXPERIENCE_LOG</span>
+                </div>
+                <div className="info-section__content">
+                  <span className="corner top-left"></span>
+                  <span className="corner top-right"></span>
+                  <span className="corner bottom-left"></span>
+                  <span className="corner bottom-right"></span>
+                  <h3 className="info-block-title">{workExperience.title}</h3>
+                  {workExperience.jobs.map((job: any, jIdx: number) => (
+                    <div
+                      key={jIdx}
+                      className="job-entry info-in"
+                    >
+                      <div className="job-entry__header">
+                        <h4>■ {job.company}</h4>
+                        <p className="job-entry__meta">
+                          {job.role} &nbsp;//&nbsp; {job.period} &nbsp;//&nbsp; {job.location}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                ))}
+                      <div className="job-entry__projects">
+                        {job.projects.map((proj: any, pIdx: number) => (
+                          <div
+                            key={pIdx}
+                            className="project-entry text-body"
+                          >
+                            <h5>[ {proj.name} ]</h5>
+                            <ul>
+                              {proj.bullets.map((bullet: string, bIdx: number) => (
+                                <li key={bIdx}>&gt; {bullet}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </section>
 
@@ -364,20 +386,31 @@ function Info({ onBack, isActive }: InfoProps) {
                   nodeRefs.current[2] = el
                 }}
               >
-                <div className="info-node__point" />
+                <div className="info-node__point">
+                  <span className="bracket">[</span> <span className="mark">+</span> <span className="bracket">]</span>
+                </div>
               </div>
               <div className="info-section__body">
-                <h3 className="info-block-title">{skills.title}</h3>
-                <div className="skills-list info-in">
-                  {skills.categories.map((cat: any, cIdx: number) => (
-                    <div
-                      key={cIdx}
-                      className="skill-category"
-                    >
-                      <strong>■ {cat.name}</strong>
-                      <span className="text-body">{cat.items}</span>
-                    </div>
-                  ))}
+                <div className="info-section__header">
+                  <span className="info-section__id">SYS.LOC // SKILL_MATRIX</span>
+                </div>
+                <div className="info-section__content">
+                  <span className="corner top-left"></span>
+                  <span className="corner top-right"></span>
+                  <span className="corner bottom-left"></span>
+                  <span className="corner bottom-right"></span>
+                  <h3 className="info-block-title">{skills.title}</h3>
+                  <div className="skills-list info-in">
+                    {skills.categories.map((cat: any, cIdx: number) => (
+                      <div
+                        key={cIdx}
+                        className="skill-category"
+                      >
+                        <strong>[ {cat.name} ]</strong>
+                        <span className="text-body">&gt; {cat.items}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </section>
@@ -394,23 +427,34 @@ function Info({ onBack, isActive }: InfoProps) {
                   nodeRefs.current[3] = el
                 }}
               >
-                <div className="info-node__point" />
+                <div className="info-node__point">
+                  <span className="bracket">[</span> <span className="mark">+</span> <span className="bracket">]</span>
+                </div>
               </div>
               <div className="info-section__body">
-                <h3 className="info-block-title">{education.title}</h3>
-                <div className="education-entry info-in">
-                  <h4>{education.school}</h4>
-                  <p className="education-entry__meta text-body">{education.period}</p>
-                  <ul>
-                    {education.bullets.map((bullet: string, eIdx: number) => (
-                      <li
-                        key={eIdx}
-                        className="text-body"
-                      >
-                        {bullet}
-                      </li>
-                    ))}
-                  </ul>
+                <div className="info-section__header">
+                  <span className="info-section__id">SYS.LOC // ACADEMIC_RECORD</span>
+                </div>
+                <div className="info-section__content">
+                  <span className="corner top-left"></span>
+                  <span className="corner top-right"></span>
+                  <span className="corner bottom-left"></span>
+                  <span className="corner bottom-right"></span>
+                  <h3 className="info-block-title">{education.title}</h3>
+                  <div className="education-entry info-in">
+                    <h4>■ {education.school}</h4>
+                    <p className="education-entry__meta text-body">DATE // {education.period}</p>
+                    <ul>
+                      {education.bullets.map((bullet: string, eIdx: number) => (
+                        <li
+                          key={eIdx}
+                          className="text-body"
+                        >
+                          &gt; {bullet}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </div>
             </section>
@@ -427,22 +471,27 @@ function Info({ onBack, isActive }: InfoProps) {
                   nodeRefs.current[4] = el
                 }}
               >
-                <div className="info-node__point" />
+                <div className="info-node__point">
+                  <span className="bracket">[</span> <span className="mark">+</span> <span className="bracket">]</span>
+                </div>
               </div>
               <div className="info-section__body">
-                <h3 className="info-block-title">Get in touch</h3>
-                <div className="info-contact info-in">
-                  <p className="btn-contact text-body">📧&nbsp;&nbsp;{contact.email}</p>
-                  <p className="btn-contact text-body">📞&nbsp;&nbsp;{contact.phone}</p>
+                <div className="info-section__header">
+                  <span className="info-section__id">SYS.LOC // COMM_LINK</span>
+                </div>
+                <div className="info-section__content">
+                  <span className="corner top-left"></span>
+                  <span className="corner top-right"></span>
+                  <span className="corner bottom-left"></span>
+                  <span className="corner bottom-right"></span>
+                  <h3 className="info-block-title">GET IN TOUCH</h3>
+                  <div className="info-contact info-in">
+                    <p className="btn-contact text-body"><span className="meta">EMAIL   //</span> {contact.email}</p>
+                    <p className="btn-contact text-body"><span className="meta">CHANNEL //</span> {contact.phone}</p>
+                  </div>
                 </div>
               </div>
             </section>
-
-            {/* <div className="info-section__footer">
-              <p className="text-body">
-                <span className="text-body">© 2026 CHAEWON IM. All rights reserved.</span>
-              </p>
-            </div> */}
           </div>
         </div>
       </div>
