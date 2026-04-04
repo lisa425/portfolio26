@@ -134,44 +134,8 @@ function App() {
     heroSplitsRef.current = []
     isFirstHeroLoadRef.current = false
 
-    const CHAR_DELAY = 0.05
-    const HOLD = 0.04
-
-    const splitLocation = new SplitText('.hero-hud-data__location .title, .hero-hud-data__location .desc', {
-      type: 'chars',
-    })
-    heroSplitsRef.current = [splitLocation]
-
-    gsap.set(splitLocation.chars, { opacity: 0, display: 'inline-block' })
-
     const tl = gsap.timeline()
     heroTlRef.current = tl
-
-    tl.fromTo(
-      '.technical-list .list-item .num',
-      { opacity: 0, x: -50 },
-      { opacity: 1, x: 0, duration: 1, ease: 'circ.out' },
-      '1',
-    ).fromTo(
-      '.technical-list .list-item .list-item__info',
-      { opacity: 0, x: -50 },
-      { opacity: 1, x: 0, duration: 1, ease: 'circ.out' },
-      '<0.1',
-    )
-
-    splitLocation.chars.forEach((char, i) => {
-      const t = i * CHAR_DELAY
-      tl.set(char, { opacity: 1, backgroundColor: '#ffffff', color: '#000000' }, t)
-      tl.to(char, { backgroundColor: 'transparent', color: '#ffffff', duration: HOLD }, t + HOLD)
-    })
-
-    tl.call(
-      () => {
-        gsap.set(splitLocation.chars, { clearProps: 'backgroundColor,color' })
-      },
-      [],
-      splitLocation.chars.length * CHAR_DELAY + HOLD,
-    )
   }, [])
 
   const handleGoWorks = useCallback(() => {

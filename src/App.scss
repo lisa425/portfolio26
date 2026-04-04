@@ -360,6 +360,8 @@ body.ko {
         &__monitor {
           bottom: 2rem;
           left: 3rem;
+          transform-origin: bottom left;
+
           .hero-panel {
             position: relative;
             width: max(vw(240, 1920), 200px);
@@ -517,7 +519,8 @@ body.ko {
 
           .hud-sub {
             font-size: max(vw(12, 1920), 14px);
-            color: rgba(255, 255, 255, 0.8);
+            color: $text-primary;
+            opacity: 0.8;
           }
 
           .val {
