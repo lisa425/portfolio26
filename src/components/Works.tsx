@@ -98,8 +98,7 @@ function Works({ isActive }: WorksProps) {
   const works = t('works.items', { returnObjects: true }) as WorkType[]
 
   const [activeWork, setActiveWork] = useState<WorkType | null>(null)
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null) // ring highlight effects
-  const hoveredIndexRef = useRef<number | null>(null) // sync for animation loop
+  const hoveredIndexRef = useRef<number | null>(null) // no state — direct DOM for zero re-renders
   const [previewIndex, setPreviewIndex] = useState<number>(0) // progress bar display
   const [isOpen, setIsOpen] = useState(false)
 
@@ -112,6 +111,8 @@ function Works({ isActive }: WorksProps) {
   // One ref per work panel — show/hide managed via direct DOM (no React re-render)
   const panelRefs = useRef<(HTMLDivElement | null)[]>([])
   const activePanelIdxRef = useRef<number | null>(null)
+  // Direct DOM refs for hover classes — eliminates React re-renders on hover
+  const nodeEls = useRef<(HTMLDivElement | null)[]>([])
 
   // Animation state (refs for perf — no re-renders during drag)
   const rotRef = useRef({ ...INITIAL_ROT })
@@ -204,11 +205,19 @@ function Works({ isActive }: WorksProps) {
   }, [])
 
   // ─── Hover states ───
-  // Updates ring highlight effects via React state; panel show/hide handled separately via DOM.
+  // All visual effects via direct DOM — zero React re-renders on hover.
   const handleNodeHover = useCallback((idx: number | null) => {
-    setHoveredIndex(idx)
+    const prev = hoveredIndexRef.current
     hoveredIndexRef.current = idx
-    if (idx !== null) setPreviewIndex(idx)
+
+    // Progress bar: only update state when switching to a real node
+    if (idx !== null && idx !== prev) setPreviewIndex(idx)
+
+    // Toggle .hovered on constellation-node elements directly
+    nodeEls.current.forEach((el, i) => el?.classList.toggle('hovered', i === idx))
+
+    // Toggle .active on ring highlight elements directly
+    ringHighlightEls.current.forEach((el, i) => el?.classList.toggle('active', i === idx))
   }, [])
 
   const handleWorkClick = useCallback((work: WorkType) => {
@@ -286,7 +295,8 @@ function Works({ isActive }: WorksProps) {
         }
       }
 
-      handleNodeHover(bestIdx)
+      // Only fire when bestIdx actually changes — prevents redundant DOM updates
+      if (bestIdx !== hoveredIndexRef.current) handleNodeHover(bestIdx)
       scene.style.cursor = bestIdx !== null ? 'pointer' : 'grab'
     },
     [handleNodeHover],
@@ -427,11 +437,29 @@ function Works({ isActive }: WorksProps) {
         0.75,
       )
 
-      // Phase 4: typewriter via SplitText — chars fire when last nodes are appearing
+      // Phase 4: terminal typewriter — each char flashes active highlight then settles
       indexSplitRef.current?.revert()
       const indexSplit = new SplitText('.constellation-node__index', { type: 'chars' })
       indexSplitRef.current = indexSplit
-      tl.fromTo(indexSplit.chars, { opacity: 0 }, { opacity: 1, duration: 0.001, stagger: 0.05 }, 1.3)
+
+      gsap.set(indexSplit.chars, { opacity: 0, display: 'inline-block' })
+      gsap.set('.constellation-node__index', { clearProps: 'opacity' })
+
+      const CHAR_DELAY = 0.05 // gap between chars within one index
+      const NODE_DELAY = 0.1 // gap between each index element starting
+      const HOLD = 0.04
+      const startTime = 1.3
+
+      // Group chars by parent index element — each node starts independently
+      Array.from(indexSplit.elements).forEach((indexEl, nodeIdx) => {
+        const nodeStart = startTime + nodeIdx * NODE_DELAY
+        const chars = indexSplit.chars.filter((char) => indexEl.contains(char))
+        chars.forEach((char, charIdx) => {
+          const t = nodeStart + charIdx * CHAR_DELAY
+          tl.set(char, { opacity: 1, backgroundColor: '#ffffff', color: '#000000' }, t)
+          tl.to(char, { backgroundColor: 'transparent', color: '#ffffff', duration: HOLD }, t + HOLD)
+        })
+      })
 
       tl.fromTo('.works-telemetry', { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.5 }, 0.6)
       tl.fromTo('.works-progress', { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.75)
@@ -470,7 +498,7 @@ function Works({ isActive }: WorksProps) {
     <div className="inner works__inner">
       {/* Terminal Progress Bar */}
       <div className="terminal-bar works-progress">
-        <span className="terminal-bar__label">&gt; WORK LIST ───</span>
+        <span className="terminal-bar__label">&gt; WORK_LIST ───</span>
         <span className="terminal-bar__bar">[{works.map((_, i) => (i <= previewIndex ? '█' : '░')).join('')}]</span>
         <span className="works-progress__info text-body">
           {`${String(previewIndex + 1).padStart(3, '0')}/${String(works.length).padStart(3, '0')} ─── ${works[previewIndex]?.game ?? ''}`}
@@ -573,7 +601,7 @@ function Works({ isActive }: WorksProps) {
               ref={(el) => {
                 ringHighlightEls.current[i] = el
               }}
-              className={`orbital-ring-highlight ${hoveredIndex === i ? 'active' : ''}`}
+              className="orbital-ring-highlight"
               style={
                 {
                   width: ring.w,
@@ -604,7 +632,12 @@ function Works({ isActive }: WorksProps) {
                   transform: `translate3d(${pos.x}px, ${pos.y}px, ${pos.z}px) rotateY(calc(-1 * var(--ry, 30deg))) rotateX(calc(-1 * var(--rx, -18deg)))`,
                 }}
               >
-                <div className={`constellation-node ${hoveredIndex === idx ? 'hovered' : ''}`}>
+                <div
+                  className="constellation-node"
+                  ref={(el) => {
+                    nodeEls.current[idx] = el
+                  }}
+                >
                   <span className="constellation-node__index">{String(idx + 1).padStart(3, '0')}</span>
                   <div className="constellation-node__point" />
                 </div>
@@ -624,7 +657,7 @@ function Works({ isActive }: WorksProps) {
           <div className="works__detail-panel">
             {/* Panel Header */}
             <div className="panel-header">
-              <span className="panel-id">SYSTEM // DETAIL_VIEW_PORT</span>
+              <span className="panel-id">◼︎ work_detail</span>
               <button
                 className="btn-close-panel"
                 onClick={closeDetail}
@@ -655,11 +688,6 @@ function Works({ isActive }: WorksProps) {
                       <div className="panel-image-scan"></div>
                     </div>
                   </div>
-
-                  <div className="panel-tech">
-                    <div className="tech-header">TECH_STACK //</div>
-                    <div className="tech-content text-body">{activeWork.stack}</div>
-                  </div>
                 </div>
 
                 <div className="panel-body__right">
@@ -669,14 +697,16 @@ function Works({ isActive }: WorksProps) {
                       <span className="meta-val">{String(activeWork.id).padStart(3, '0')}</span>
                     </div>
                     <div className="meta-row">
-                      <span className="meta-label">DATE_RECORDED</span>{' '}
-                      <span className="meta-val">{activeWork.date}</span>
+                      <span className="meta-label">Period</span> <span className="meta-val">{activeWork.date}</span>
+                    </div>
+                    <div className="meta-row">
+                      <span className="meta-label">Tech</span> <span className="meta-val">{activeWork.stack}</span>
                     </div>
                   </div>
 
                   <div className="panel-title-wrapper">
-                    <h2 className="panel-game">{activeWork.game}</h2>
-                    <h1 className="panel-title">{activeWork.title}</h1>
+                    <h2 className="panel-game text-display">{activeWork.game}</h2>
+                    <h1 className="panel-title text-display">{activeWork.title}</h1>
                   </div>
 
                   <div className="panel-description text-body">{activeWork.description}</div>

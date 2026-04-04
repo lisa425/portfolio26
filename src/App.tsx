@@ -7,6 +7,7 @@ import type { LangType } from './types'
 gsap.registerPlugin(SplitText)
 import './App.scss'
 import { useHeroScene } from './hooks/useHeroScene'
+import { useCursorTrail } from './hooks/useCursorTrail'
 import Works from './components/Works'
 import Info from './components/Info'
 
@@ -19,6 +20,9 @@ function App() {
   const buttonInfoRef = useRef<HTMLButtonElement>(null)
   const heroTlRef = useRef<gsap.core.Timeline | null>(null)
   const heroSplitsRef = useRef<InstanceType<typeof SplitText>[]>([])
+  const trailCanvasRef = useRef<HTMLCanvasElement>(null)
+  const heroAnimTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isFirstHeroLoadRef = useRef(true)
 
   const [language, setLanguage] = useState(i18n.language)
   const [loadProgress, setLoadProgress] = useState(0)
@@ -33,6 +37,11 @@ function App() {
     i18n.changeLanguage(lang)
     setLanguage(lang)
   }
+
+  useEffect(() => {
+    document.body.classList.remove('ko', 'en')
+    document.body.classList.add(language)
+  }, [language])
 
   // Loading progress handler
   const handleProgress = useCallback((progress: number) => {
@@ -86,7 +95,12 @@ function App() {
     const tick = () => {
       const now = new Date()
       setCurrentTime(
-        now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        now.toLocaleTimeString('en-US', {
+          hour12: true,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+        }),
       )
       const y = now.getFullYear()
       const m = String(now.getMonth() + 1).padStart(2, '0')
@@ -108,49 +122,56 @@ function App() {
     isHeroActiveRef,
   )
 
+  useCursorTrail(trailCanvasRef)
+
   useEffect(() => {
     isHeroActiveRef.current = view === 'hero'
   }, [view])
 
   const runHeroAnimation = useCallback(() => {
-    // Kill previous and revert all splits for clean re-run
     heroTlRef.current?.kill()
     heroSplitsRef.current.forEach((s) => s.revert())
     heroSplitsRef.current = []
+    isFirstHeroLoadRef.current = false
 
-    // Split only static (non-React-state) elements
-    const splitTitle = new SplitText('.title', { type: 'chars' })
-    const splitHudTitle = new SplitText('.hud-title', { type: 'chars' })
-    const splitHudDesc = new SplitText('.hud-desc', { type: 'chars' })
-    const splitPanelStatic = new SplitText(
-      '.hero-panel__label, .hero-panel__id, .hero-panel__key, .hero-panel__status',
-      { type: 'chars' },
-    )
-    const splitNums = new SplitText('.num', { type: 'chars' })
-    const splitHudSub = new SplitText('.hud-sub', { type: 'chars' })
+    const CHAR_DELAY = 0.05
+    const HOLD = 0.04
 
-    heroSplitsRef.current = [splitTitle, splitHudTitle, splitHudDesc, splitPanelStatic, splitNums, splitHudSub]
+    const splitLocation = new SplitText('.hero-hud-data__location .title, .hero-hud-data__location .desc', {
+      type: 'chars',
+    })
+    heroSplitsRef.current = [splitLocation]
+
+    gsap.set(splitLocation.chars, { opacity: 0, display: 'inline-block' })
 
     const tl = gsap.timeline()
     heroTlRef.current = tl
 
-    // .title chars — first to appear
-    tl.fromTo(splitTitle.chars, { opacity: 0 }, { opacity: 1, duration: 0.001, stagger: 0.1 }, 0)
-    // hud title
-    tl.fromTo(splitHudTitle.chars, { opacity: 0 }, { opacity: 1, duration: 0.001, stagger: 0.02 }, 0.4)
-    // hud description words
-    tl.fromTo(splitHudDesc.chars, { opacity: 0 }, { opacity: 1, duration: 0.001, stagger: 0.02 }, 0.6)
-    // sys monitor panel slides in
-    // panel static text chars
-    // tl.fromTo(splitPanelStatic.chars, { opacity: 0 }, { opacity: 1, duration: 0.001, stagger: 0.05 }, 0.68)
-    // panel dynamic value rows fade in
-    // tl.fromTo('.hero-panel__val', { opacity: 0 }, { opacity: 1, duration: 0.25, stagger: 0.1 }, 0.85)
-    // technical list numbers
-    // tl.fromTo(splitNums.chars, { opacity: 0 }, { opacity: 1, duration: 0.001, stagger: 0.04 }, 0.95)
-    // subtitles
-    // tl.fromTo(splitHudSub.chars, { opacity: 0 }, { opacity: 1, duration: 0.001, stagger: 0.018 }, 1.05)
-    // description vals fade
-    // tl.fromTo('.val', { opacity: 0 }, { opacity: 1, duration: 0.02, stagger: 0.1 }, 1.15)
+    tl.fromTo(
+      '.technical-list .list-item .num',
+      { opacity: 0, x: -50 },
+      { opacity: 1, x: 0, duration: 1, ease: 'circ.out' },
+      '1',
+    ).fromTo(
+      '.technical-list .list-item .list-item__info',
+      { opacity: 0, x: -50 },
+      { opacity: 1, x: 0, duration: 1, ease: 'circ.out' },
+      '<0.1',
+    )
+
+    splitLocation.chars.forEach((char, i) => {
+      const t = i * CHAR_DELAY
+      tl.set(char, { opacity: 1, backgroundColor: '#ffffff', color: '#000000' }, t)
+      tl.to(char, { backgroundColor: 'transparent', color: '#ffffff', duration: HOLD }, t + HOLD)
+    })
+
+    tl.call(
+      () => {
+        gsap.set(splitLocation.chars, { clearProps: 'backgroundColor,color' })
+      },
+      [],
+      splitLocation.chars.length * CHAR_DELAY + HOLD,
+    )
   }, [])
 
   const handleGoWorks = useCallback(() => {
@@ -168,12 +189,23 @@ function App() {
   const handleGoHero = useCallback(() => {
     if (view === 'hero' || view === 'transitioning') return
     setView('transitioning')
-    triggerHeroTransition(() => setView('hero'))
+
+    // 줌아웃 종료 1초 전에 hero 섹션을 미리 페이드인 (zoom duration = 1.5s)
+    if (heroAnimTimerRef.current) clearTimeout(heroAnimTimerRef.current)
+    heroAnimTimerRef.current = setTimeout(() => {
+      gsap.to('.hero', { opacity: 1, duration: 0.5, ease: 'power2.out' })
+    }, 500)
+
+    triggerHeroTransition(() => {
+      setView('hero')
+      gsap.set('.hero', { clearProps: 'opacity' })
+    })
   }, [view, triggerHeroTransition])
 
-  // Hero text entry animation — triggers on initial load and each time user returns to hero
+  // 첫 진입 시에만 hero 애니메이션 실행
   useEffect(() => {
     if (!isLoaded || view !== 'hero') return
+    if (!isFirstHeroLoadRef.current) return // 줌아웃 복귀 시 스킵
     runHeroAnimation()
   }, [isLoaded, view, runHeroAnimation])
 
@@ -182,8 +214,77 @@ function App() {
     return () => {
       heroTlRef.current?.kill()
       heroSplitsRef.current.forEach((s) => s.revert())
+      if (heroAnimTimerRef.current) clearTimeout(heroAnimTimerRef.current)
     }
   }, [])
+
+  // Btn hover — terminal typewriter effect via GSAP
+  useEffect(() => {
+    if (!isLoaded) return
+
+    const btnRefs = [buttonWorksRef.current, buttonInfoRef.current]
+    const cleanups: (() => void)[] = []
+
+    btnRefs.forEach((btn) => {
+      if (!btn) return
+
+      const textEl = btn.querySelector<HTMLElement>('.btn-text')
+      const textContent = btn.querySelector<HTMLElement>('.btn-text__text')
+      const cursorEl = btn.querySelector<HTMLElement>('.btn-text__cursor')
+      if (!textEl || !textContent) return
+
+      gsap.set(textEl, { opacity: 0, x: 10 })
+      cursorEl?.classList.remove('active')
+
+      const split = new SplitText(textContent, { type: 'chars' })
+      gsap.set(split.chars, { opacity: 0, display: 'inline-block' })
+      gsap.set(textContent, { clearProps: 'opacity' })
+
+      const CHAR_DELAY = 0.07 // gap between each char
+      const HOLD = 0.05 // how long the active highlight stays
+
+      const tl = gsap.timeline({
+        paused: true,
+        // cursor CSS animation starts only after all chars are done
+        onComplete: () => cursorEl?.classList.add('active'),
+      })
+
+      // Slide wrapper in
+      tl.to(textEl, { opacity: 1, x: 0, duration: 0.15, ease: 'power2.out' })
+
+      // Per-char: active highlight (white bg + black text) → settled (transparent + white)
+      split.chars.forEach((char, i) => {
+        const t = 0.15 + i * CHAR_DELAY
+        tl.set(char, { opacity: 1, backgroundColor: '#ffffff', color: '#000000' }, t)
+        tl.to(char, { backgroundColor: 'transparent', color: '#ffffff', duration: HOLD }, t + HOLD)
+      })
+
+      const reset = () => {
+        tl.pause(0)
+        gsap.set(textEl, { opacity: 0, x: 10 })
+        gsap.set(split.chars, { opacity: 0, backgroundColor: 'transparent', color: '#ffffff' })
+        cursorEl?.classList.remove('active')
+      }
+
+      const onEnter = () => {
+        cursorEl?.classList.remove('active')
+        tl.restart()
+      }
+      const onLeave = () => reset()
+
+      btn.addEventListener('mouseenter', onEnter)
+      btn.addEventListener('mouseleave', onLeave)
+
+      cleanups.push(() => {
+        btn.removeEventListener('mouseenter', onEnter)
+        btn.removeEventListener('mouseleave', onLeave)
+        tl.kill()
+        split.revert()
+      })
+    })
+
+    return () => cleanups.forEach((fn) => fn())
+  }, [isLoaded])
 
   // GSAP Animation
   useEffect(() => {
@@ -201,6 +302,10 @@ function App() {
         className="webgl-canvas"
         ref={canvasRef}
       />
+      <canvas
+        className="trail-canvas"
+        ref={trailCanvasRef}
+      />
 
       {/* Loading Overlay */}
       <div className={`loading-overlay${isLoaded ? ' loaded' : ''}`}>
@@ -217,16 +322,16 @@ function App() {
 
       <div className="content">
         <header className="header">
-          <div className="header-left">
-            <div
-              className="title"
-              onClick={handleGoHero}
-            >
-              ChaewonIm
-            </div>
+          <div
+            className="header-left"
+            onClick={handleGoHero}
+          >
+            <div className="title">ChaewonIm</div>
+            <div className="title-sub">Archive v1.0.0</div>
           </div>
 
           <div className="header-right">
+            <span className="menu-lang-label">&gt; LAN</span>
             <div className="menu-lang">
               <button
                 className={language === 'ko' ? 'btn-lang on' : 'btn-lang'}
@@ -246,18 +351,12 @@ function App() {
         </header>
 
         <section className={`hero${view !== 'hero' ? ' hidden' : ''}`}>
-          <div className="hero-hud-data left-data">
-            <p className="hud-title">PORTFOLIO.VISUALIZATION —</p>
-            <p className="hud-desc text-body">
-              VISUAL OBJECT LOCALIZED CAN BE DESCRIBED BY
-              <br />
-              MANY PHYSICAL AND TECHNICAL PROPERTIES WITH
-              <br />
-              INTERACTIVE INTERFACES.
-            </p>
+          <div className="hero-hud-data hero-hud-data__location">
+            <div className="title">◼ Location</div>
+            <div className="desc">Seoul,South Korea</div>
           </div>
 
-          <div className="hero-hud-data right-data">
+          <div className="hero-hud-data hero-hud-data__monitor">
             <div className="hero-panel">
               <div className="hero-panel__header">
                 <span className="hero-panel__label">◼ SYS.MONITOR</span>
@@ -279,7 +378,7 @@ function App() {
                   </span>
                 </div>
                 <div className="hero-panel__row">
-                  <span className="hero-panel__key">LOC</span>
+                  <span className="hero-panel__key">GEO</span>
                   <span className="hero-panel__val">{locationStr}</span>
                 </div>
               </div>
@@ -291,24 +390,36 @@ function App() {
           </div>
 
           <div className="keyword-container technical-list">
-            <div className="timeline-line"></div>
             <div className="list-items">
               <div className="list-item">
-                <span className="num">001</span>
-                <p className="hud-sub">Interactive Web —</p>
-                <span className="val text-body">3D GRAPHICS & EXPERIENCES</span>
+                <span className="num">[01] —</span>
+                <div className="list-item__info">
+                  <p className="hud-sub">Interactive Web</p>
+                  <span className="val">3D GRAPHICS · EXPERIENCES</span>
+                </div>
               </div>
               <div className="list-item">
-                <span className="num">002</span>
-                <p className="hud-sub">Frontend Dev —</p>
-                <span className="val text-body">ARCHITECTURE & LOGIC</span>
+                <span className="num">[02] —</span>
+                <div className="list-item__info">
+                  <p className="hud-sub">Frontend Dev</p>
+                  <span className="val">ARCHITECTURE · LOGIC</span>
+                </div>
               </div>
               <div className="list-item">
-                <span className="num">003</span>
-                <p className="hud-sub">UX/UI Design —</p>
-                <span className="val text-body">STRATEGY & COLLABORATION</span>
+                <span className="num">[03] —</span>
+                <div className="list-item__info">
+                  <p className="hud-sub">AI Support</p>
+                  <span className="val">STRATEGY · COLLABORATION</span>
+                </div>
               </div>
             </div>
+          </div>
+
+          <div className="hero-hint">
+            <span className="hero-hint__mouse">
+              <span className="hero-hint__wheel" />
+            </span>
+            <span className="hero-hint__label">touch stars</span>
           </div>
 
           <div className="hero-actions">
@@ -317,14 +428,20 @@ function App() {
               className="btn-hud btn-hud--works"
               onClick={handleGoWorks}
             >
-              <span className="btn-text">+ view works +</span>
+              <span className="btn-text">
+                &gt; <span className="btn-text__text">works</span>
+                <span className="btn-text__cursor"></span>
+              </span>
             </button>
             <button
               ref={buttonInfoRef}
               className="btn-hud btn-hud--info"
               onClick={handleGoInfo}
             >
-              <span className="btn-text">+ view info +</span>
+              <span className="btn-text">
+                &gt; <span className="btn-text__text">info</span>
+                <span className="btn-text__cursor"></span>
+              </span>
             </button>
           </div>
         </section>

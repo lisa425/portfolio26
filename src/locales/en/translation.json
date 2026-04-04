@@ -55,7 +55,7 @@
   },
   "info": {
     "name": "Chaewon Im",
-    "role": "Frontend Engineer | Creative Developer",
+    "role": "Frontend Developer",
     "contact": {
       "email": "codnjs984@gmail.com",
       "phone": "+82 10-9902-7913"
@@ -121,10 +121,9 @@
       ]
     },
     "education": {
-      "title": "EDUCATION",
       "school": "Sookmyung Women’s University",
       "period": "Mar 2017 – Aug 2022 | Seoul, South Korea",
-      "bullets": ["Bachelor of Arts in Visual & Multimedia Design", "Bachelor of Science in IT Engineering"]
+      "bullets": ["Bachelor of Arts in Visual & Media Design", "Bachelor of Science in IT Engineering"]
     }
   }
 }

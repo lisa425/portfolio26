@@ -161,7 +161,7 @@ export const useHeroScene = (
     let isButtonHoveredStar2 = false
     let isTransitioning = false
 
-    const MAX_ROTATION = THREE.MathUtils.degToRad(10) // limit to ~10 degrees max in either direction
+    const MAX_ROTATION = THREE.MathUtils.degToRad(20) // limit to ~10 degrees max in either direction
 
     // Create an invisible plane at Z=0 to cast rays against to know exactly where the mouse is in 3D world space
     const planeZ0 = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0)

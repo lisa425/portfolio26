@@ -13,9 +13,9 @@ interface InfoProps {
 const SECTIONS = [
   { id: 'profile', label: 'Profile', offsetX: 18 },
   { id: 'experience', label: 'Experience', offsetX: 48 },
-  { id: 'skills', label: 'Skills', offsetX: 23 },
-  { id: 'education', label: 'Education', offsetX: 55 },
-  { id: 'contact', label: 'Contact', offsetX: 38 },
+  { id: 'skills', label: 'Skills', offsetX: 18 },
+  { id: 'education', label: 'Education', offsetX: 48 },
+  { id: 'contact', label: 'Contact', offsetX: 18 },
 ]
 
 function Info({ isActive }: InfoProps) {
@@ -112,8 +112,8 @@ function Info({ isActive }: InfoProps) {
           ScrollTrigger.create({
             trigger: `#${section.id}`,
             scroller: containerRef.current,
-            start: 'top 60%',
-            end: 'bottom 40%',
+            start: 'top 70%',
+            end: 'bottom 70%',
             onToggle: (self) => {
               if (self.isActive) setActiveSection(section.id)
             },
@@ -121,7 +121,7 @@ function Info({ isActive }: InfoProps) {
         })
 
         // Reveal animations
-        const revealElements = gsap.utils.toArray('.info-name, .info-role, .info-about, .info-block-title, .info-in')
+        const revealElements = gsap.utils.toArray('.info-section__body')
         revealElements.forEach((el: any) => {
           gsap.fromTo(
             el,
@@ -134,7 +134,7 @@ function Info({ isActive }: InfoProps) {
               scrollTrigger: {
                 trigger: el,
                 scroller: containerRef.current,
-                start: 'top 90%',
+                start: 'top 70%',
                 toggleActions: 'play none none reverse',
               },
             },
@@ -154,7 +154,7 @@ function Info({ isActive }: InfoProps) {
               scrollTrigger: {
                 trigger: el,
                 scroller: containerRef.current,
-                start: 'top 85%',
+                start: 'top 70%',
                 toggleActions: 'play none none reverse',
               },
             },
@@ -173,8 +173,8 @@ function Info({ isActive }: InfoProps) {
             scrollTrigger: {
               trigger: targetSection,
               scroller: containerRef.current,
-              start: 'top 90%',
-              end: 'top 50%',
+              start: 'top 70%',
+              end: 'top 70%',
               scrub: 1,
             },
           })
@@ -208,15 +208,6 @@ function Info({ isActive }: InfoProps) {
     }, 300)
     return () => clearTimeout(timer)
   }, [i18n.language, updateLines])
-
-  // Nav active highlight (instant switch)
-  useEffect(() => {
-    const activeIndex = SECTIONS.findIndex((s) => s.id === activeSection)
-    navRefs.current.forEach((nav, idx) => {
-      if (!nav) return
-      nav.style.opacity = idx === activeIndex ? '1' : '0.35'
-    })
-  }, [activeSection])
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id)
@@ -302,15 +293,15 @@ function Info({ isActive }: InfoProps) {
               </div>
               <div className="info-section__body">
                 <div className="info-section__header">
-                  <span className="info-section__id">SYS.LOC // PROFILE_DATA</span>
+                  <span className="info-section__id">◼ 001.PROFILE</span>
                 </div>
                 <div className="info-section__content">
                   <span className="corner top-left"></span>
                   <span className="corner top-right"></span>
                   <span className="corner bottom-left"></span>
                   <span className="corner bottom-right"></span>
-                  <h2 className="info-name">{t('info.name')}</h2>
-                  <p className="info-role">ROLE // {t('info.role')}</p>
+                  <h2 className="info-name text-display">{t('info.name')}</h2>
+                  <p className="info-role">ROLE | {t('info.role')}</p>
                   <p className="info-about text-body">{t('info.about')}</p>
                 </div>
               </div>
@@ -334,23 +325,23 @@ function Info({ isActive }: InfoProps) {
               </div>
               <div className="info-section__body">
                 <div className="info-section__header">
-                  <span className="info-section__id">SYS.LOC // EXPERIENCE_LOG</span>
+                  <span className="info-section__id">◼ 002.EXPERIENCE</span>
                 </div>
                 <div className="info-section__content">
                   <span className="corner top-left"></span>
                   <span className="corner top-right"></span>
                   <span className="corner bottom-left"></span>
                   <span className="corner bottom-right"></span>
-                  <h3 className="info-block-title">{workExperience.title}</h3>
+                  <h3 className="info-block-title">CAREER_SUMMARY</h3>
                   {workExperience.jobs.map((job: any, jIdx: number) => (
                     <div
                       key={jIdx}
-                      className="job-entry info-in"
+                      className="job-entry"
                     >
                       <div className="job-entry__header">
-                        <h4>■ {job.company}</h4>
+                        <h4 className="text-display">{job.company}</h4>
                         <p className="job-entry__meta">
-                          {job.role} &nbsp;//&nbsp; {job.period} &nbsp;//&nbsp; {job.location}
+                          {job.role} &nbsp;|&nbsp; {job.period} &nbsp;|&nbsp; {job.location}
                         </p>
                       </div>
                       <div className="job-entry__projects">
@@ -359,10 +350,10 @@ function Info({ isActive }: InfoProps) {
                             key={pIdx}
                             className="project-entry text-body"
                           >
-                            <h5>[ {proj.name} ]</h5>
+                            <h5 className="text-display">{proj.name}</h5>
                             <ul>
                               {proj.bullets.map((bullet: string, bIdx: number) => (
-                                <li key={bIdx}>&gt; {bullet}</li>
+                                <li key={bIdx}>{bullet}</li>
                               ))}
                             </ul>
                           </div>
@@ -392,22 +383,22 @@ function Info({ isActive }: InfoProps) {
               </div>
               <div className="info-section__body">
                 <div className="info-section__header">
-                  <span className="info-section__id">SYS.LOC // SKILL_MATRIX</span>
+                  <span className="info-section__id">◼ 003.SKILLS</span>
                 </div>
                 <div className="info-section__content">
                   <span className="corner top-left"></span>
                   <span className="corner top-right"></span>
                   <span className="corner bottom-left"></span>
                   <span className="corner bottom-right"></span>
-                  <h3 className="info-block-title">{skills.title}</h3>
-                  <div className="skills-list info-in">
+                  <h3 className="info-block-title">TECHNICAL_SKILLS</h3>
+                  <div className="skills-list">
                     {skills.categories.map((cat: any, cIdx: number) => (
                       <div
                         key={cIdx}
                         className="skill-category"
                       >
-                        <strong>[ {cat.name} ]</strong>
-                        <span className="text-body">&gt; {cat.items}</span>
+                        <strong>{cat.name}</strong>
+                        <span className="text-body">▪︎ {cat.items}</span>
                       </div>
                     ))}
                   </div>
@@ -433,24 +424,24 @@ function Info({ isActive }: InfoProps) {
               </div>
               <div className="info-section__body">
                 <div className="info-section__header">
-                  <span className="info-section__id">SYS.LOC // ACADEMIC_RECORD</span>
+                  <span className="info-section__id">◼ 004.EDUCATION</span>
                 </div>
                 <div className="info-section__content">
                   <span className="corner top-left"></span>
                   <span className="corner top-right"></span>
                   <span className="corner bottom-left"></span>
                   <span className="corner bottom-right"></span>
-                  <h3 className="info-block-title">{education.title}</h3>
-                  <div className="education-entry info-in">
-                    <h4>■ {education.school}</h4>
-                    <p className="education-entry__meta text-body">DATE // {education.period}</p>
+                  <h3 className="info-block-title">ACADEMIC_HISTORY</h3>
+                  <div className="education-entry">
+                    <h4 className="text-display">{education.school}</h4>
+                    <p className="education-entry__meta">{education.period}</p>
                     <ul>
                       {education.bullets.map((bullet: string, eIdx: number) => (
                         <li
                           key={eIdx}
                           className="text-body"
                         >
-                          &gt; {bullet}
+                          - {bullet}
                         </li>
                       ))}
                     </ul>
@@ -477,21 +468,27 @@ function Info({ isActive }: InfoProps) {
               </div>
               <div className="info-section__body">
                 <div className="info-section__header">
-                  <span className="info-section__id">SYS.LOC // COMM_LINK</span>
+                  <span className="info-section__id">◼ 005.CONTACT</span>
                 </div>
                 <div className="info-section__content">
                   <span className="corner top-left"></span>
                   <span className="corner top-right"></span>
                   <span className="corner bottom-left"></span>
                   <span className="corner bottom-right"></span>
-                  <h3 className="info-block-title">GET IN TOUCH</h3>
-                  <div className="info-contact info-in">
-                    <p className="btn-contact text-body"><span className="meta">EMAIL   //</span> {contact.email}</p>
-                    <p className="btn-contact text-body"><span className="meta">CHANNEL //</span> {contact.phone}</p>
+                  <h3 className="info-block-title">GET_IN_TOUCH</h3>
+                  <div className="info-contact">
+                    <p className="btn-contact">
+                      Email<span className="meta text-body">{contact.email}</span>
+                    </p>
+                    <p className="btn-contact">
+                      Phone<span className="meta text-body">{contact.phone}</span>
+                    </p>
                   </div>
                 </div>
               </div>
             </section>
+
+            <section className="info-section__footer">© 2026 ChaeWon Im. All rights reserved.</section>
           </div>
         </div>
       </div>

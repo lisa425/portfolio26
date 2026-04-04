@@ -55,14 +55,13 @@
   },
   "info": {
     "name": "임채원",
-    "role": "Frontend Engineer | Creative Developer",
+    "role": "Frontend Developer",
     "contact": {
       "email": "codnjs984@gmail.com",
       "phone": "010-9902-7913"
     },
     "about": "디자인 전공 배경을 바탕으로 UX/UI 디자이너와의 원활한 협업을 통해 사용자 경험과 성능을 모두 고려한 인터랙션을 구현해온 5년차 프론트엔드 개발자입니다. 레거시 환경 개선, 개발 환경 재구성, 자동화 도입 등을 통해 조직의 개발 생산성과 안정성을 지속적으로 향상시켜왔습니다. 기술 구현에 그치지 않고 구조를 설계하고 유지보수를 고려한 코드를 작성하는 것을 중요하게 생각하며, 팀 내 개발 인사이트를 공유하고 AI 기반 도구를 활용해 개발 문화를 개선하는 데에도 관심을 가지고 있습니다. ",
     "workExperience": {
-      "title": "WORK EXPERIENCE",
       "jobs": [
         {
           "company": "넥슨코리아(NEXON Korea)",
@@ -104,7 +103,6 @@
       ]
     },
     "skills": {
-      "title": "SKILLS",
       "categories": [
         {
           "name": "Frontend",
@@ -121,10 +119,9 @@
       ]
     },
     "education": {
-      "title": "EDUCATION",
-      "school": "숙명여자대학교(Sookmyung Women’s University)",
+      "school": "숙명여자대학교",
       "period": "2017.03 – 2022.08 | 대한민국 서울",
-      "bullets": ["시각·영상디자인과", "IT공학전공 (복수전공)"]
+      "bullets": ["시각•영상디자인과", "IT공학과(복수전공)"]
     }
   }
 }
