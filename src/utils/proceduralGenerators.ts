@@ -74,56 +74,6 @@ export function generateStarParticles(options: StarGeneratorOptions) {
   return { positions, randoms };
 }
 
-export interface SupernovaGeneratorOptions {
-  count: number;
-  radius: number; // Base radius of the sphere
-}
-
-export function generateSupernovaParticles(options: SupernovaGeneratorOptions) {
-  const positions = new Float32Array(options.count * 3);
-  const randoms = new Float32Array(options.count);
-
-  const { count, radius } = options;
-
-  // Roughly 70% on surface, 30% inside (rough fill)
-  const surfaceRatio = 0.7;
-
-  for (let i = 0; i < count; i++) {
-    // Generate uniform distribution on sphere surface using spherical coordinates
-    const u = Math.random(); // 0 to 1
-    const v = Math.random(); // 0 to 1
-    
-    // Spherical coordinates
-    const theta = u * Math.PI * 2; // Azimuth angle (0 to 2π)
-    const phi = Math.acos(2 * v - 1); // Polar angle (0 to π)
-    
-    // Convert to Cartesian coordinates on unit sphere
-    const x = Math.sin(phi) * Math.cos(theta);
-    const y = Math.sin(phi) * Math.sin(theta);
-    const z = Math.cos(phi);
-    
-    // Decide if particle is on surface or inside
-    const isSurface = Math.random() < surfaceRatio;
-    
-    if (isSurface) {
-      // Place particles on sphere surface
-      positions[i * 3 + 0] = x * radius;
-      positions[i * 3 + 1] = y * radius;
-      positions[i * 3 + 2] = z * radius;
-    } else {
-      // Place particles inside sphere (rough fill)
-      // Use cube root for uniform distribution in 3D volume
-      const r = Math.pow(Math.random(), 1/3) * radius;
-      positions[i * 3 + 0] = x * r;
-      positions[i * 3 + 1] = y * r;
-      positions[i * 3 + 2] = z * r;
-    }
-
-    randoms[i] = Math.random();
-  }
-
-  return { positions, randoms };
-}
 
 export interface NebulaGeneratorOptions {
   count: number;

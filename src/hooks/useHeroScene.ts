@@ -15,7 +15,9 @@ const heroConfig = {
     fov: 75,
     near: 0.1,
     far: 50, // Z depth
-    z: 20, // Move camera back to see the volumetric shapes
+    z: 22, // Move camera back to see the volumetric shapes
+    x: -3.5, // 별이 화면 오른쪽에 보이도록 카메라를 좌측으로
+    y: -0.0, // 별이 화면 위쪽에 보이도록 카메라를 아래로
   },
   render: {
     maxPixelRatio: Math.min(window.devicePixelRatio, 1.5),
@@ -35,7 +37,7 @@ const heroConfig = {
       rotationOffset: Math.PI / 2 + 0.3,
 
       material: {
-        size: 50.0, // Smaller particles reveal the shape better than huge overlapping ones
+        size: 50.0,
         color: "#eae9f3", // Pure white/blue core
         noiseStrength: 0.2, // Less undulating so it doesn't distort the star shape too much
         holeRadius: 9.0, // The exact coordinate size of the pushed hole
@@ -65,9 +67,9 @@ const heroConfig = {
   postprocessing: {
     bloom: {
       enabled: true,
-      strength: 0.3, // Let the core star shine like crazy
-      radius: 0.7, // Spread the glow
-      threshold: 0.2, // Catch most of the colored point particles
+      strength: 0.3,
+      radius: 0.7,
+      threshold: 0.2,
     },
   },
 };
@@ -83,6 +85,7 @@ export const useHeroScene = (
   triggerWorksTransition: (onComplete: () => void) => void;
   triggerInfoTransition: (onComplete: () => void) => void;
   triggerHeroTransition: (onComplete: () => void) => void;
+  triggerAssembly: () => void;
 } => {
   const worksTransitionRef = useRef<((onComplete: () => void) => void) | null>(
     null,
@@ -93,6 +96,7 @@ export const useHeroScene = (
   const heroTransitionRef = useRef<((onComplete: () => void) => void) | null>(
     null,
   );
+  const assemblyRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
@@ -117,7 +121,11 @@ export const useHeroScene = (
       heroConfig.camera.near,
       heroConfig.camera.far,
     );
-    camera.position.z = heroConfig.camera.z;
+    camera.position.set(
+      heroConfig.camera.x,
+      heroConfig.camera.y,
+      heroConfig.camera.z,
+    );
 
     // 3. RENDERER
     const renderer = new THREE.WebGLRenderer({
@@ -164,20 +172,16 @@ export const useHeroScene = (
       currentY: 100,
     };
 
-    const dragParams = {
-      isDragging: false,
-      previousX: 0,
-      previousY: 0,
-      targetRotationX: 0,
-      targetRotationY: 0,
-    };
+    // Cursor-driven rotation targets (mapped directly from mouse NDC position)
+    let targetRotationX = 0;
+    let targetRotationY = 0;
 
     // Button hover state (각 별별로 독립적으로 관리)
     let isButtonHoveredStar1 = false;
     let isButtonHoveredStar2 = false;
     let isTransitioning = false;
 
-    const MAX_ROTATION = THREE.MathUtils.degToRad(10); // limit to ~15 degrees max in either direction
+    const MAX_ROTATION = THREE.MathUtils.degToRad(20); // limit to ~10 degrees max in either direction
 
     // Create an invisible plane at Z=0 to cast rays against to know exactly where the mouse is in 3D world space
     const planeZ0 = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -200,67 +204,26 @@ export const useHeroScene = (
       raycaster.ray.intersectPlane(planeZ0, intersectPoint);
 
       if (intersectPoint) {
-        // The shader expects coordinates in the same 3D world space scale
         mouseParams.targetX = intersectPoint.x;
         mouseParams.targetY = intersectPoint.y;
       }
 
-      // 2. Drag Rotation Logic (버튼 호버 중에는 비활성화)
-      if (
-        dragParams.isDragging &&
-        !isButtonHoveredStar1 &&
-        !isButtonHoveredStar2
-      ) {
-        const deltaX = event.clientX - dragParams.previousX;
-        const deltaY = event.clientY - dragParams.previousY;
-
-        // Accumulate rotation target based on mouse movement speed
-        dragParams.targetRotationY += deltaX * 0.005; // Pan horizontally changes Y rotation
-        dragParams.targetRotationX += deltaY * 0.005; // Pan vertically changes X rotation
-
-        // Clamp rotation to prevent spinning fully around
-        dragParams.targetRotationX = THREE.MathUtils.clamp(
-          dragParams.targetRotationX,
-          -MAX_ROTATION,
-          MAX_ROTATION,
-        );
-        dragParams.targetRotationY = THREE.MathUtils.clamp(
-          dragParams.targetRotationY,
-          -MAX_ROTATION,
-          MAX_ROTATION,
-        );
-
-        dragParams.previousX = event.clientX;
-        dragParams.previousY = event.clientY;
-      }
-    };
-
-    const handleMouseDown = (event: MouseEvent) => {
-      // 버튼 호버 중에는 드래그 비활성화
+      // 2. Cursor-position-based rotation (버튼 호버 중에는 비활성화)
       if (!isButtonHoveredStar1 && !isButtonHoveredStar2) {
-        dragParams.isDragging = true;
-        dragParams.previousX = event.clientX;
-        dragParams.previousY = event.clientY;
-        container.style.cursor = "grabbing";
+        // NDC mouseVec2D is already -1..1; scale directly to MAX_ROTATION
+        targetRotationY = mouseVec2D.x * MAX_ROTATION;
+        targetRotationX = -mouseVec2D.y * MAX_ROTATION;
       }
-    };
-
-    const handleMouseUp = () => {
-      dragParams.isDragging = false;
-      container.style.cursor = "";
-
-      // Optional: gracefully return to 0 rotation when mouse released
-      // dragParams.targetRotationX = 0;
-      // dragParams.targetRotationY = 0;
     };
 
     container.addEventListener("mousemove", handleMouseMove);
-    container.addEventListener("mousedown", handleMouseDown);
-    window.addEventListener("mouseup", handleMouseUp); // Attach to window in case they drag outside container
     // On mouse leave, lerp mouse back towards infinity (or corner) so the hole closes
+    // and return stars to neutral rotation
     const handleMouseLeave = () => {
       mouseParams.targetX = 100;
       mouseParams.targetY = 100;
+      targetRotationX = 0;
+      targetRotationY = 0;
     };
     container.addEventListener("mouseleave", handleMouseLeave);
 
@@ -354,6 +317,59 @@ export const useHeroScene = (
 
     reportProgress(60); // Star 2 generated
 
+    // -------------------------------------------------------------
+    // 7a. PARTICLE ASSEMBLY SETUP (scatter → star convergence)
+    // -------------------------------------------------------------
+    // Copy the original (star-shaped) positions before we scatter them
+    const originalPos1 = new Float32Array(star1Data.positions);
+    const originalPos2 = new Float32Array(star2Data.positions);
+
+    // Generate random scatter positions in a sphere
+    const genScatter = (n: number, r = 22): Float32Array => {
+      const arr = new Float32Array(n * 3);
+      for (let i = 0; i < n * 3; i += 3) {
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        const dist = r * (0.5 + Math.random() * 0.5);
+        arr[i] = dist * Math.sin(phi) * Math.cos(theta);
+        arr[i + 1] = dist * Math.sin(phi) * Math.sin(theta);
+        arr[i + 2] = dist * Math.cos(phi);
+      }
+      return arr;
+    };
+
+    const scattered1 = genScatter(heroConfig.particles.coreStar.count);
+    const scattered2 = genScatter(heroConfig.particles.coreStar.count);
+
+    // Set geometries to scattered state (canvas is brightness(0) so not visible yet)
+    (star1Geo.attributes.position.array as Float32Array).set(scattered1);
+    star1Geo.attributes.position.needsUpdate = true;
+    (star2Geo.attributes.position.array as Float32Array).set(scattered2);
+    star2Geo.attributes.position.needsUpdate = true;
+
+    // Assembly trigger — called from heroIntroMotion in App.tsx
+    assemblyRef.current = () => {
+      const prog = { v: 0 };
+      gsap.to(prog, {
+        v: 1,
+        duration: 2.0,
+        ease: "expo.out",
+        onUpdate: () => {
+          const t = prog.v;
+          const p1 = star1Geo.attributes.position.array as Float32Array;
+          const p2 = star2Geo.attributes.position.array as Float32Array;
+          for (let i = 0; i < p1.length; i++) {
+            p1[i] = scattered1[i] + (originalPos1[i] - scattered1[i]) * t;
+          }
+          for (let i = 0; i < p2.length; i++) {
+            p2[i] = scattered2[i] + (originalPos2[i] - scattered2[i]) * t;
+          }
+          star1Geo.attributes.position.needsUpdate = true;
+          star2Geo.attributes.position.needsUpdate = true;
+        },
+      });
+    };
+
     // Button hover effect: 버튼에 마우스오버하면 구멍 효과 발생
     let targetButtonHoverStar1 = 0.0; // star1용 (btn-go-works)
     let targetButtonHoverStar2 = 0.0; // star2용 (btn-go-info)
@@ -369,8 +385,8 @@ export const useHeroScene = (
         targetButtonHoverStar1 = 1.0; // star1만 활성화
 
         // 별의 rotation을 0으로 초기화
-        dragParams.targetRotationX = 0;
-        dragParams.targetRotationY = 0;
+        targetRotationX = 0;
+        targetRotationY = 0;
       };
 
       const handleButtonMouseLeave = () => {
@@ -403,8 +419,8 @@ export const useHeroScene = (
         targetButtonHoverStar2 = 1.0; // star2만 활성화
 
         // 별의 rotation을 0으로 초기화
-        dragParams.targetRotationX = 0;
-        dragParams.targetRotationY = 0;
+        targetRotationX = 0;
+        targetRotationY = 0;
       };
 
       const handleButtonMouseLeave = () => {
@@ -469,6 +485,20 @@ export const useHeroScene = (
     // -------------------------------------------------------------
     let animationFrameId: number;
 
+    // Reusable Vector3 for projectHoleToScreen — allocated once, never GC'd per frame
+    const _projVec3 = new THREE.Vector3();
+
+    // Project a 2D hole position (world XY, Z=0) into CSS pixel coords for button placement
+    // Defined OUTSIDE update() so the function object is not re-created every frame
+    const projectHoleToScreen = (hx: number, hy: number) => {
+      _projVec3.set(hx, hy, 0);
+      _projVec3.project(camera); // NDC (-1 ~ 1)
+      return {
+        x: (_projVec3.x * 0.5 + 0.5) * container.clientWidth,
+        y: (-_projVec3.y * 0.5 + 0.5) * container.clientHeight,
+      };
+    };
+
     const update = () => {
       const elapsedTime = clock.getElapsedTime();
 
@@ -481,13 +511,11 @@ export const useHeroScene = (
       // Smooth lerp for mouse coordinates to avoid jerky jumps
       // 버튼 호버 중이 아닐 때만 마우스 위치 업데이트
       if (!isButtonHoveredStar1 && !isButtonHoveredStar2) {
-        // 마우스가 멀리 떨어져 있을 때는 더 느리게 전환 (부드러운 아웃 트랜지션)
-        const targetDistance = Math.sqrt(
+        // Skip sqrt: compare squared distance to 10² = 100 (same threshold, cheaper)
+        const targetDistSq =
           mouseParams.targetX * mouseParams.targetX +
-            mouseParams.targetY * mouseParams.targetY,
-        );
-        // 타겟이 멀리 있으면 더 느리게 전환 (마우스아웃 시 부드러운 트랜지션)
-        const lerpSpeed = targetDistance > 10 ? 0.05 : 0.1;
+          mouseParams.targetY * mouseParams.targetY;
+        const lerpSpeed = targetDistSq > 100 ? 0.05 : 0.1;
 
         mouseParams.currentX +=
           (mouseParams.targetX - mouseParams.currentX) * lerpSpeed;
@@ -593,48 +621,41 @@ export const useHeroScene = (
 
       // Animate bloom strength: 0.2와 0.3 사이를 왔다갔다 반짝거리는 효과
       if (bloomPass) {
-        const minStrength = 0.2;
-        const maxStrength = 0.25;
+        const minStrength = 0.15;
+        const maxStrength = 0.22;
         // sin 함수를 사용해서 0.2와 0.3 사이를 부드럽게 오가도록
         const normalizedSin = (Math.sin(elapsedTime * 2.0) + 1) / 2; // 0 to 1
         bloomPass.strength =
           minStrength + (maxStrength - minStrength) * normalizedSin;
       }
 
-      // Apply drag rotation via smooth lerp EXCLUSIVELY to the Stars (mesh) so the Nebula remains static
+      // Apply cursor-driven rotation via smooth lerp EXCLUSIVELY to the Stars (mesh)
       star1Points.rotation.x +=
-        (dragParams.targetRotationX - star1Points.rotation.x) * 0.1;
+        (targetRotationX - star1Points.rotation.x) * 0.1;
       star1Points.rotation.y +=
-        (dragParams.targetRotationY - star1Points.rotation.y) * 0.1;
+        (targetRotationY - star1Points.rotation.y) * 0.1;
 
       star2Points.rotation.x +=
-        (dragParams.targetRotationX - star2Points.rotation.x) * 0.1;
+        (targetRotationX - star2Points.rotation.x) * 0.1;
       star2Points.rotation.y +=
-        (dragParams.targetRotationY - star2Points.rotation.y) * 0.1;
+        (targetRotationY - star2Points.rotation.y) * 0.1;
 
-      // 홀의 중심 위치(셰이더 uStar1/2Position)를 화면 좌표로 프로젝션하여 버튼 위치 동기화
-      const projectHoleToScreen = (holePos: THREE.Vector2) => {
-        const pos3D = new THREE.Vector3(holePos.x, holePos.y, 0);
-        pos3D.project(camera); // NDC (-1 ~ 1)
-        return {
-          x: (pos3D.x * 0.5 + 0.5) * container.clientWidth,
-          y: (-pos3D.y * 0.5 + 0.5) * container.clientHeight,
-        };
-      };
-
+      // Sync button positions to the projected 3D hole centres
       if (buttonWorksRef?.current) {
-        const screen1 = projectHoleToScreen(
-          nebulaMat.uniforms.uStar1Position.value,
+        const s1 = projectHoleToScreen(
+          nebulaMat.uniforms.uStar1Position.value.x,
+          nebulaMat.uniforms.uStar1Position.value.y,
         );
-        buttonWorksRef.current.style.left = `${screen1.x}px`;
-        buttonWorksRef.current.style.top = `${screen1.y}px`;
+        buttonWorksRef.current.style.left = `${s1.x}px`;
+        buttonWorksRef.current.style.top = `${s1.y}px`;
       }
       if (buttonInfoRef?.current) {
-        const screen2 = projectHoleToScreen(
-          nebulaMat.uniforms.uStar2Position.value,
+        const s2 = projectHoleToScreen(
+          nebulaMat.uniforms.uStar2Position.value.x,
+          nebulaMat.uniforms.uStar2Position.value.y,
         );
-        buttonInfoRef.current.style.left = `${screen2.x}px`;
-        buttonInfoRef.current.style.top = `${screen2.y}px`;
+        buttonInfoRef.current.style.left = `${s2.x}px`;
+        buttonInfoRef.current.style.top = `${s2.y}px`;
       }
     };
 
@@ -655,44 +676,10 @@ export const useHeroScene = (
     animate();
 
     // -------------------------------------------------------------
-    // INTRO ANIMATION: 응축 → 폭발 → 안정
-    // -------------------------------------------------------------
-    const introTl = gsap.timeline({ delay: 0.5 });
-
-    introTl
-      .from([star1Points.scale, star2Points.scale], {
-        x: 0,
-        y: 0,
-        z: 0,
-        duration: 3.0,
-        ease: "elastic.out(1, 100)",
-        stagger: 0.1,
-      })
-      .from(
-        star1Points.rotation,
-        {
-          z: THREE.MathUtils.degToRad(-200),
-          duration: 3.5,
-          ease: "elastic.out(1, 100)",
-        },
-        "<",
-      )
-      .from(
-        star2Points.rotation,
-        {
-          z: THREE.MathUtils.degToRad(180),
-          duration: 3.5,
-          ease: "elastic.out(1, 100)",
-        },
-        "<",
-      );
-
-    // -------------------------------------------------------------
     // 8. TRANSITION TRIGGERS
     // -------------------------------------------------------------
     worksTransitionRef.current = (onComplete: () => void) => {
       isTransitioning = true;
-      introTl.kill();
       // Open the hole in star1 and lock mouse to star1 center
       targetButtonHoverStar1 = 1.0;
       isButtonHoveredStar1 = true;
@@ -731,7 +718,6 @@ export const useHeroScene = (
 
     infoTransitionRef.current = (onComplete: () => void) => {
       isTransitioning = true;
-      introTl.kill();
       targetButtonHoverStar2 = 1.0;
       isButtonHoveredStar2 = true;
 
@@ -777,8 +763,8 @@ export const useHeroScene = (
       tl.to(
         camera.position,
         {
-          x: 0,
-          y: 0,
+          x: heroConfig.camera.x,
+          y: heroConfig.camera.y,
           z: heroConfig.camera.z,
           duration: 1.5,
           ease: "power3.out",
@@ -819,12 +805,10 @@ export const useHeroScene = (
       worksTransitionRef.current = null;
       infoTransitionRef.current = null;
       heroTransitionRef.current = null;
-      introTl.kill();
+      assemblyRef.current = null;
 
       window.removeEventListener("resize", handleResize);
       container.removeEventListener("mousemove", handleMouseMove);
-      container.removeEventListener("mousedown", handleMouseDown);
-      window.removeEventListener("mouseup", handleMouseUp);
       container.removeEventListener("mouseleave", handleMouseLeave);
 
       if (buttonCleanup) {
@@ -868,9 +852,14 @@ export const useHeroScene = (
     heroTransitionRef.current?.(onComplete);
   }, []);
 
+  const triggerAssembly = useCallback(() => {
+    assemblyRef.current?.();
+  }, []);
+
   return {
     triggerWorksTransition,
     triggerInfoTransition,
     triggerHeroTransition,
+    triggerAssembly,
   };
 };
