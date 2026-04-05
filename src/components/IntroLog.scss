@@ -1,0 +1,91 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap");
+
+// LINE_H must match the JS constant LINE_H = 60px
+$line-h: 22px;
+$visible-rows: 5;
+
+// ─── Intro Log Overlay ────────────────────────────────────────────
+.intro-log {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  background: #07070a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  cursor: default;
+  will-change: opacity;
+
+  // ── CRT scanlines ──
+  &__scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 3px,
+      rgba(255, 255, 255, 0.013) 3px,
+      rgba(255, 255, 255, 0.013) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  // ── Viewport: clips to exactly 5 rows ──
+  &__viewport {
+    position: relative;
+    width: 480px;
+    height: $line-h * $visible-rows; // 300px
+    overflow: hidden;
+    z-index: 2;
+  }
+
+  // ── Track: scrolled by GSAP translateY ──
+  &__track {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    will-change: transform;
+  }
+
+  // ── Each line: fixed height so geometry is predictable ──
+  &__line {
+    height: $line-h;
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.25);
+    will-change: background-color, color, transform;
+    transform-origin: left center;
+  }
+
+  &__line-text {
+    display: flex;
+    align-items: center;
+  }
+
+  // ── Blinking block cursor — only rendered on last line after anim ──
+  &__cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 0.85em;
+    background: currentColor;
+    margin-left: 0.3em;
+    vertical-align: middle;
+    animation: intro-cursor-blink 0.75s step-end infinite;
+  }
+
+  @keyframes intro-cursor-blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+}
