@@ -353,7 +353,13 @@ function Info({ isActive }: InfoProps) {
                             <h5 className="text-display">{proj.name}</h5>
                             <ul>
                               {proj.bullets.map((bullet: string, bIdx: number) => (
-                                <li key={bIdx}>{bullet}</li>
+                                <li key={bIdx}>
+                                  {bullet.split('\n').map((line, lIdx, lines) => (
+                                    <span key={lIdx} style={{ display: 'contents' }}>
+                                      {line}{lIdx < lines.length - 1 && <br />}
+                                    </span>
+                                  ))}
+                                </li>
                               ))}
                             </ul>
                           </div>
@@ -437,11 +443,12 @@ function Info({ isActive }: InfoProps) {
                     <p className="education-entry__meta">{education.period}</p>
                     <ul>
                       {education.bullets.map((bullet: string, eIdx: number) => (
-                        <li
-                          key={eIdx}
-                          className="text-body"
-                        >
-                          - {bullet}
+                        <li key={eIdx} className="text-body">
+                          - {bullet.split('\n').map((line, lIdx, lines) => (
+                            <span key={lIdx} style={{ display: 'contents' }}>
+                              {line}{lIdx < lines.length - 1 && <br />}
+                            </span>
+                          ))}
                         </li>
                       ))}
                     </ul>

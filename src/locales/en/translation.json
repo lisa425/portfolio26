@@ -3,50 +3,55 @@
     "items": [
       {
         "id": 1,
+        "category": 1,
         "game": "Azure Promilia",
-        "title": "Official Website",
+        "title": "Official Website & Pre-registration Event(1st)",
         "date": "2025.11 - 2025.12",
-        "description": "Official promotional website for the game 'Azure Promilia'. Implemented rich interactions and 3D scenes to provide an immersive user experience.",
-        "stack": "Next.js · Three.js · GSAP",
+        "description": "Led overall frontend development - architecture design,<br/>API integration, security audit, and load testing\nReduced project timeline by 50% through structured cross-functional collaboration\nBuilt character introduction, world reveal, and other informational interaction features for the pre-registration page",
+        "stack": "Next.js",
         "img": "/images/meta_azur.jpg",
         "url": "https://azurpromilia.nexon.com/events/2025/12/preregistration"
       },
       {
         "id": 2,
+        "category": 1,
         "game": "Baram",
-        "title": "Anchor Remaster Teaser",
+        "title": "Archer Remaster Teaser:\n21st Anniversary Illustration Gallery",
         "date": "2022.11 - 2022.12",
-        "description": "A visionary project demonstrating advanced web graphics for a cyberpunk themed experience.",
-        "stack": "JavaScript · Three.js · GSAP",
+        "description": "Built a 3D web gallery featuring historical illustrations to celebrate<br/>the Archer remaster\n Implemented scroll-based year counting, gallery control interactions, and illustration focus effects",
+        "stack": "Three.js · GSAP",
         "img": "/images/meta_baram.jpg",
         "url": "https://baram.nexon.com/E221215/Intro"
       },
       {
         "id": 3,
+        "category": 1,
         "game": "Blue Archive",
         "title": "Code:BOX Roadmap Promotion",
         "date": "2025.07",
-        "description": "Interactive portfolio layout utilizing particle systems and custom shaders to visualize a universe.",
+        "description": "Implemented immersive interactive web graphics with a<br/>cyberpunk theme\nGlobal multilingual support for Korean, English, and Thai",
         "stack": "Vue.js · Nuxt.js",
         "img": "/images/meta_ba.jpg",
         "url": "https://bluearchive.nexon.com/events/2025/07/update"
       },
       {
         "id": 4,
-        "game": "Vindictus",
-        "title": "New Character 'Neamhain'",
+        "category": 1,
+        "game": "Vindictus(NA)",
+        "title": "New Character 'Neamhain' Update",
         "date": "2025.01",
-        "description": "3D virtual exhibition gallery for digital artists to showcase their artworks in a virtual space.",
+        "description": "Informational page for the new character update\nAdvanced web animation crafted to guide user attention and<br/>express the character's identity",
         "stack": "React · TypeScript",
         "img": "/images/meta_mm.jpg",
         "url": "http://vindictus.nexon.net/event/2025/0121/neamhain"
       },
       {
         "id": 5,
+        "category": 1,
         "game": "Mabinogi Mobile",
-        "title": "1st Anniversary Update",
+        "title": "1st Anniversary Update Event",
         "date": "2026.03",
-        "description": "3D virtual exhibition gallery for digital artists to showcase their artworks in a virtual space.",
+        "description": "Informational intro page for the 1st anniversary update,<br/>featuring spring-themed particle web graphics\nAdaptive animation for both mobile and PC",
         "stack": "React · TypeScript",
         "img": "/images/meta_mm.jpg",
         "url": "https://mabinogimobile.nexon.com/events2026/0326/1stanniversary"
@@ -60,7 +65,7 @@
       "email": "codnjs984@gmail.com",
       "phone": "+82 10-9902-7913"
     },
-    "about": "Frontend Engineer with 4+ years of experience contributing to large-scale web services at Nexon Korea. Skilled in frontend architecture, legacy system modernization, and workflow automation, delivering practical solutions under tight timelines. With a background in design, I collaborate closely with UX/UI designers to create visually engaging and performance-conscious web experiences. Committed to improving development processes and enabling teams to work more efficiently.",
+    "about": "I'm a frontend developer who thinks across the full creative process: planning, design, and implementation. Having studied both design and engineering, I care deeply about craft on screen and the systems behind it. I'm drawn to building not just polished interfaces, but better ways to build them like structure, automation, and team culture.",
     "workExperience": {
       "title": "WORK EXPERIENCE",
       "jobs": [
@@ -71,32 +76,30 @@
           "location": "Seoul, South Korea",
           "projects": [
             {
-              "name": "Azure Promilia (KR) – Official Website Launch (Frontend Lead)",
+              "name": "Azure Promilia(KR) – Official Website Launch (Frontend Lead)",
               "bullets": [
-                "Led frontend development from project initiation to launch",
-                "Designed scalable project structure and reusable component architecture",
-                "Implemented validation layer for internal API integration",
-                "Built and optimize interactive UI features (character sliders, animated map interactions)",
-                "Established load testing strategy for up to 5,000 concurrent users",
-                "Reduced delivery timeline by 50% through structured planning and cross-functional collaboration"
+                "Designed initial frontend architecture and reusable component structure for a new project",
+                "Integrated internal APIs with request/response validation layer to ensure code stability",
+                "Established security audit and load testing strategy for up to 5,000 concurrent users",
+                "Streamlined cross-team collaboration and scheduling, reducing project timeline by 50%"
               ]
             },
             {
-              "name": "NEXON Official Game Website Maintenance & Development Interactive Web Campaigns",
+              "name": "Mabinogi Heroes(KR/NA) – Infrastructure Modernization (Frontend Lead)",
               "bullets": [
-                "Implemented the organization’s first three.js-based 3D web gallery",
-                "Developed interactive card-combination logic for Mabinogi Mobile pre-registration event",
-                "Built in-game connected web event experience for Mabinogi Heroes",
-                "Handled multilingual localization for global game event websites, including MapleStory M and Blue Archive"
+                "Led modernization of a legacy website into a React + Vite architecture and standardized the dev environment",
+                "Built workflow automation tools using Figma API and AI, reducing repetitive task time by over 90%",
+                "Introduced shared components, event templates, and automation scripts, cutting dev timelines by 85% and\nimproving new event turnaround speed by 50%",
+                "Established branch strategy and deployment process for dev/production, improving security stability by 30%"
               ]
             },
             {
-              "name": "Mabinogi Heroes (KR/NA) – Website Modernization & Automation",
+              "name": "Game Website Maintenance & Development Web Promotion",
               "bullets": [
-                "Led modernization of a legacy website into a React + Vite architecture",
-                "Designed branch strategy separating development and production environments, improving security stability by 30%",
-                "Built automated build and deployment scripts, reducing deployment process timelines by 80%",
-                "Standardized reusable event templates and shared component structures, reducing development timelines by 50%"
+                "Implemented a Three.js-based 3D web gallery event for Baram",
+                "Built character introduction slides and interactive map drag events for Azur Promilia pre-registration",
+                "Handled multilingual support for global game events including MapleStoryM and Blue Archive",
+                "Developed in-game integrated web events for games such as Mabinogi Heroes, KartRider Rush Plus, and others"
               ]
             }
           ]
@@ -123,7 +126,10 @@
     "education": {
       "school": "Sookmyung Women’s University",
       "period": "Mar 2017 – Aug 2022 | Seoul, South Korea",
-      "bullets": ["Bachelor of Arts in Visual & Media Design", "Bachelor of Science in IT Engineering"]
+      "bullets": [
+        "Bachelor of Arts in Visual & Media Design",
+        "Bachelor of Science in IT Engineering"
+      ]
     }
   }
 }
