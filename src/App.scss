@@ -379,7 +379,7 @@ body.ko {
       }
       .hero-sub-text {
         .hero-sub-text__desc {
-          font-size: max(vw(17, 1920), 18px);
+          font-size: max(vw(16, 1920), 17px);
           color: rgba($text-primary, 0.6);
           margin-top: 4em;
           display: flex;
@@ -1362,17 +1362,68 @@ body.ko {
         }
       }
 
+      // Natural aspect ratio on the img (width 100%, height auto). Min-height only
+      // while loading so the column doesn’t collapse before decode.
       .image-wrapper {
         position: relative;
         width: 100%;
+        min-height: 240px;
         overflow: hidden;
+        background: rgba(255, 255, 255, 0.02);
+
+        &--loaded {
+          min-height: 0;
+        }
+      }
+
+      .panel-image__skeleton {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background: linear-gradient(
+          105deg,
+          rgba(255, 255, 255, 0.03) 0%,
+          rgba(255, 255, 255, 0.08) 48%,
+          rgba(255, 255, 255, 0.03) 100%
+        );
+        background-size: 200% 100%;
+        animation: panel-image-skeleton-shimmer 1.4s ease-in-out infinite;
+        animation-play-state: running;
+        pointer-events: none;
+        transition:
+          opacity 0.4s ease,
+          visibility 0s linear 0.4s;
+
+        &--hidden {
+          opacity: 0;
+          visibility: hidden;
+          animation: none;
+          animation-play-state: paused;
+        }
       }
 
       img {
+        position: relative;
+        z-index: 0;
         width: 100%;
-        object-fit: cover;
+        height: auto;
         display: block;
         filter: grayscale(10%);
+        opacity: 0;
+        transition: opacity 0.45s ease;
+
+        &.is-loaded {
+          opacity: 1;
+        }
+      }
+    }
+
+    @keyframes panel-image-skeleton-shimmer {
+      0% {
+        background-position: 120% 0;
+      }
+      100% {
+        background-position: -120% 0;
       }
     }
 

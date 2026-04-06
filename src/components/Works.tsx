@@ -23,6 +23,47 @@ type WorkType = {
   url: string
 }
 
+function WorkDetailImage({ src, index }: { src: string; index: number }) {
+  const [loaded, setLoaded] = useState(false)
+  const imgRef = useRef<HTMLImageElement>(null)
+
+  useEffect(() => {
+    setLoaded(false)
+    const el = imgRef.current
+    if (el?.complete && el.naturalWidth > 0) {
+      setLoaded(true)
+    }
+  }, [src])
+
+  return (
+    <div className="panel-image-container">
+      <span className="corner top-left"></span>
+      <span className="corner top-right"></span>
+      <span className="corner bottom-left"></span>
+      <span className="corner bottom-right"></span>
+      <div
+        className={`image-wrapper${loaded ? ' image-wrapper--loaded' : ''}`}
+        aria-busy={!loaded}
+      >
+        <div
+          className={`panel-image__skeleton${loaded ? ' panel-image__skeleton--hidden' : ''}`}
+          aria-hidden
+        />
+        <img
+          ref={imgRef}
+          src={src}
+          alt=""
+          loading={index < 2 ? 'eager' : 'lazy'}
+          decoding="async"
+          onLoad={() => setLoaded(true)}
+          onError={() => setLoaded(true)}
+          className={loaded ? 'is-loaded' : ''}
+        />
+      </div>
+    </div>
+  )
+}
+
 // ─── Category Map (확장 시 여기에만 추가) ───
 const CATEGORY_MAP: Record<number, string> = {
   0: 'Personal_work',
@@ -713,21 +754,11 @@ function Works({ isActive }: WorksProps) {
               >
                 <div className="panel-body__left">
                   {activeWork.img.map((img, idx) => (
-                    <div
-                      key={idx}
-                      className="panel-image-container"
-                    >
-                      <span className="corner top-left"></span>
-                      <span className="corner top-right"></span>
-                      <span className="corner bottom-left"></span>
-                      <span className="corner bottom-right"></span>
-                      <div className="image-wrapper">
-                        <img
-                          src={img}
-                          alt="thumbnail"
-                        />
-                      </div>
-                    </div>
+                    <WorkDetailImage
+                      key={`${activeWork.id}-${idx}-${img}`}
+                      src={img}
+                      index={idx}
+                    />
                   ))}
                 </div>
 
