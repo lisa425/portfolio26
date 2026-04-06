@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap');
 
 // LINE_H must match the JS constant LINE_H = 60px
 $line-h: 22px;
@@ -16,6 +16,7 @@ $visible-rows: 5;
   pointer-events: auto;
   cursor: default;
   will-change: opacity;
+  font-family: 'JetBrains Mono', monospace;
 
   // ── CRT scanlines ──
   &__scanlines {

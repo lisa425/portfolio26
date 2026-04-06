@@ -25,6 +25,8 @@ const _utcOffsetH = -new Date().getTimezoneOffset() / 60
 const _utcLabel = `UTC${_utcOffsetH >= 0 ? '+' : ''}${String(_utcOffsetH).padStart(2, '0')}:00`
 
 const VIEWPORT_GUARD_MAX_PX = 1000
+/** Max wait for `document.fonts.ready` before continuing intro (avoids hanging on slow/broken fonts). */
+const FONTS_READY_MAX_WAIT_MS = 2500
 
 function App() {
   const { i18n, t } = useTranslation()
@@ -75,15 +77,26 @@ function App() {
     return () => mq.removeEventListener('change', sync)
   }, [])
 
-  // Loading progress handler
+  // WebGL init reports 100 in the same tick as scene setup; the intro still waits on
+  // `document.fonts.ready` + delay. Without tying the counter to that, (100/100) looked
+  // "stuck" while fonts were still loading. Cap at 99 until fonts resolve (or timeout).
+
   const handleProgress = useCallback((progress: number) => {
-    setLoadProgress(progress)
-    if (progress >= 100) {
-      // 폰트 로딩까지 대기 후, 100%가 화면에 렌더된 뒤 fade-out 시작
-      document.fonts.ready.then(() => {
-        setTimeout(() => setIsLoaded(true), 500)
-      })
+    if (progress < 100) {
+      setLoadProgress(progress)
+      return
     }
+    setLoadProgress(99)
+    Promise.race([
+      document.fonts.ready,
+      new Promise<void>((resolve) => {
+        setTimeout(resolve, FONTS_READY_MAX_WAIT_MS)
+      }),
+    ]).then(() => {
+      setLoadProgress(100)
+      // Brief hold so 100/100 is readable before line cycling starts
+      setTimeout(() => setIsLoaded(true), 500)
+    })
   }, [])
 
   // Geolocation

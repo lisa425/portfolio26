@@ -90,7 +90,7 @@ export default function IntroLog({
   }, [visible]);
 
   // ── Start cycling once loading completes ──
-  // The 500ms delay already built into handleProgress acts as the post-100% hold
+  // `isLoaded` flips after WebGL + fonts gate + 500ms hold (see App `handleProgress`)
   useEffect(() => {
     if (!isLoaded || !visible || doneRef.current) return;
 

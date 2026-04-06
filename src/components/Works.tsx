@@ -23,17 +23,50 @@ type WorkType = {
   url: string
 }
 
+const PANEL_IMG_PLACEHOLDER_H = 240
+
 function WorkDetailImage({ src, index }: { src: string; index: number }) {
   const [loaded, setLoaded] = useState(false)
+  const [heightPx, setHeightPx] = useState(PANEL_IMG_PLACEHOLDER_H)
   const imgRef = useRef<HTMLImageElement>(null)
+
+  const settleNaturalHeight = useCallback(() => {
+    const img = imgRef.current
+    if (!img?.naturalWidth) {
+      setHeightPx(PANEL_IMG_PLACEHOLDER_H)
+      return
+    }
+    setHeightPx(img.offsetHeight)
+  }, [])
 
   useEffect(() => {
     setLoaded(false)
+    setHeightPx(PANEL_IMG_PLACEHOLDER_H)
     const el = imgRef.current
     if (el?.complete && el.naturalWidth > 0) {
       setLoaded(true)
+      // Two rAFs so the browser paints placeholder height first; then `height` can transition.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          settleNaturalHeight()
+        })
+      })
     }
-  }, [src])
+  }, [src, settleNaturalHeight])
+
+  const handleLoad = () => {
+    setLoaded(true)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        settleNaturalHeight()
+      })
+    })
+  }
+
+  const handleError = () => {
+    setLoaded(true)
+    setHeightPx(PANEL_IMG_PLACEHOLDER_H)
+  }
 
   return (
     <div className="panel-image-container">
@@ -42,7 +75,8 @@ function WorkDetailImage({ src, index }: { src: string; index: number }) {
       <span className="corner bottom-left"></span>
       <span className="corner bottom-right"></span>
       <div
-        className={`image-wrapper${loaded ? ' image-wrapper--loaded' : ''}`}
+        className="image-wrapper"
+        style={{ height: heightPx }}
         aria-busy={!loaded}
       >
         <div
@@ -55,8 +89,8 @@ function WorkDetailImage({ src, index }: { src: string; index: number }) {
           alt=""
           loading={index < 2 ? 'eager' : 'lazy'}
           decoding="async"
-          onLoad={() => setLoaded(true)}
-          onError={() => setLoaded(true)}
+          onLoad={handleLoad}
+          onError={handleError}
           className={loaded ? 'is-loaded' : ''}
         />
       </div>

@@ -1362,17 +1362,17 @@ body.ko {
         }
       }
 
-      // Natural aspect ratio on the img (width 100%, height auto). Min-height only
-      // while loading so the column doesn’t collapse before decode.
+      // Height is set in px from JS so we can transition (CSS cannot animate to `auto`).
+      // img stays width:100% / height:auto for natural aspect ratio.
       .image-wrapper {
         position: relative;
         width: 100%;
-        min-height: 240px;
         overflow: hidden;
         background: rgba(255, 255, 255, 0.02);
+        transition: height 0.7s ease;
 
-        &--loaded {
-          min-height: 0;
+        @media (prefers-reduced-motion: reduce) {
+          transition: none;
         }
       }
 
@@ -1407,10 +1407,12 @@ body.ko {
         z-index: 0;
         width: 100%;
         height: auto;
+        min-height: 100%;
         display: block;
         filter: grayscale(10%);
         opacity: 0;
         transition: opacity 0.45s ease;
+        object-fit: cover;
 
         &.is-loaded {
           opacity: 1;
