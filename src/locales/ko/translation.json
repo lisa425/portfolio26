@@ -9,7 +9,13 @@
         "date": "2025.11 - 2025.12",
         "description": "프론트엔드 아키텍처 설계 및 API 연동, 보안 검수, 부하 테스트 등 개발 전반 리딩\n연관 부서 협업 구조 정립으로 프로젝트 일정 50% 단축\n사전등록 페이지 내 캐릭터 소개, 월드 소개 등 정보 전달 인터랙션 구현",
         "stack": "Next.js",
-        "img": "/images/meta_azur.jpg",
+        "thumbnail": "assets/images/az_thumb1.jpg",
+        "img": [
+          "assets/images/az_img1.jpg",
+          "assets/images/az_img2.jpg",
+          "assets/images/az_img3.jpg",
+          "assets/images/az_img4.jpg"
+        ],
         "url": "https://azurpromilia.nexon.com/events/2025/12/preregistration"
       },
       {
@@ -20,7 +26,8 @@
         "date": "2022.11 - 2022.12",
         "description": "궁사 리마스터를 기념해 역대 일러스트를 담은 3D 웹 갤러리 구현\n 스크롤 기반의 연도 카운팅, 갤러리 컨트롤 인터랙션 및 일러스트 포커싱 효과 구현",
         "stack": "Three.js · GSAP",
-        "img": "/images/meta_baram.jpg",
+        "thumbnail": "assets/images/br_thumb1.jpg",
+        "img": ["assets/images/br_img1.jpg", "assets/images/br_img2.jpg", "assets/images/br_img3.jpg"],
         "url": "https://baram.nexon.com/E221215/Intro"
       },
       {
@@ -31,7 +38,13 @@
         "date": "2025.07",
         "description": "사이버펑크 테마의 몰입감 있는 인터랙티브 웹 그래픽 구현\n한국어·영어·태국어 3개 언어 글로벌 대응",
         "stack": "Vue.js · Nuxt.js",
-        "img": "/images/meta_ba.jpg",
+        "thumbnail": "assets/images/ba_thumb1.jpg",
+        "img": [
+          "assets/images/ba_img1.jpg",
+          "assets/images/ba_img2.jpg",
+          "assets/images/ba_img3.jpg",
+          "assets/images/ba_img4.jpg"
+        ],
         "url": "https://bluearchive.nexon.com/events/2025/07/update"
       },
       {
@@ -42,7 +55,13 @@
         "date": "2025.01",
         "description": "신규 캐릭터 업데이트 안내성 페이지 작업\n정보의 효과적인 전달을 유도하고 캐릭터의 정체성을 살리는 고급 웹 애니메이션 연출",
         "stack": "React · TypeScript",
-        "img": "/images/meta_mm.jpg",
+        "thumbnail": "assets/images/vd_thumb1.jpg",
+        "img": [
+          "assets/images/vd_img1.jpg",
+          "assets/images/vd_img2.jpg",
+          "assets/images/vd_img3.jpg",
+          "assets/images/vd_img4.jpg"
+        ],
         "url": "http://vindictus.nexon.net/event/2025/0121/neamhain"
       },
       {
@@ -53,7 +72,8 @@
         "date": "2026.03",
         "description": "봄 테마의 파티클 웹 그래픽 애니메이션 연출을 적용한 업데이트 안내성 인트로 페이지\n모바일,PC 적응형 애니메이션 대응",
         "stack": "React · TypeScript",
-        "img": "/images/meta_mm.jpg",
+        "thumbnail": "assets/images/mm_thumb1.jpg",
+        "img": ["assets/images/mm_img1.jpg", "assets/images/mm_img2.jpg", "assets/images/mm_img3.jpg"],
         "url": "https://mabinogimobile.nexon.com/events2026/0326/1stanniversary"
       }
     ]

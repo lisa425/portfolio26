@@ -9,7 +9,13 @@
         "date": "2025.11 - 2025.12",
         "description": "Led overall frontend development - architecture design,<br/>API integration, security audit, and load testing\nReduced project timeline by 50% through structured cross-functional collaboration\nBuilt character introduction, world reveal, and other informational interaction features for the pre-registration page",
         "stack": "Next.js",
-        "img": "/images/meta_azur.jpg",
+        "thumbnail": "assets/images/az_thumb1.jpg",
+        "img": [
+          "assets/images/az_img1.jpg",
+          "assets/images/az_img2.jpg",
+          "assets/images/az_img3.jpg",
+          "assets/images/az_img4.jpg"
+        ],
         "url": "https://azurpromilia.nexon.com/events/2025/12/preregistration"
       },
       {
@@ -20,7 +26,8 @@
         "date": "2022.11 - 2022.12",
         "description": "Built a 3D web gallery featuring historical illustrations to celebrate<br/>the Archer remaster\n Implemented scroll-based year counting, gallery control interactions, and illustration focus effects",
         "stack": "Three.js · GSAP",
-        "img": "/images/meta_baram.jpg",
+        "thumbnail": "assets/images/br_thumb1.jpg",
+        "img": ["assets/images/br_img1.jpg", "assets/images/br_img2.jpg", "assets/images/br_img3.jpg"],
         "url": "https://baram.nexon.com/E221215/Intro"
       },
       {
@@ -31,7 +38,13 @@
         "date": "2025.07",
         "description": "Implemented immersive interactive web graphics with a<br/>cyberpunk theme\nGlobal multilingual support for Korean, English, and Thai",
         "stack": "Vue.js · Nuxt.js",
-        "img": "/images/meta_ba.jpg",
+        "thumbnail": "assets/images/ba_thumb1.jpg",
+        "img": [
+          "assets/images/ba_img1.jpg",
+          "assets/images/ba_img2.jpg",
+          "assets/images/ba_img3.jpg",
+          "assets/images/ba_img4.jpg"
+        ],
         "url": "https://bluearchive.nexon.com/events/2025/07/update"
       },
       {
@@ -42,7 +55,13 @@
         "date": "2025.01",
         "description": "Informational page for the new character update\nAdvanced web animation crafted to guide user attention and<br/>express the character's identity",
         "stack": "React · TypeScript",
-        "img": "/images/meta_mm.jpg",
+        "thumbnail": "assets/images/vd_thumb1.jpg",
+        "img": [
+          "assets/images/vd_img1.jpg",
+          "assets/images/vd_img2.jpg",
+          "assets/images/vd_img3.jpg",
+          "assets/images/vd_img4.jpg"
+        ],
         "url": "http://vindictus.nexon.net/event/2025/0121/neamhain"
       },
       {
@@ -53,7 +72,8 @@
         "date": "2026.03",
         "description": "Informational intro page for the 1st anniversary update,<br/>featuring spring-themed particle web graphics\nAdaptive animation for both mobile and PC",
         "stack": "React · TypeScript",
-        "img": "/images/meta_mm.jpg",
+        "thumbnail": "assets/images/mm_thumb1.jpg",
+        "img": ["assets/images/mm_img1.jpg", "assets/images/mm_img2.jpg", "assets/images/mm_img3.jpg"],
         "url": "https://mabinogimobile.nexon.com/events2026/0326/1stanniversary"
       }
     ]
@@ -126,10 +146,7 @@
     "education": {
       "school": "Sookmyung Women’s University",
       "period": "Mar 2017 – Aug 2022 | Seoul, South Korea",
-      "bullets": [
-        "Bachelor of Arts in Visual & Media Design",
-        "Bachelor of Science in IT Engineering"
-      ]
+      "bullets": ["Bachelor of Arts in Visual & Media Design", "Bachelor of Science in IT Engineering"]
     }
   }
 }
