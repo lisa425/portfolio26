@@ -1,4 +1,8 @@
 {
+  "viewportGuard": {
+    "title": "◼︎ VIEWPORT TOO SMALL ◼︎",
+    "body": "이 페이지는 데스크톱 브라우저에 맞춰 제작되었습니다.\n의도된 레이아웃과 인터랙션을 위해\n가로 1000px 이상의 화면에서 접속해 주세요."
+  },
   "works": {
     "items": [
       {

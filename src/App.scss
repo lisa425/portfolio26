@@ -124,6 +124,42 @@ body.ko {
     pointer-events: none;
   }
 
+  .viewport-guard {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: rgba(13, 13, 13, 0.92);
+    backdrop-filter: blur(6px);
+    pointer-events: auto;
+  }
+
+  .viewport-guard__panel {
+    max-width: 22rem;
+    text-align: center;
+    line-height: 1.55;
+    color: $text-primary;
+  }
+
+  .viewport-guard__title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    opacity: 0.95;
+    white-space: pre-line;
+  }
+
+  .viewport-guard__body {
+    font-size: 0.95rem;
+    opacity: 0.75;
+    white-space: pre-line;
+  }
+
   > .focus {
     position: fixed;
     top: 0;
