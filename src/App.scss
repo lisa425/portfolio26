@@ -4,31 +4,33 @@
 @import url('https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css');
 @import url('https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/monas.css');
 
+// Absolute paths: bundled CSS lives under /assets/*.css, so relative
+// `assets/fonts/...` would resolve to /assets/assets/fonts/... (404).
 @font-face {
   font-family: 'nbarchitekt';
-  src: url(assets/fonts/NBArchitektStd-Regular.woff2) format('woff2');
+  src: url(/assets/fonts/NBArchitektStd-Regular.woff2) format('woff2');
   font-style: normal;
   font-weight: 400;
 }
 @font-face {
   font-family: 'nbarchitekt';
-  src: url(assets/fonts/NBArchitektStd-Bold.woff2) format('woff2');
+  src: url(/assets/fonts/NBArchitektStd-Bold.woff2) format('woff2');
   font-style: normal;
   font-weight: 700;
 }
 @font-face {
   font-family: 'NexonLv2Gothic';
   src:
-    url(assets/fonts/NEXONLv2GothicOTF.otf) format('otf'),
-    url(assets/fonts/NEXONLv2Gothic.ttf) format('ttf');
+    url(/assets/fonts/NEXONLv2GothicOTF.otf) format('opentype'),
+    url(/assets/fonts/NEXONLv2Gothic.ttf) format('truetype');
   font-style: normal;
   font-weight: 400;
 }
 @font-face {
   font-family: 'NexonLv2Gothic';
   src:
-    url(assets/fonts/NEXONLv2GothicOTFBold.otf) format('otf'),
-    url(assets/fonts/NEXONLv2GothicBold.ttf) format('ttf');
+    url(/assets/fonts/NEXONLv2GothicOTFBold.otf) format('opentype'),
+    url(/assets/fonts/NEXONLv2GothicBold.ttf) format('truetype');
   font-style: normal;
   font-weight: 700;
 }
