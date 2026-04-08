@@ -240,7 +240,7 @@ function Works({ isActive }: WorksProps) {
     for (let i = 0; i < count; i++) {
       const preset = RING_PRESETS[i % RING_PRESETS.length]
       const w = (START_W + step * i) * ringScale
-      const op = 0.15 - (0.09 * (i / Math.max(1, count - 1)))
+      const op = 0.15 - 0.09 * (i / Math.max(1, count - 1))
       result.push({ w, h: w, ...preset, op })
     }
 
@@ -255,7 +255,7 @@ function Works({ isActive }: WorksProps) {
   }, [works.length, ringScale])
 
   const node3d = useMemo(() => {
-    return rings.slice(0, works.length).map(ring => getPointOnRing(ring, ring.angle))
+    return rings.slice(0, works.length).map((ring) => getPointOnRing(ring, ring.angle))
   }, [rings, works.length])
 
   const node3dRef = useRef(node3d)
@@ -660,9 +660,7 @@ function Works({ isActive }: WorksProps) {
         <span> ─── </span>
         <span className="terminal-bar__bar">[{works.map((_, i) => (i === previewIndex ? '█' : '░')).join('')}]</span>
         <span className="works-progress__info">
-          <span>{`${String(previewIndex + 1).padStart(3, '0')}/${String(works.length).padStart(3, '0')}`}</span>
-          <span> ─── </span>
-          <span className={i18n.language === 'ko' ? 'text-body' : ''}>{`${works[previewIndex]?.game ?? ''}`}</span>
+          <span>{`${String(previewIndex + 1).padStart(3, '0')}/${String(works.length).padStart(3, '0')} ─── ${`${works[previewIndex]?.game ?? ''}`}`}</span>
         </span>
       </div>
 
