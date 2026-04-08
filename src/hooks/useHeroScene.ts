@@ -16,8 +16,8 @@ const heroConfig = {
     near: 0.1,
     far: 50, // Z depth
     z: 22, // Move camera back to see the volumetric shapes
-    x: -3.5, // 별이 화면 오른쪽에 보이도록 카메라를 좌측으로
-    y: -0.0, // 별이 화면 위쪽에 보이도록 카메라를 아래로
+    x: window.innerWidth < 1280 ? -7.0 : -3.5, // 별이 화면 오른쪽에 보이도록 카메라를 좌측으로
+    y: window.innerWidth < 1280 ? -2.0 : -0.0, // 별이 화면 위쪽에 보이도록 카메라를 아래로
   },
   render: {
     maxPixelRatio: Math.min(window.devicePixelRatio, 1.5),
@@ -501,6 +501,8 @@ export const useHeroScene = (
 
     const update = () => {
       const elapsedTime = clock.getElapsedTime();
+      const starElapsedSpeed = 0.1;
+      const nebulaElapsedSpeed = 0.1;
 
       // hero가 아닐 때 마우스를 멀리 보내서 파티클 인터랙션 비활성화
       if (isHeroActiveRef?.current === false) {
@@ -544,7 +546,7 @@ export const useHeroScene = (
       // 각 별의 마우스 좌표를 별의 로컬 좌표계로 변환 (별의 위치를 빼서 상대 좌표로)
       if (star1Mat) {
         // star1은 0.1초 늦게 시작 (타이밍 차이)
-        star1Mat.uniforms.uTime.value = elapsedTime;
+        star1Mat.uniforms.uTime.value = elapsedTime * starElapsedSpeed;
         // star1의 로컬 좌표계로 변환 (별의 위치를 빼서)
         star1Mat.uniforms.uMouse.value.set(
           mouseParams.currentX - star1Points.position.x,
@@ -567,7 +569,7 @@ export const useHeroScene = (
       }
       if (star2Mat) {
         // star2는 즉시 시작 (기본 타이밍)
-        star2Mat.uniforms.uTime.value = elapsedTime;
+        star2Mat.uniforms.uTime.value = elapsedTime * starElapsedSpeed;
         // star2의 로컬 좌표계로 변환 (별의 위치를 빼서)
         star2Mat.uniforms.uMouse.value.set(
           mouseParams.currentX - star2Points.position.x,
@@ -589,7 +591,7 @@ export const useHeroScene = (
           (targetButtonHoverStar2 - currentButtonHoverStar2) * 0.1;
       }
       if (nebulaMat) {
-        nebulaMat.uniforms.uTime.value = elapsedTime * 0.4;
+        nebulaMat.uniforms.uTime.value = elapsedTime * nebulaElapsedSpeed;
 
         // Star1과 Star2의 실제 위치를 nebula에 전달 (Points 객체에서 직접 읽어 항상 동기화)
         nebulaMat.uniforms.uStar1Position.value.set(

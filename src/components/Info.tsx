@@ -30,7 +30,9 @@ function Info({ isActive }: InfoProps) {
   const lineRefs = useRef<(SVGLineElement | null)[]>([])
 
   const contact = t('info.contact', { returnObjects: true }) as any
-  const workExperience = t('info.workExperience', { returnObjects: true }) as any
+  const workExperience = t('info.workExperience', {
+    returnObjects: true,
+  }) as any
   const skills = t('info.skills', { returnObjects: true }) as any
   const education = t('info.education', { returnObjects: true }) as any
 
@@ -212,7 +214,10 @@ function Info({ isActive }: InfoProps) {
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id)
     if (element && lenisRef.current) {
-      lenisRef.current.scrollTo(element, { offset: -window.innerHeight * 0.2, duration: 1.2 })
+      lenisRef.current.scrollTo(element, {
+        offset: -window.innerHeight * 0.2,
+        duration: 1.2,
+      })
     }
   }
 
@@ -300,7 +305,9 @@ function Info({ isActive }: InfoProps) {
                   <span className="corner top-right"></span>
                   <span className="corner bottom-left"></span>
                   <span className="corner bottom-right"></span>
-                  <h2 className="info-name text-display">{t('info.name')}</h2>
+                  <h2 className={`info-name ${i18n.language === 'ko' ? 'text-display' : 'text-body'}`}>
+                    {t('info.name')}
+                  </h2>
                   <p className="info-role">ROLE | {t('info.role')}</p>
                   <p className="info-about text-body">{t('info.about')}</p>
                 </div>
@@ -355,8 +362,12 @@ function Info({ isActive }: InfoProps) {
                               {proj.bullets.map((bullet: string, bIdx: number) => (
                                 <li key={bIdx}>
                                   {bullet.split('\n').map((line, lIdx, lines) => (
-                                    <span key={lIdx} style={{ display: 'contents' }}>
-                                      {line}{lIdx < lines.length - 1 && <br />}
+                                    <span
+                                      key={lIdx}
+                                      style={{ display: 'contents' }}
+                                    >
+                                      {line}
+                                      {lIdx < lines.length - 1 && <br />}
                                     </span>
                                   ))}
                                 </li>
@@ -443,10 +454,18 @@ function Info({ isActive }: InfoProps) {
                     <p className="education-entry__meta">{education.period}</p>
                     <ul>
                       {education.bullets.map((bullet: string, eIdx: number) => (
-                        <li key={eIdx} className="text-body">
-                          - {bullet.split('\n').map((line, lIdx, lines) => (
-                            <span key={lIdx} style={{ display: 'contents' }}>
-                              {line}{lIdx < lines.length - 1 && <br />}
+                        <li
+                          key={eIdx}
+                          className="text-body"
+                        >
+                          -{' '}
+                          {bullet.split('\n').map((line, lIdx, lines) => (
+                            <span
+                              key={lIdx}
+                              style={{ display: 'contents' }}
+                            >
+                              {line}
+                              {lIdx < lines.length - 1 && <br />}
                             </span>
                           ))}
                         </li>
@@ -485,10 +504,22 @@ function Info({ isActive }: InfoProps) {
                   <h3 className="info-block-title">GET_IN_TOUCH</h3>
                   <div className="info-contact">
                     <p className="btn-contact">
-                      Email<span className="meta text-body">{contact.email}</span>
+                      Email
+                      <a
+                        className="meta text-body"
+                        href={`mailto:${contact.email}`}
+                      >
+                        {contact.email}
+                      </a>
                     </p>
                     <p className="btn-contact">
-                      Phone<span className="meta text-body">{contact.phone}</span>
+                      Phone
+                      <a
+                        className="meta text-body"
+                        href={`tel:${contact.phone.replace(/\s/g, '')}`}
+                      >
+                        {contact.phone}
+                      </a>
                     </p>
                   </div>
                 </div>

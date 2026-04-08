@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import gsap from 'gsap'
 import { SplitText } from 'gsap/SplitText'
@@ -111,24 +111,28 @@ const AUTO_ROTATE_SPEED = 0.06
 const DRAG_SENSITIVITY = 0.35
 const MOMENTUM_DECAY = 0.94
 
-// Orbital rings with unique 3D rotations — Middle-ground chaotic tilts, sized to keep nodes visible
-const ORBITAL_RINGS = [
-  // ── Node Rings (kept within bounds) ──
-  { w: 300, h: 300, rx: 75, ry: 15, rz: -10, op: 0.15, angle: -45 }, // 0: Top Right
-  { w: 550, h: 550, rx: 60, ry: -20, rz: 15, op: 0.12, angle: 160 }, // 1: Far Left
-  { w: 800, h: 800, rx: 68, ry: 25, rz: -5, op: 0.1, angle: 80 }, // 2: Bottom Center
-  { w: 1050, h: 1050, rx: 55, ry: -10, rz: 30, op: 0.08, angle: -140 }, // 3: Top Left
-  { w: 1300, h: 1300, rx: 70, ry: 18, rz: -20, op: 0.06, angle: 10 }, // 4: Far Right
+// ─── Component Configurations (Dynamic Layout) ───
 
-  // ── Decorative Outer Rings (expansive, allowed off-screen) ──
-  { w: 1650, h: 1650, rx: 62, ry: -25, rz: 18, op: 0.05, angle: 0 },
-  { w: 2000, h: 2000, rx: 74, ry: 10, rz: -35, op: 0.04, angle: 0 },
-  { w: 2400, h: 2400, rx: 58, ry: -5, rz: 25, op: 0.03, angle: 0 },
+const RING_PRESETS = [
+  { rx: 75, ry: 15, rz: -10, angle: -45 }, // 0
+  { rx: 60, ry: -20, rz: 15, angle: 160 }, // 1
+  { rx: 68, ry: 25, rz: -5, angle: 80 }, // 2
+  { rx: 55, ry: -10, rz: 30, angle: -140 }, // 3
+  { rx: 70, ry: 18, rz: -20, angle: 10 }, // 4
+  { rx: 65, ry: -25, rz: -15, angle: -80 }, // 5
+  { rx: 80, ry: 5, rz: 25, angle: 120 }, // 6
+  { rx: 50, ry: 35, rz: -5, angle: 45 }, // 7
+  { rx: 72, ry: -15, rz: 10, angle: -15 }, // 8
+  { rx: 60, ry: 20, rz: -30, angle: 170 }, // 9
 ]
 
-function getPointOnRing(ringIndex: number, angleDeg: number) {
-  const ring = ORBITAL_RINGS[ringIndex]
-  if (!ring) return { x: 0, y: 0, z: 0 }
+const DECORATIVE_RINGS = [
+  { rx: 62, ry: -25, rz: 18, op: 0.05, angle: 0 },
+  { rx: 74, ry: 10, rz: -35, op: 0.04, angle: 0 },
+  { rx: 58, ry: -5, rz: 25, op: 0.03, angle: 0 },
+]
+
+function getPointOnRing(ring: any, angleDeg: number) {
   const rad = angleDeg * DEG
   const lx = (ring.w / 2) * Math.cos(rad)
   const ly = (ring.h / 2) * Math.sin(rad)
@@ -149,9 +153,6 @@ function getPointOnRing(ringIndex: number, angleDeg: number) {
 
   return { x: x3, y: y3, z: z3 }
 }
-
-// Node positions explicitly mapped strictly to the inner 5 rings to ensure they are always visible
-const NODE_3D = ORBITAL_RINGS.slice(0, 5).map((ring, i) => getPointOnRing(i, ring.angle))
 
 const SCENE_PERSPECTIVE = 2000 // matches CSS perspective: 2000px
 const HOVER_RADIUS = 60 // screen-space px threshold
@@ -177,7 +178,7 @@ function projectToScreen(
 
 // ─── Component ───
 function Works({ isActive }: WorksProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const works = t('works.items', { returnObjects: true }) as WorkType[]
 
   const [activeWork, setActiveWork] = useState<WorkType | null>(null)
@@ -211,12 +212,62 @@ function Works({ isActive }: WorksProps) {
   const indexSplitRef = useRef<InstanceType<typeof SplitText> | null>(null)
 
   // Line animation states
-  const ringHighlightSweeps = useRef<number[]>([0, 0, 0, 0, 0])
+  const ringHighlightSweeps = useRef<number[]>([])
   const rafRef = useRef(0)
   const telemetryIntervalRef = useRef(0)
 
+  // ─── Dynamic Layout State ───
+  const [ringScale, setRingScale] = useState(1)
+
+  useEffect(() => {
+    const syncScale = () => {
+      const baseScale = window.innerWidth / 1200
+      const scale = Math.max(0.3, Math.min(1, baseScale))
+      setRingScale(scale)
+    }
+    syncScale()
+    window.addEventListener('resize', syncScale)
+    return () => window.removeEventListener('resize', syncScale)
+  }, [])
+
+  const rings = useMemo(() => {
+    const result = []
+    const count = works.length
+    const START_W = 300
+    const MAX_NODE_W = 1300
+    const step = count > 1 ? (MAX_NODE_W - START_W) / (count - 1) : 0
+
+    for (let i = 0; i < count; i++) {
+      const preset = RING_PRESETS[i % RING_PRESETS.length]
+      const w = (START_W + step * i) * ringScale
+      const op = 0.15 - (0.09 * (i / Math.max(1, count - 1)))
+      result.push({ w, h: w, ...preset, op })
+    }
+
+    const decorStart = 1650
+    const decorStep = 350
+    DECORATIVE_RINGS.forEach((dec, i) => {
+      const w = (decorStart + decorStep * i) * ringScale
+      result.push({ w, h: w, ...dec })
+    })
+
+    return result
+  }, [works.length, ringScale])
+
+  const node3d = useMemo(() => {
+    return rings.slice(0, works.length).map(ring => getPointOnRing(ring, ring.angle))
+  }, [rings, works.length])
+
+  const node3dRef = useRef(node3d)
+  node3dRef.current = node3d
+  const ringsRef = useRef(rings)
+  ringsRef.current = rings
+
   useEffect(() => {
     isActiveRef.current = isActive
+    if (isActive) {
+      setPreviewIndex(0)
+    }
   }, [isActive])
 
   // ─── Main animation loop ───
@@ -248,13 +299,16 @@ function Works({ isActive }: WorksProps) {
         }
 
         // Update Ring Highlights (lerp sweep)
-        ringHighlightSweeps.current.forEach((val, i) => {
+        for (let i = 0; i < worksRef.current.length; i++) {
+          if (ringHighlightSweeps.current[i] === undefined) {
+            ringHighlightSweeps.current[i] = 0
+          }
           const target = hoveredIndexRef.current === i ? 360 : 0
-          ringHighlightSweeps.current[i] += (target - val) * 0.15
+          ringHighlightSweeps.current[i] += (target - ringHighlightSweeps.current[i]) * 0.15
           if (ringHighlightEls.current[i]) {
             ringHighlightEls.current[i]!.style.setProperty('--draw-sweep', `${ringHighlightSweeps.current[i]}deg`)
           }
-        })
+        }
       }
 
       rafRef.current = requestAnimationFrame(loop)
@@ -325,7 +379,7 @@ function Works({ isActive }: WorksProps) {
         sx: number
         sy: number
       }[] = []
-      NODE_3D.forEach((pos, idx) => {
+      node3dRef.current.forEach((pos, idx) => {
         const { sx, sy } = projectToScreen(pos, rotRef.current.x, rotRef.current.y)
         const dist = Math.sqrt((mx - sx) ** 2 + (my - sy) ** 2)
         if (dist <= HOVER_RADIUS) candidates.push({ idx, dist, sx, sy })
@@ -484,7 +538,7 @@ function Works({ isActive }: WorksProps) {
       entryTlRef.current = tl
 
       // Rings start invisible (sweep=0) — will draw themselves in
-      ORBITAL_RINGS.forEach((_, i) => {
+      ringsRef.current.forEach((_, i) => {
         if (ringEls.current[i]) {
           ringEls.current[i]!.style.setProperty('--sweep', '0deg')
         }
@@ -586,7 +640,7 @@ function Works({ isActive }: WorksProps) {
       gsap.set('.works-telemetry', { opacity: 0 })
 
       // Reset ring sweep to 0 (invisible) — no scale reset needed
-      ORBITAL_RINGS.forEach((_, i) => {
+      ringsRef.current.forEach((_, i) => {
         if (ringEls.current[i]) {
           ringEls.current[i]!.style.setProperty('--sweep', '0deg')
         }
@@ -602,10 +656,13 @@ function Works({ isActive }: WorksProps) {
     <div className="inner works__inner">
       {/* Terminal Progress Bar */}
       <div className="terminal-bar works-progress">
-        <span className="terminal-bar__label">&gt; WORK_LIST ───</span>
-        <span className="terminal-bar__bar">[{works.map((_, i) => (i <= previewIndex ? '█' : '░')).join('')}]</span>
-        <span className="works-progress__info text-body">
-          {`${String(previewIndex + 1).padStart(3, '0')}/${String(works.length).padStart(3, '0')} ─── ${works[previewIndex]?.game ?? ''}`}
+        <span className="terminal-bar__label">&gt; WORK_LIST</span>
+        <span> ─── </span>
+        <span className="terminal-bar__bar">[{works.map((_, i) => (i === previewIndex ? '█' : '░')).join('')}]</span>
+        <span className="works-progress__info">
+          <span>{`${String(previewIndex + 1).padStart(3, '0')}/${String(works.length).padStart(3, '0')}`}</span>
+          <span> ─── </span>
+          <span className={i18n.language === 'ko' ? 'text-body' : ''}>{`${works[previewIndex]?.game ?? ''}`}</span>
         </span>
       </div>
 
@@ -687,7 +744,7 @@ function Works({ isActive }: WorksProps) {
           ref={scene3dRef}
         >
           {/* Base Rings */}
-          {ORBITAL_RINGS.map((ring, i) => (
+          {rings.map((ring, i) => (
             <div
               key={`base-${i}`}
               ref={(el) => {
@@ -706,7 +763,7 @@ function Works({ isActive }: WorksProps) {
           ))}
 
           {/* Highlight Rings (on hover comet tail), only mapped to node rings */}
-          {ORBITAL_RINGS.slice(0, 5).map((ring, i) => (
+          {rings.slice(0, works.length).map((ring, i) => (
             <div
               key={`highlight-${i}`}
               ref={(el) => {
@@ -727,7 +784,7 @@ function Works({ isActive }: WorksProps) {
 
           {/* Nodes */}
           {works.map((work, idx) => {
-            const pos = NODE_3D[idx]
+            const pos = node3d[idx]
             if (!pos) return null
             return (
               <div

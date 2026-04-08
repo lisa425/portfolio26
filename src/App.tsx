@@ -59,6 +59,10 @@ function App() {
 
   const [isViewportGuardActive, setIsViewportGuardActive] = useState(false)
 
+  // Flag: true while we're executing a programmatic history.back().
+  // Prevents the resulting popstate from double-processing the same navigation.
+  const programmaticNavRef = useRef(false)
+
   const changeLanguage = (lang: LangType) => {
     i18n.changeLanguage(lang)
     setLanguage(lang)
@@ -166,37 +170,101 @@ function App() {
     isHeroActiveRef.current = view === 'hero'
   }, [view])
 
-  const handleGoWorks = useCallback(() => {
-    if (view !== 'hero') return
-    setHasShownWorks(true)
-    setView('transitioning')
-    gsap.set('.hero', { opacity: 0 }) // immediately hide hero before camera zooms
-    triggerWorksTransition(() => setView('works'))
-  }, [view, triggerWorksTransition])
+  const killHeroTweens = useCallback(() => {
+    if (heroAnimTimerRef.current) {
+      clearTimeout(heroAnimTimerRef.current)
+      heroAnimTimerRef.current = null
+    }
+    gsap.killTweensOf('.hero')
+  }, [])
 
-  const handleGoInfo = useCallback(() => {
-    if (view !== 'hero') return
-    setHasShownInfo(true)
-    setView('transitioning')
-    gsap.set('.hero', { opacity: 0 }) // immediately hide hero before camera zooms
-    triggerInfoTransition(() => setView('info'))
-  }, [view, triggerInfoTransition])
+  const goWorks = useCallback(
+    (pushHistory: boolean) => {
+      if (view !== 'hero') return
+      setHasShownWorks(true)
+      setView('transitioning')
+      if (pushHistory) history.pushState({ view: 'works' }, '')
+      killHeroTweens()
+      gsap.set('.hero', { opacity: 0 })
+      triggerWorksTransition(() => setView('works'))
+    },
+    [view, triggerWorksTransition, killHeroTweens],
+  )
 
-  const handleGoHero = useCallback(() => {
-    if (view === 'hero' || view === 'transitioning') return
-    setView('transitioning')
+  const goInfo = useCallback(
+    (pushHistory: boolean) => {
+      if (view !== 'hero') return
+      setHasShownInfo(true)
+      setView('transitioning')
+      if (pushHistory) history.pushState({ view: 'info' }, '')
+      killHeroTweens()
+      gsap.set('.hero', { opacity: 0 })
+      triggerInfoTransition(() => setView('info'))
+    },
+    [view, triggerInfoTransition, killHeroTweens],
+  )
 
-    // Fade hero in 0.5s before zoom-out completes (zoom duration = 1.5s)
-    if (heroAnimTimerRef.current) clearTimeout(heroAnimTimerRef.current)
-    heroAnimTimerRef.current = setTimeout(() => {
-      gsap.to('.hero', { opacity: 1, duration: 0.5, ease: 'power2.out' })
-    }, 1000)
+  const goHero = useCallback(
+    (skipHistoryBack: boolean) => {
+      if (view === 'hero' || view === 'transitioning') return
+      setView('transitioning')
 
-    triggerHeroTransition(() => {
-      setView('hero')
-      // No clearProps — GSAP keeps managing .hero opacity to avoid CSS conflicts
-    })
-  }, [view, triggerHeroTransition])
+      if (!skipHistoryBack) {
+        programmaticNavRef.current = true
+        history.back()
+      }
+
+      if (heroAnimTimerRef.current) clearTimeout(heroAnimTimerRef.current)
+      heroAnimTimerRef.current = setTimeout(() => {
+        gsap.to('.hero', { opacity: 1, duration: 0.5, ease: 'power2.out' })
+      }, 1000)
+
+      triggerHeroTransition(() => {
+        setView('hero')
+      })
+    },
+    [view, triggerHeroTransition],
+  )
+
+  const handleGoWorks = useCallback(() => goWorks(true), [goWorks])
+  const handleGoInfo = useCallback(() => goInfo(true), [goInfo])
+  const handleGoHero = useCallback(() => goHero(false), [goHero])
+
+  // Browser back/forward: read history.state to decide direction.
+  // Skip events caused by our own programmatic history.back() calls.
+  useEffect(() => {
+    const onPopState = (e: PopStateEvent) => {
+      if (programmaticNavRef.current) {
+        programmaticNavRef.current = false
+        return
+      }
+
+      const target = (e.state as { view?: string } | null)?.view
+
+      if (target === 'works') {
+        goWorks(false)
+      } else if (target === 'info') {
+        goInfo(false)
+      } else {
+        goHero(true)
+      }
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [goWorks, goInfo, goHero])
+
+  // bfcache: if the page is restored from back/forward cache, reset to hero
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        setView('hero')
+        setShowIntro(false)
+        gsap.set('.hero', { opacity: 1 })
+      }
+    }
+    window.addEventListener('pageshow', onPageShow)
+    return () => window.removeEventListener('pageshow', onPageShow)
+  }, [])
 
   // 첫 진입 시에만 hero 애니메이션 실행
   // useEffect(() => {
@@ -318,16 +386,18 @@ function App() {
           split2.revert()
           split3.revert()
         })
-        // 7. After timeline completes, start hint float as an INDEPENDENT tween
+        // 7. After timeline completes, start mouse float as an INDEPENDENT tween
         //    (keeps it out of this timeline so the tl can finish and GSAP frees all tracked tweens)
         .call(() => {
           heroHintTweenRef.current?.kill()
-          heroHintTweenRef.current = gsap.to('.hero-hint', {
-            y: 7,
-            duration: 1,
+          heroHintTweenRef.current = gsap.to('.hero-hint__mouse', {
+            // x: 5,
+            y: -3,
+            // rotation: 8,
+            duration: 1.2,
             repeat: -1,
             yoyo: true,
-            ease: 'linear',
+            ease: 'sine.inOut',
           })
         })
     )
@@ -375,8 +445,14 @@ function App() {
             className="header-left"
             onClick={handleGoHero}
           >
-            <div className="title">ChaewonIm</div>
-            <div className="title-sub">Archive v1.0</div>
+            <div className="title">ImChaewon</div>
+            <div
+              className={`header-sub-flip${view !== 'hero' ? ' is-sub' : ''}`}
+              aria-label={view !== 'hero' ? '← back to main' : 'Archive v1.0'}
+            >
+              <span className="header-sub-flip__front">Archive v1.0</span>
+              <span className="header-sub-flip__back">back to main</span>
+            </div>
           </div>
 
           <div className="header-right">
@@ -479,10 +555,27 @@ function App() {
 
           <div className="hero-hint">
             <span className="hero-hint__mouse">
-              <span className="hero-hint__wheel" />
+              <svg
+                className="hero-hint__hand"
+                xmlns="http://www.w3.org/2000/svg"
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="rgba(255,255,255,0.8)"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M9 11V4a2 2 0 0 1 4 0v6" />
+                <path d="M13 10V7a2 2 0 0 1 4 0v4" />
+                <path d="M17 11V9a2 2 0 0 1 4 0v5c0 3.866-3.134 7-7 7H9.5c-3.866 0-7-3.134-7-7V9.5a2.5 2.5 0 0 1 5 0V11" />
+              </svg>
+              <span className="hero-hint__scan-wave" />
+              <span className="hero-hint__scan-wave delay-1" />
             </span>
             <span className="hero-hint__label">
-              Touch STARS
+              TOUCH STARS
               <br />
               TO EXPLORE
             </span>
