@@ -41,6 +41,9 @@ $visible-rows: 5;
     height: $line-h * $visible-rows; // 300px
     overflow: hidden;
     z-index: 2;
+    @media (max-width: 1000px) {
+      width: 90vw;
+    }
   }
 
   // ── Track: scrolled by GSAP translateY ──
@@ -63,6 +66,10 @@ $visible-rows: 5;
     color: rgba(255, 255, 255, 0.25);
     will-change: background-color, color, transform;
     transform-origin: left center;
+
+    @media (max-width: 1000px) {
+      font-size: 12px;
+    }
   }
 
   &__line-text {

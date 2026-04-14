@@ -9,6 +9,7 @@ import {
   generateNebulaParticles,
 } from "../utils/proceduralGenerators";
 import { createInteractiveParticleMaterial } from "../materials/interactiveParticleMaterial";
+import { useMobile } from "./useMobile";
 
 const heroConfig = {
   camera: {
@@ -97,6 +98,12 @@ export const useHeroScene = (
     null,
   );
   const assemblyRef = useRef<(() => void) | null>(null);
+
+  const { isMobile } = useMobile();
+  const isMobileRef = useRef(isMobile);
+  useEffect(() => {
+    isMobileRef.current = isMobile;
+  }, [isMobile]);
 
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
@@ -190,6 +197,7 @@ export const useHeroScene = (
 
     const handleMouseMove = (event: MouseEvent) => {
       if (isHeroActiveRef?.current === false) return;
+      if (isMobileRef.current) return; // Disable all mouse interactions on mobile
 
       // 1. Hole Repulsion Logic (Raycaster)
       const rect = container.getBoundingClientRect();
@@ -381,6 +389,7 @@ export const useHeroScene = (
 
       const handleButtonMouseEnter = () => {
         if (isTransitioning) return;
+        if (isMobileRef.current) return; // Disable hover effect on mobile
         isButtonHoveredStar1 = true;
         targetButtonHoverStar1 = 1.0; // star1만 활성화
 
@@ -391,6 +400,7 @@ export const useHeroScene = (
 
       const handleButtonMouseLeave = () => {
         if (isTransitioning) return;
+        if (isMobileRef.current) return; // Disable hover effect on mobile
         isButtonHoveredStar1 = false;
         targetButtonHoverStar1 = 0.0; // star1 비활성화
       };
@@ -415,6 +425,7 @@ export const useHeroScene = (
 
       const handleButtonMouseEnter = () => {
         if (isTransitioning) return;
+        if (isMobileRef.current) return; // Disable hover effect on mobile
         isButtonHoveredStar2 = true;
         targetButtonHoverStar2 = 1.0; // star2만 활성화
 
@@ -425,6 +436,7 @@ export const useHeroScene = (
 
       const handleButtonMouseLeave = () => {
         if (isTransitioning) return;
+        if (isMobileRef.current) return; // Disable hover effect on mobile
         isButtonHoveredStar2 = false;
         targetButtonHoverStar2 = 0.0; // star2 비활성화
       };
@@ -794,12 +806,67 @@ export const useHeroScene = (
       const height = container.clientHeight;
 
       camera.aspect = width / height;
+
+      const isMobile = width <= 1000;
+      let currentCameraX = -3.5;
+      let currentCameraY = 0.0;
+      let s1X = -6,
+        s1Y = 1;
+      let s2X = 7,
+        s2Y = -4;
+
+      if (isMobile) {
+        // Center the camera on mobile
+        currentCameraX = 0;
+        currentCameraY = 0;
+        // Arrange stars to be both visible horizontally but closer to center
+        s1X = -2.5;
+        s1Y = -4.5;
+        s2X = 5.5;
+        s2Y = -13.5;
+
+        // Dynamic scaling based on width so sizes shrink nicely like on PC height-scaling
+        const baseAspect = 0.75; // 3:4 aspect ratio base for mobile scaling
+        if (camera.aspect < baseAspect) {
+          heroConfig.camera.z = 22 * (baseAspect / camera.aspect);
+        } else {
+          heroConfig.camera.z = 22;
+        }
+      } else {
+        currentCameraX = width < 1280 ? -7.0 : -3.5;
+        currentCameraY = width < 1280 ? -2.0 : 0.0;
+        heroConfig.camera.z = 22;
+      }
+
+      // We only apply camera X, Y here if we are NOT in a transition
+      // (This avoids jumping if resize happens during transition)
+      if (isHeroActiveRef?.current !== false && !isTransitioning) {
+        camera.position.x = currentCameraX;
+        camera.position.y = currentCameraY;
+        camera.position.z = heroConfig.camera.z;
+      }
+
+      // Update heroConfig to ensure transitions land on the correct mobile/pc coordinates
+      heroConfig.camera.x = currentCameraX;
+      heroConfig.camera.y = currentCameraY;
+
+      heroConfig.particles.coreStar.starPosition.star1[0] = s1X;
+      heroConfig.particles.coreStar.starPosition.star1[1] = s1Y;
+      heroConfig.particles.coreStar.starPosition.star2[0] = s2X;
+      heroConfig.particles.coreStar.starPosition.star2[1] = s2Y;
+
+      // Update mesh positions dynamically
+      star1Points.position.set(s1X, s1Y, 0);
+      star2Points.position.set(s2X, s2Y, 0);
+
       camera.updateProjectionMatrix();
 
       renderer.setSize(width, height);
       composer.setSize(width, height);
     };
 
+    // Run once on load to initialize positioning
+    handleResize();
     window.addEventListener("resize", handleResize);
 
     // 10. CLEANUP

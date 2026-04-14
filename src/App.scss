@@ -250,12 +250,16 @@ body.ko {
       font-size: max(vw(14, 1920), 18px);
       gap: 3rem;
 
+      @media (max-width: 1000px) {
+        padding: 1.5rem;
+        font-size: 15px;
+        gap: 1.5rem;
+      }
+
       .header-left {
         flex-shrink: 0;
         cursor: pointer;
         pointer-events: auto;
-        .title {
-        }
       }
 
       .header-sub-flip {
@@ -318,6 +322,9 @@ body.ko {
           font-size: max(vw(13, 1920), 15px);
           color: rgba(255, 255, 255, 0.7);
           height: fit-content;
+          @media (max-width: 1000px) {
+            font-size: 14px;
+          }
         }
         .menu-lang {
           display: flex;
@@ -339,13 +346,23 @@ body.ko {
             background-color: transparent;
             padding: 0 0.2rem;
             height: fit-content;
+            @media (max-width: 1000px) {
+              font-size: 14px;
+            }
             &.on {
               color: $text-primary;
             }
             &:hover {
               animation: textBlink 0.7s infinite;
+              @media (max-width: 1000px) {
+                animation: none;
+              }
             }
           }
+        }
+
+        @media (max-width: 1000px) {
+          gap: 0.5rem;
         }
       }
     }
@@ -418,12 +435,23 @@ body.ko {
         top: 15%;
         left: 3rem;
         pointer-events: none;
+
+        @media (max-width: 1000px) {
+          top: 9%;
+          left: 1.5rem;
+          right: 1.5rem;
+        }
+
         .hero-main-text__title {
           font-size: max(vw(55, 1920), 50px);
           color: $text-primary;
           line-height: 1.15;
           width: fit-content;
           letter-spacing: -0.02em;
+
+          @media (max-width: 1000px) {
+            font-size: min(10vw, 37px);
+          }
         }
       }
       .hero-sub-text {
@@ -435,10 +463,24 @@ body.ko {
           flex-direction: column;
           gap: 0.1em;
 
+          @media (max-width: 1000px) {
+            font-size: min(vw(13, 370), 14px);
+            margin-top: 1.5em;
+          }
+
           .desc-wrap {
             display: flex;
             align-items: center;
             gap: 0.2em;
+          }
+
+          .desc-separator {
+            margin-bottom: 0.1em;
+            letter-spacing: -0.3em;
+          }
+
+          .desc-wrap-location {
+            color: rgba($text-primary, 0.6);
           }
 
           // SplitText target — chars animated by GSAP
@@ -454,6 +496,10 @@ body.ko {
           bottom: 3rem;
           right: 3rem;
           transform-origin: bottom left;
+
+          @media (max-width: 1000px) {
+            display: none; // Hide monitor on mobile to prevent clutter
+          }
 
           .hero-panel {
             position: relative;
@@ -643,6 +689,11 @@ body.ko {
         gap: 8px;
         pointer-events: none;
 
+        @media (max-width: 1000px) {
+          bottom: 2.5rem;
+          transform: translateX(-50%) scale(0.9); // Make slightly smaller on mobile
+        }
+
         &__mouse {
           display: flex;
           align-items: center;
@@ -662,6 +713,9 @@ body.ko {
           white-space: nowrap;
           letter-spacing: 0.15rem;
           text-align: center;
+          @media (max-width: 1000px) {
+            font-size: min(vw(12, 390), 12px);
+          }
         }
       }
 
@@ -686,12 +740,24 @@ body.ko {
         width: max(vw(250, 1920), 250px);
         height: max(vw(250, 1920), 250px);
         color: $text-primary;
+
+        @media (max-width: 1000px) {
+          width: 160px;
+          height: 160px;
+          font-size: min(vw(13.5, 390), 15px);
+        }
+
         .btn-text {
-          // initial state managed by GSAP (opacity: 0, x: 10)
           white-space: nowrap;
           display: flex;
           align-items: center;
           gap: 0.05rem;
+
+          @media (max-width: 1000px) {
+            background-color: rgba(255, 255, 255, 1);
+            box-shadow: 0 0 10px 10px rgba(255, 255, 255, 1);
+            color: $bg-color;
+          }
 
           &__cursor {
             display: inline-block;
@@ -701,17 +767,30 @@ body.ko {
             &.active {
               animation: textBlink 0.8s infinite;
             }
+            @media (max-width: 1000px) {
+              animation: none;
+              display: none;
+            }
           }
           &__text {
             margin-left: 0.5rem;
+            @media (max-width: 1000px) {
+              margin-left: 0.3em;
+            }
           }
         }
 
         &--works .btn-text {
           margin-left: 7%;
+          @media (max-width: 1000px) {
+            margin-left: 0;
+          }
         }
         &--info .btn-text {
           margin-left: -12%;
+          @media (max-width: 1000px) {
+            margin-left: 0;
+          }
         }
 
         &:hover {
@@ -1618,6 +1697,9 @@ body.ko {
 
       &:hover {
         animation: textBlink 0.7s infinite;
+        @media (max-width: 1000px) {
+          animation: none;
+        }
       }
 
       &.active {
@@ -2044,5 +2126,28 @@ body.ko {
   100% {
     color: rgba(255, 255, 255, 0.7);
     background-color: transparent;
+  }
+}
+
+@keyframes textBlinkReverse {
+  0% {
+    color: $bg-color;
+    background-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 10px 10px rgba(255, 255, 255, 1);
+  }
+  49% {
+    color: $bg-color;
+    background-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 10px 10px rgba(255, 255, 255, 1);
+  }
+  50% {
+    color: rgba(255, 255, 255, 0.7);
+    background-color: transparent;
+    box-shadow: none;
+  }
+  100% {
+    color: rgba(255, 255, 255, 0.7);
+    background-color: transparent;
+    box-shadow: none;
   }
 }

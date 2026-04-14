@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { SplitText } from "gsap/SplitText";
 import type { LangType } from "./types";
+import { useMobile } from "./hooks/useMobile";
 
 gsap.registerPlugin(SplitText);
 import "./App.scss";
@@ -35,12 +36,12 @@ const _tzShort =
 const _utcOffsetH = -new Date().getTimezoneOffset() / 60;
 const _utcLabel = `UTC${_utcOffsetH >= 0 ? "+" : ""}${String(_utcOffsetH).padStart(2, "0")}:00`;
 
-const VIEWPORT_GUARD_MAX_PX = 1000;
 /** Max wait for `document.fonts.ready` before continuing intro (avoids hanging on slow/broken fonts). */
 const FONTS_READY_MAX_WAIT_MS = 2500;
 
 function App() {
-  const { i18n, t } = useTranslation();
+  const { i18n } = useTranslation();
+  const { isMobile } = useMobile();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -69,8 +70,6 @@ function App() {
   const [hasShownWorks, setHasShownWorks] = useState(false);
   const [hasShownInfo, setHasShownInfo] = useState(false);
 
-  const [isViewportGuardActive, setIsViewportGuardActive] = useState(false);
-
   const changeLanguage = (lang: LangType) => {
     i18n.changeLanguage(lang);
     setLanguage(lang);
@@ -80,14 +79,6 @@ function App() {
     document.body.classList.remove("ko", "en");
     document.body.classList.add(language);
   }, [language]);
-
-  useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${VIEWPORT_GUARD_MAX_PX}px)`);
-    const sync = () => setIsViewportGuardActive(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
 
   // WebGL init reports 100 in the same tick as scene setup; the intro still waits on
   // `document.fonts.ready` + delay. Without tying the counter to that, (100/100) looked
@@ -229,22 +220,6 @@ function App() {
   const handleGoInfo = useCallback(() => goInfo(), [goInfo]);
   const handleGoHero = useCallback(() => goHero(), [goHero]);
 
-  // 첫 진입 시에만 hero 애니메이션 실행
-  // useEffect(() => {
-  //   if (!isLoaded || view !== "hero") return;
-  //   if (!isFirstHeroLoadRef.current) return; // 줌아웃 복귀 시 스킵
-  //   runHeroAnimation();
-  // }, [isLoaded, view, runHeroAnimation]);
-
-  // // Cleanup on unmount
-  // useEffect(() => {
-  //   return () => {
-  //     heroTlRef.current?.kill();
-  //     heroSplitsRef.current.forEach((s) => s.revert());
-  //     if (heroAnimTimerRef.current) clearTimeout(heroAnimTimerRef.current);
-  //   };
-  // }, []);
-
   // Btn hover — terminal typewriter effect via GSAP
   useEffect(() => {
     if (!isLoaded) return;
@@ -260,6 +235,13 @@ function App() {
       const cursorEl = btn.querySelector<HTMLElement>(".btn-text__cursor");
       if (!textEl || !textContent) return;
 
+      if (isMobile) {
+        // Mobile uses CSS blinking animations; skip all GSAP text interventions to prevent inline style overrides
+        // Clear any GSAP inline styles that might hide the text
+        gsap.set(textEl, { clearProps: "all" });
+        return;
+      }
+      
       gsap.set(textEl, { opacity: 0, x: 10 });
       cursorEl?.classList.remove("active");
 
@@ -323,37 +305,42 @@ function App() {
     });
 
     return () => cleanups.forEach((fn) => fn());
-  }, [isLoaded]);
+  }, [isLoaded, isMobile]);
 
   const heroIntroMotion = () => {
-    const split1 = new SplitText(".desc-text-1", { type: "chars" });
-    const split2 = new SplitText(".desc-text-2", { type: "chars" });
-    const split3 = new SplitText(".desc-text-3", { type: "chars" });
+    let split1: SplitText | undefined;
+    let split2: SplitText | undefined;
+    let split3: SplitText | undefined;
 
-    return (
-      gsap
-        .timeline()
-        // 0. particles converge from scatter → star shape
-        .call(() => triggerAssembly())
-        // 1. fade in hero content
-        .fromTo(
-          heroContentRef.current,
-          { opacity: 0 },
-          { opacity: 1, duration: 0.5, ease: "linear" },
-        )
-        // 2. canvas brightness reveal
-        .to(
-          ".webgl-canvas",
-          { filter: "brightness(1)", duration: 2, ease: "circ.out" },
-          "<",
-        )
-        // 3. title words: mask slide-up
-        .from(
-          ".title-word",
-          { y: "110%", duration: 1.2, stagger: 0.1, ease: "circ.out" },
-          "<+0.15",
-        )
-        // 4. desc-wrap slide + fade
+    if (!isMobile) {
+      split1 = new SplitText(".desc-text-1", { type: "chars" });
+      split2 = new SplitText(".desc-text-2", { type: "chars" });
+      split3 = new SplitText(".desc-text-3", { type: "chars" });
+    }
+
+    const tl = gsap
+      .timeline()
+      // 0. particles converge from scatter → star shape
+      .call(() => triggerAssembly())
+      // 1. fade in hero content
+      .fromTo(
+        heroContentRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.5, ease: "linear" },
+      )
+      // 2. canvas brightness reveal
+      .to(
+        ".webgl-canvas",
+        { filter: "brightness(1)", duration: 2, ease: "circ.out" },
+        "<",
+      );
+
+    if (!isMobile) {
+      tl.from(
+        ".title-word",
+        { y: "110%", duration: 1.2, stagger: 0.1, ease: "circ.out" },
+        "<+0.15",
+      )
         .from(
           ".desc-wrap",
           { x: -10, stagger: 0.1, duration: 0.8, ease: "circ.out" },
@@ -364,20 +351,24 @@ function App() {
           { opacity: 0, stagger: 0.1, duration: 0.2, ease: "power1.out" },
           "<",
         )
-        // 5. desc chars typewriter
         .from(
-          split1.chars,
+          split1!.chars,
           { opacity: 0, duration: 0.01, stagger: 0.025, ease: "none" },
           "<",
         )
         .from(
-          split2.chars,
+          split2!.chars,
           { opacity: 0, duration: 0.01, stagger: 0.025, ease: "none" },
           "<0.1",
         )
         .from(
-          split3.chars,
+          split3!.chars,
           { opacity: 0, duration: 0.01, stagger: 0.025, ease: "none" },
+          "<0.1",
+        )
+        .from(
+          ".desc-separator",
+          { opacity: 0, duration: 0.4, ease: "power1.out" },
           "<0.1",
         )
         .from(
@@ -397,23 +388,35 @@ function App() {
         .from(
           ".hero-hint",
           {
-            y: 5,
-            repeat: -1,
-            yoyo: true,
+            y: -10,
             duration: 0.8,
-            ease: "linear",
+            ease: "circ.out",
           },
           "<",
         )
-        // 6. Cleanup: revert splits right after desc chars finish
-        //    Removes char <div>s from DOM and releases GSAP tracking on 100+ elements
         .call(() => {
-          split1.revert();
-          split2.revert();
-          split3.revert();
-        })
+          split1?.revert();
+          split2?.revert();
+          split3?.revert();
+        });
+    }
+
+    tl.fromTo(
+      ".hero-hint",
+      { y: 0 },
+      {
+        y: 8,
+        repeat: -1,
+        yoyo: true,
+        duration: 1.0,
+        ease: "sine.inOut",
+      },
+      isMobile ? 0.5 : "+0.2",
     );
+
+    return tl;
   };
+
   return (
     <div className="app-container" ref={containerRef}>
       <canvas className="webgl-canvas" ref={canvasRef} />
@@ -510,21 +513,34 @@ function App() {
                     optimizing workflows and systems
                   </span>
                 </span>
+                {isMobile && (
+                  <>
+                    <span className="desc-separator">. . .</span>
+                    <span className="desc-wrap desc-wrap-location">
+                      <span className="desc-prompt">&gt;</span>
+                      <span className="desc-text desc-location">
+                        based in South_korea/Australia
+                      </span>
+                    </span>
+                  </>
+                )}
               </p>
             </div>
           </div>
 
-          <div className="hero-hud-data hero-hud-data__location">
-            <div className="title title-mask">
-              <span className="title-word">Based_in</span>
+          {!isMobile && (
+            <div className="hero-hud-data hero-hud-data__location">
+              <div className="title title-mask">
+                <span className="title-word">Based_in</span>
+              </div>
+              <div className="desc title-mask">
+                <span className="title-word">
+                  South Korea | Australia | Worldwide
+                  <span className="emoji">🌏</span>
+                </span>
+              </div>
             </div>
-            <div className="desc title-mask">
-              <span className="title-word">
-                South Korea | Australia | Worldwide
-                <span className="emoji">🌏</span>
-              </span>
-            </div>
-          </div>
+          )}
 
           <div className="hero-hud-data hero-hud-data__monitor">
             <div className="hero-panel">
@@ -630,24 +646,6 @@ function App() {
           </Suspense>
         )}
       </div>
-
-      {isViewportGuardActive && (
-        <div
-          className="viewport-guard"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="viewport-guard-title"
-        >
-          <div className="viewport-guard__panel">
-            <p id="viewport-guard-title" className="viewport-guard__title">
-              {t("viewportGuard.title")}
-            </p>
-            <p className="viewport-guard__body text-body">
-              {t("viewportGuard.body")}
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
