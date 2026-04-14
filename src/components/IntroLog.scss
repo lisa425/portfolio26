@@ -67,8 +67,12 @@ $visible-rows: 5;
     will-change: background-color, color, transform;
     transform-origin: left center;
 
-    @media (max-width: 1000px) {
+    @media (max-width: 720px) {
       font-size: 12px;
+    }
+
+    @media (max-width: 375px) {
+      font-size: 10px;
     }
   }
 
