@@ -1,84 +1,93 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import gsap from 'gsap'
-import { SplitText } from 'gsap/SplitText'
-import type { LangType } from './types'
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { useTranslation } from "react-i18next";
+import gsap from "gsap";
+import { SplitText } from "gsap/SplitText";
+import type { LangType } from "./types";
 
-gsap.registerPlugin(SplitText)
-import './App.scss'
-import { useHeroScene } from './hooks/useHeroScene'
-import { useCursorTrail } from './hooks/useCursorTrail'
-import IntroLog from './components/IntroLog'
+gsap.registerPlugin(SplitText);
+import "./App.scss";
+import { useHeroScene } from "./hooks/useHeroScene";
+import { useCursorTrail } from "./hooks/useCursorTrail";
+import IntroLog from "./components/IntroLog";
 
 // Code-split: Works & Info are lazy-loaded on first visit
-const Works = lazy(() => import('./components/Works'))
-const Info = lazy(() => import('./components/Info'))
+const Works = lazy(() => import("./components/Works"));
+const Info = lazy(() => import("./components/Info"));
 
 // ---------------------------------------------------------------------------
 // Static timezone info — computed once at module load, never on re-render
 // (setCurrentTime fires every second; keeping these here prevents repeated
 //  Intl / Date API calls on each React re-render)
 // ---------------------------------------------------------------------------
-const _tzName = Intl.DateTimeFormat().resolvedOptions().timeZone
-const _tzShort = new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').at(-1) ?? _tzName
-const _utcOffsetH = -new Date().getTimezoneOffset() / 60
-const _utcLabel = `UTC${_utcOffsetH >= 0 ? '+' : ''}${String(_utcOffsetH).padStart(2, '0')}:00`
+const _tzName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+const _tzShort =
+  new Date()
+    .toLocaleTimeString("en-US", { timeZoneName: "short" })
+    .split(" ")
+    .at(-1) ?? _tzName;
+const _utcOffsetH = -new Date().getTimezoneOffset() / 60;
+const _utcLabel = `UTC${_utcOffsetH >= 0 ? "+" : ""}${String(_utcOffsetH).padStart(2, "0")}:00`;
 
-const VIEWPORT_GUARD_MAX_PX = 1000
+const VIEWPORT_GUARD_MAX_PX = 1000;
 /** Max wait for `document.fonts.ready` before continuing intro (avoids hanging on slow/broken fonts). */
-const FONTS_READY_MAX_WAIT_MS = 2500
+const FONTS_READY_MAX_WAIT_MS = 2500;
 
 function App() {
-  const { i18n, t } = useTranslation()
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const { i18n, t } = useTranslation();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const buttonWorksRef = useRef<HTMLButtonElement>(null)
-  const buttonInfoRef = useRef<HTMLButtonElement>(null)
-  const trailCanvasRef = useRef<HTMLCanvasElement>(null)
-  const heroAnimTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const buttonWorksRef = useRef<HTMLButtonElement>(null);
+  const buttonInfoRef = useRef<HTMLButtonElement>(null);
+  const trailCanvasRef = useRef<HTMLCanvasElement>(null);
+  const heroAnimTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [language, setLanguage] = useState(i18n.language)
-  const [loadProgress, setLoadProgress] = useState(0)
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [locationStr, setLocationStr] = useState("37° 33' N ■ 126° 58' E")
-  const [currentTime, setCurrentTime] = useState('')
-  const [currentDate, setCurrentDate] = useState('')
-  const [view, setView] = useState<'hero' | 'transitioning' | 'works' | 'info'>('hero')
-  const isHeroActiveRef = useRef(true)
+  const [language, setLanguage] = useState(i18n.language);
+  const [loadProgress, setLoadProgress] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [locationStr, setLocationStr] = useState("37° 33' N ■ 126° 58' E");
+  const [currentTime, setCurrentTime] = useState("");
+  const [currentDate, setCurrentDate] = useState("");
+  const [view, setView] = useState<"hero" | "transitioning" | "works" | "info">(
+    "hero",
+  );
+  const isHeroActiveRef = useRef(true);
 
   // Intro log: plays every page load; false after first run so hero-return skips it
-  const [showIntro, setShowIntro] = useState(true)
-  const heroContentRef = useRef<HTMLDivElement>(null)
+  const [showIntro, setShowIntro] = useState(true);
+  const heroContentRef = useRef<HTMLDivElement>(null);
 
   // Keep-alive: mount Works/Info on first visit, stay mounted to preserve state
   // Set at transition START (not on view change) to avoid Suspense flash
-  const [hasShownWorks, setHasShownWorks] = useState(false)
-  const [hasShownInfo, setHasShownInfo] = useState(false)
+  const [hasShownWorks, setHasShownWorks] = useState(false);
+  const [hasShownInfo, setHasShownInfo] = useState(false);
 
-  const [isViewportGuardActive, setIsViewportGuardActive] = useState(false)
-
-  // Flag: true while we're executing a programmatic history.back().
-  // Prevents the resulting popstate from double-processing the same navigation.
-  const programmaticNavRef = useRef(false)
+  const [isViewportGuardActive, setIsViewportGuardActive] = useState(false);
 
   const changeLanguage = (lang: LangType) => {
-    i18n.changeLanguage(lang)
-    setLanguage(lang)
-  }
+    i18n.changeLanguage(lang);
+    setLanguage(lang);
+  };
 
   useEffect(() => {
-    document.body.classList.remove('ko', 'en')
-    document.body.classList.add(language)
-  }, [language])
+    document.body.classList.remove("ko", "en");
+    document.body.classList.add(language);
+  }, [language]);
 
   useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${VIEWPORT_GUARD_MAX_PX}px)`)
-    const sync = () => setIsViewportGuardActive(mq.matches)
-    sync()
-    mq.addEventListener('change', sync)
-    return () => mq.removeEventListener('change', sync)
-  }, [])
+    const mq = window.matchMedia(`(max-width: ${VIEWPORT_GUARD_MAX_PX}px)`);
+    const sync = () => setIsViewportGuardActive(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   // WebGL init reports 100 in the same tick as scene setup; the intro still waits on
   // `document.fonts.ready` + delay. Without tying the counter to that, (100/100) looked
@@ -86,184 +95,139 @@ function App() {
 
   const handleProgress = useCallback((progress: number) => {
     if (progress < 100) {
-      setLoadProgress(progress)
-      return
+      setLoadProgress(progress);
+      return;
     }
-    setLoadProgress(99)
+    setLoadProgress(99);
     Promise.race([
       document.fonts.ready,
       new Promise<void>((resolve) => {
-        setTimeout(resolve, FONTS_READY_MAX_WAIT_MS)
+        setTimeout(resolve, FONTS_READY_MAX_WAIT_MS);
       }),
     ]).then(() => {
-      setLoadProgress(100)
+      setLoadProgress(100);
       // Brief hold so 100/100 is readable before line cycling starts
-      setTimeout(() => setIsLoaded(true), 500)
-    })
-  }, [])
+      setTimeout(() => setIsLoaded(true), 500);
+    });
+  }, []);
 
   // Geolocation
   useEffect(() => {
-    if ('geolocation' in navigator) {
+    if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const lat = position.coords.latitude
-          const lng = position.coords.longitude
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
 
-          const dLat = Math.floor(Math.abs(lat))
-          const mLat = Math.floor((Math.abs(lat) - dLat) * 60)
-          const dLng = Math.floor(Math.abs(lng))
-          const mLng = Math.floor((Math.abs(lng) - dLng) * 60)
+          const dLat = Math.floor(Math.abs(lat));
+          const mLat = Math.floor((Math.abs(lat) - dLat) * 60);
+          const dLng = Math.floor(Math.abs(lng));
+          const mLng = Math.floor((Math.abs(lng) - dLng) * 60);
 
-          const dirLat = lat >= 0 ? 'N' : 'S'
-          const dirLng = lng >= 0 ? 'E' : 'W'
+          const dirLat = lat >= 0 ? "N" : "S";
+          const dirLng = lng >= 0 ? "E" : "W";
 
-          setLocationStr(`${dLat}° ${mLat}' ${dirLat} ■ ${dLng}° ${mLng}' ${dirLng}`)
+          setLocationStr(
+            `${dLat}° ${mLat}' ${dirLat} ■ ${dLng}° ${mLng}' ${dirLng}`,
+          );
         },
         (error) => {
-          console.error('Geolocation error:', error)
-          setLocationStr("37° 33' N ■ 126° 58' E")
+          console.error("Geolocation error:", error);
+          setLocationStr("37° 33' N ■ 126° 58' E");
         },
-      )
+      );
     } else {
-      setLocationStr("37° 33' N ■ 126° 58' E")
+      setLocationStr("37° 33' N ■ 126° 58' E");
     }
-  }, [])
+  }, []);
 
   // Live Clock
   useEffect(() => {
-    const DAY = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+    const DAY = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
     const tick = () => {
-      const now = new Date()
+      const now = new Date();
       setCurrentTime(
-        now.toLocaleTimeString('en-US', {
+        now.toLocaleTimeString("en-US", {
           hour12: true,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
         }),
-      )
-      const y = now.getFullYear()
-      const m = String(now.getMonth() + 1).padStart(2, '0')
-      const d = String(now.getDate()).padStart(2, '0')
-      setCurrentDate(`${y}.${m}.${d}  ${DAY[now.getDay()]}`)
-    }
-    tick()
-    const timer = setInterval(tick, 1000)
-    return () => clearInterval(timer)
-  }, [])
+      );
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      setCurrentDate(`${y}.${m}.${d}  ${DAY[now.getDay()]}`);
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Three.js Scene
-  const { triggerWorksTransition, triggerInfoTransition, triggerHeroTransition, triggerAssembly } = useHeroScene(
+  const {
+    triggerWorksTransition,
+    triggerInfoTransition,
+    triggerHeroTransition,
+    triggerAssembly,
+  } = useHeroScene(
     canvasRef,
     containerRef,
     buttonWorksRef,
     buttonInfoRef,
     handleProgress,
     isHeroActiveRef,
-  )
+  );
 
-  useCursorTrail(trailCanvasRef)
+  useCursorTrail(trailCanvasRef);
 
   useEffect(() => {
-    isHeroActiveRef.current = view === 'hero'
-  }, [view])
+    isHeroActiveRef.current = view === "hero";
+  }, [view]);
 
   const killHeroTweens = useCallback(() => {
     if (heroAnimTimerRef.current) {
-      clearTimeout(heroAnimTimerRef.current)
-      heroAnimTimerRef.current = null
+      clearTimeout(heroAnimTimerRef.current);
+      heroAnimTimerRef.current = null;
     }
-    gsap.killTweensOf('.hero')
-  }, [])
+    gsap.killTweensOf(".hero");
+  }, []);
 
-  const goWorks = useCallback(
-    (pushHistory: boolean) => {
-      if (view !== 'hero') return
-      setHasShownWorks(true)
-      setView('transitioning')
-      if (pushHistory) history.pushState({ view: 'works' }, '')
-      killHeroTweens()
-      gsap.set('.hero', { opacity: 0 })
-      triggerWorksTransition(() => setView('works'))
-    },
-    [view, triggerWorksTransition, killHeroTweens],
-  )
+  const goWorks = useCallback(() => {
+    if (view !== "hero") return;
+    setHasShownWorks(true);
+    setView("transitioning");
+    killHeroTweens();
+    gsap.set(".hero", { opacity: 0 });
+    triggerWorksTransition(() => setView("works"));
+  }, [view, triggerWorksTransition, killHeroTweens]);
 
-  const goInfo = useCallback(
-    (pushHistory: boolean) => {
-      if (view !== 'hero') return
-      setHasShownInfo(true)
-      setView('transitioning')
-      if (pushHistory) history.pushState({ view: 'info' }, '')
-      killHeroTweens()
-      gsap.set('.hero', { opacity: 0 })
-      triggerInfoTransition(() => setView('info'))
-    },
-    [view, triggerInfoTransition, killHeroTweens],
-  )
+  const goInfo = useCallback(() => {
+    if (view !== "hero") return;
+    setHasShownInfo(true);
+    setView("transitioning");
+    killHeroTweens();
+    gsap.set(".hero", { opacity: 0 });
+    triggerInfoTransition(() => setView("info"));
+  }, [view, triggerInfoTransition, killHeroTweens]);
 
-  const goHero = useCallback(
-    (skipHistoryBack: boolean) => {
-      if (view === 'hero' || view === 'transitioning') return
-      setView('transitioning')
+  const goHero = useCallback(() => {
+    if (view === "hero" || view === "transitioning") return;
+    setView("transitioning");
 
-      if (!skipHistoryBack) {
-        programmaticNavRef.current = true
-        history.back()
-      }
+    if (heroAnimTimerRef.current) clearTimeout(heroAnimTimerRef.current);
+    heroAnimTimerRef.current = setTimeout(() => {
+      gsap.to(".hero", { opacity: 1, duration: 0.5, ease: "power2.out" });
+    }, 1000);
 
-      if (heroAnimTimerRef.current) clearTimeout(heroAnimTimerRef.current)
-      heroAnimTimerRef.current = setTimeout(() => {
-        gsap.to('.hero', { opacity: 1, duration: 0.5, ease: 'power2.out' })
-      }, 1000)
+    triggerHeroTransition(() => {
+      setView("hero");
+    });
+  }, [view, triggerHeroTransition]);
 
-      triggerHeroTransition(() => {
-        setView('hero')
-      })
-    },
-    [view, triggerHeroTransition],
-  )
-
-  const handleGoWorks = useCallback(() => goWorks(true), [goWorks])
-  const handleGoInfo = useCallback(() => goInfo(true), [goInfo])
-  const handleGoHero = useCallback(() => goHero(false), [goHero])
-
-  // Browser back/forward: read history.state to decide direction.
-  // Skip events caused by our own programmatic history.back() calls.
-  useEffect(() => {
-    const onPopState = (e: PopStateEvent) => {
-      if (programmaticNavRef.current) {
-        programmaticNavRef.current = false
-        return
-      }
-
-      const target = (e.state as { view?: string } | null)?.view
-
-      if (target === 'works') {
-        goWorks(false)
-      } else if (target === 'info') {
-        goInfo(false)
-      } else {
-        goHero(true)
-      }
-    }
-    window.addEventListener('popstate', onPopState)
-    return () => window.removeEventListener('popstate', onPopState)
-  }, [goWorks, goInfo, goHero])
-
-  // bfcache: if the page is restored from back/forward cache, reset to hero
-  useEffect(() => {
-    const onPageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) {
-        setView('hero')
-        setShowIntro(false)
-        gsap.set('.hero', { opacity: 1 })
-      }
-    }
-    window.addEventListener('pageshow', onPageShow)
-    return () => window.removeEventListener('pageshow', onPageShow)
-  }, [])
+  const handleGoWorks = useCallback(() => goWorks(), [goWorks]);
+  const handleGoInfo = useCallback(() => goInfo(), [goInfo]);
+  const handleGoHero = useCallback(() => goHero(), [goHero]);
 
   // 첫 진입 시에만 hero 애니메이션 실행
   // useEffect(() => {
@@ -283,80 +247,88 @@ function App() {
 
   // Btn hover — terminal typewriter effect via GSAP
   useEffect(() => {
-    if (!isLoaded) return
+    if (!isLoaded) return;
 
-    const btnRefs = [buttonWorksRef.current, buttonInfoRef.current]
-    const cleanups: (() => void)[] = []
+    const btnRefs = [buttonWorksRef.current, buttonInfoRef.current];
+    const cleanups: (() => void)[] = [];
 
     btnRefs.forEach((btn) => {
-      if (!btn) return
+      if (!btn) return;
 
-      const textEl = btn.querySelector<HTMLElement>('.btn-text')
-      const textContent = btn.querySelector<HTMLElement>('.btn-text__text')
-      const cursorEl = btn.querySelector<HTMLElement>('.btn-text__cursor')
-      if (!textEl || !textContent) return
+      const textEl = btn.querySelector<HTMLElement>(".btn-text");
+      const textContent = btn.querySelector<HTMLElement>(".btn-text__text");
+      const cursorEl = btn.querySelector<HTMLElement>(".btn-text__cursor");
+      if (!textEl || !textContent) return;
 
-      gsap.set(textEl, { opacity: 0, x: 10 })
-      cursorEl?.classList.remove('active')
+      gsap.set(textEl, { opacity: 0, x: 10 });
+      cursorEl?.classList.remove("active");
 
-      const split = new SplitText(textContent, { type: 'chars' })
-      gsap.set(split.chars, { opacity: 0, display: 'inline-block' })
-      gsap.set(textContent, { clearProps: 'opacity' })
+      const split = new SplitText(textContent, { type: "chars" });
+      gsap.set(split.chars, { opacity: 0, display: "inline-block" });
+      gsap.set(textContent, { clearProps: "opacity" });
 
-      const CHAR_DELAY = 0.07 // gap between each char
-      const HOLD = 0.05 // how long the active highlight stays
+      const CHAR_DELAY = 0.07; // gap between each char
+      const HOLD = 0.05; // how long the active highlight stays
 
       const tl = gsap.timeline({
         paused: true,
         // cursor CSS animation starts only after all chars are done
-        onComplete: () => cursorEl?.classList.add('active'),
-      })
+        onComplete: () => cursorEl?.classList.add("active"),
+      });
 
       // Slide wrapper in
-      tl.to(textEl, { opacity: 1, x: 0, duration: 0.15, ease: 'power2.out' })
+      tl.to(textEl, { opacity: 1, x: 0, duration: 0.15, ease: "power2.out" });
 
       // Per-char: active highlight (white bg + black text) → settled (transparent + white)
       split.chars.forEach((char, i) => {
-        const t = 0.15 + i * CHAR_DELAY
-        tl.set(char, { opacity: 1, backgroundColor: '#ffffff', color: '#000000' }, t)
-        tl.to(char, { backgroundColor: 'transparent', color: '#ffffff', duration: HOLD }, t + HOLD)
-      })
+        const t = 0.15 + i * CHAR_DELAY;
+        tl.set(
+          char,
+          { opacity: 1, backgroundColor: "#ffffff", color: "#000000" },
+          t,
+        );
+        tl.to(
+          char,
+          { backgroundColor: "transparent", color: "#ffffff", duration: HOLD },
+          t + HOLD,
+        );
+      });
 
       const reset = () => {
-        tl.pause(0)
-        gsap.set(textEl, { opacity: 0, x: 10 })
+        tl.pause(0);
+        gsap.set(textEl, { opacity: 0, x: 10 });
         gsap.set(split.chars, {
           opacity: 0,
-          backgroundColor: 'transparent',
-          color: '#ffffff',
-        })
-        cursorEl?.classList.remove('active')
-      }
+          backgroundColor: "transparent",
+          color: "#ffffff",
+        });
+        cursorEl?.classList.remove("active");
+      };
 
       const onEnter = () => {
-        cursorEl?.classList.remove('active')
-        tl.restart()
-      }
-      const onLeave = () => reset()
+        cursorEl?.classList.remove("active");
+        tl.restart();
+      };
+      const onLeave = () => reset();
 
-      btn.addEventListener('mouseenter', onEnter)
-      btn.addEventListener('mouseleave', onLeave)
+      btn.addEventListener("mouseenter", onEnter);
+      btn.addEventListener("mouseleave", onLeave);
 
       cleanups.push(() => {
-        btn.removeEventListener('mouseenter', onEnter)
-        btn.removeEventListener('mouseleave', onLeave)
-        tl.kill()
-        split.revert()
-      })
-    })
+        btn.removeEventListener("mouseenter", onEnter);
+        btn.removeEventListener("mouseleave", onLeave);
+        tl.kill();
+        split.revert();
+      });
+    });
 
-    return () => cleanups.forEach((fn) => fn())
-  }, [isLoaded])
+    return () => cleanups.forEach((fn) => fn());
+  }, [isLoaded]);
 
   const heroIntroMotion = () => {
-    const split1 = new SplitText('.desc-text-1', { type: 'chars' })
-    const split2 = new SplitText('.desc-text-2', { type: 'chars' })
-    const split3 = new SplitText('.desc-text-3', { type: 'chars' })
+    const split1 = new SplitText(".desc-text-1", { type: "chars" });
+    const split2 = new SplitText(".desc-text-2", { type: "chars" });
+    const split3 = new SplitText(".desc-text-3", { type: "chars" });
 
     return (
       gsap
@@ -364,61 +336,88 @@ function App() {
         // 0. particles converge from scatter → star shape
         .call(() => triggerAssembly())
         // 1. fade in hero content
-        .fromTo(heroContentRef.current, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: 'linear' })
+        .fromTo(
+          heroContentRef.current,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.5, ease: "linear" },
+        )
         // 2. canvas brightness reveal
-        .to('.webgl-canvas', { filter: 'brightness(1)', duration: 2, ease: 'circ.out' }, '<')
+        .to(
+          ".webgl-canvas",
+          { filter: "brightness(1)", duration: 2, ease: "circ.out" },
+          "<",
+        )
         // 3. title words: mask slide-up
-        .from('.title-word', { y: '110%', duration: 1.2, stagger: 0.1, ease: 'circ.out' }, '<+0.15')
-        // 4. desc-wrap slide + fade
-        .from('.desc-wrap', { x: -10, stagger: 0.1, duration: 0.8, ease: 'circ.out' }, '<+0.1')
-        .from('.desc-wrap', { opacity: 0, stagger: 0.1, duration: 0.2, ease: 'power1.out' }, '<')
-        // 5. desc chars typewriter
-        .from(split1.chars, { opacity: 0, duration: 0.01, stagger: 0.025, ease: 'none' }, '<')
-        .from(split2.chars, { opacity: 0, duration: 0.01, stagger: 0.025, ease: 'none' }, '<0.1')
-        .from(split3.chars, { opacity: 0, duration: 0.01, stagger: 0.025, ease: 'none' }, '<0.1')
-        .from('.hero-hud-data__monitor', { opacity: 0, x: 50, duration: 0.8, ease: 'circ.out' }, '<')
         .from(
-          '.hero-hint',
+          ".title-word",
+          { y: "110%", duration: 1.2, stagger: 0.1, ease: "circ.out" },
+          "<+0.15",
+        )
+        // 4. desc-wrap slide + fade
+        .from(
+          ".desc-wrap",
+          { x: -10, stagger: 0.1, duration: 0.8, ease: "circ.out" },
+          "<+0.1",
+        )
+        .from(
+          ".desc-wrap",
+          { opacity: 0, stagger: 0.1, duration: 0.2, ease: "power1.out" },
+          "<",
+        )
+        // 5. desc chars typewriter
+        .from(
+          split1.chars,
+          { opacity: 0, duration: 0.01, stagger: 0.025, ease: "none" },
+          "<",
+        )
+        .from(
+          split2.chars,
+          { opacity: 0, duration: 0.01, stagger: 0.025, ease: "none" },
+          "<0.1",
+        )
+        .from(
+          split3.chars,
+          { opacity: 0, duration: 0.01, stagger: 0.025, ease: "none" },
+          "<0.1",
+        )
+        .from(
+          ".hero-hud-data__monitor",
+          { opacity: 0, x: 50, duration: 0.8, ease: "circ.out" },
+          "<",
+        )
+        .from(
+          ".hero-hint",
           {
             opacity: 0,
             duration: 0.8,
-            ease: 'linear',
+            ease: "linear",
           },
-          '<',
+          "<",
         )
         .from(
-          '.hero-hint',
+          ".hero-hint",
           {
             y: 5,
             repeat: -1,
             yoyo: true,
             duration: 0.8,
-            ease: 'linear',
+            ease: "linear",
           },
-          '<',
+          "<",
         )
         // 6. Cleanup: revert splits right after desc chars finish
         //    Removes char <div>s from DOM and releases GSAP tracking on 100+ elements
         .call(() => {
-          split1.revert()
-          split2.revert()
-          split3.revert()
+          split1.revert();
+          split2.revert();
+          split3.revert();
         })
-    )
-  }
+    );
+  };
   return (
-    <div
-      className="app-container"
-      ref={containerRef}
-    >
-      <canvas
-        className="webgl-canvas"
-        ref={canvasRef}
-      />
-      <canvas
-        className="trail-canvas"
-        ref={trailCanvasRef}
-      />
+    <div className="app-container" ref={containerRef}>
+      <canvas className="webgl-canvas" ref={canvasRef} />
+      <canvas className="trail-canvas" ref={trailCanvasRef} />
 
       {/* ── IntroLog: mounts immediately, acts as loading screen + intro ── */}
       {showIntro && (
@@ -426,12 +425,12 @@ function App() {
           loadProgress={loadProgress}
           isLoaded={isLoaded}
           onComplete={() => {
-            setShowIntro(false)
+            setShowIntro(false);
             // Prefetch Works & Info chunks in the background after intro
             // so they're ready before the user clicks a nav button
-            import('./components/Works')
-            import('./components/Info')
-            heroIntroMotion()
+            import("./components/Works");
+            import("./components/Info");
+            heroIntroMotion();
           }}
         />
       )}
@@ -441,21 +440,18 @@ function App() {
         ref={heroContentRef}
         style={{
           opacity: showIntro ? 0 : 1,
-          pointerEvents: showIntro ? 'none' : 'auto',
+          pointerEvents: showIntro ? "none" : "auto",
         }}
       >
         <header className="header">
-          <div
-            className="header-left"
-            onClick={handleGoHero}
-          >
+          <div className="header-left" onClick={handleGoHero}>
             <div className="title">ImChaewon</div>
             <div
-              className={`header-sub-flip${view !== 'hero' ? ' is-sub' : ''}`}
-              aria-label={view !== 'hero' ? '← back to main' : 'Archive v1.0'}
+              className={`header-sub-flip${view !== "hero" ? " is-sub" : ""}`}
+              aria-label={view !== "hero" ? "go main" : "Archive v1.0"}
             >
               <span className="header-sub-flip__front">Archive v1.0</span>
-              <span className="header-sub-flip__back">back to main</span>
+              <span className="header-sub-flip__back">← back</span>
             </div>
           </div>
 
@@ -463,15 +459,15 @@ function App() {
             <span className="menu-lang-label">&gt; LAN</span>
             <div className="menu-lang">
               <button
-                className={language === 'ko' ? 'btn-lang on' : 'btn-lang'}
-                onClick={() => changeLanguage('ko')}
+                className={language === "ko" ? "btn-lang on" : "btn-lang"}
+                onClick={() => changeLanguage("ko")}
               >
                 KO
               </button>
               <span className="divider"></span>
               <button
-                className={language === 'en' ? 'btn-lang on' : 'btn-lang'}
-                onClick={() => changeLanguage('en')}
+                className={language === "en" ? "btn-lang on" : "btn-lang"}
+                onClick={() => changeLanguage("en")}
               >
                 EN
               </button>
@@ -479,7 +475,7 @@ function App() {
           </div>
         </header>
 
-        <section className={`hero${view !== 'hero' ? ' hidden' : ''}`}>
+        <section className={`hero${view !== "hero" ? " hidden" : ""}`}>
           <div className="hero-main-text">
             <div className="hero-main-text__title">
               <span className="title-mask">
@@ -498,15 +494,21 @@ function App() {
               <p className="hero-sub-text__desc">
                 <span className="desc-wrap">
                   <span className="desc-prompt">&gt;</span>
-                  <span className="desc-text desc-text-1">designing interactive web experiences</span>
+                  <span className="desc-text desc-text-1">
+                    designing interactive web experiences
+                  </span>
                 </span>
                 <span className="desc-wrap">
                   <span className="desc-prompt">&gt;</span>
-                  <span className="desc-text desc-text-2">focusing on structure and motion</span>
+                  <span className="desc-text desc-text-2">
+                    focusing on structure and motion
+                  </span>
                 </span>
                 <span className="desc-wrap">
                   <span className="desc-prompt">&gt;</span>
-                  <span className="desc-text desc-text-3">optimizing workflows and systems</span>
+                  <span className="desc-text desc-text-3">
+                    optimizing workflows and systems
+                  </span>
                 </span>
               </p>
             </div>
@@ -609,8 +611,10 @@ function App() {
         {/* Works — lazy-loaded on first visit, kept mounted after */}
         {hasShownWorks && (
           <Suspense fallback={null}>
-            <section className={`page-sub works${view === 'works' ? ' visible' : ''}`}>
-              <Works isActive={view === 'works'} />
+            <section
+              className={`page-sub works${view === "works" ? " visible" : ""}`}
+            >
+              <Works isActive={view === "works"} />
             </section>
           </Suspense>
         )}
@@ -618,8 +622,10 @@ function App() {
         {/* Info — lazy-loaded on first visit, kept mounted after */}
         {hasShownInfo && (
           <Suspense fallback={null}>
-            <section className={`page-sub info${view === 'info' ? ' visible' : ''}`}>
-              <Info isActive={view === 'info'} />
+            <section
+              className={`page-sub info${view === "info" ? " visible" : ""}`}
+            >
+              <Info isActive={view === "info"} />
             </section>
           </Suspense>
         )}
@@ -633,18 +639,17 @@ function App() {
           aria-labelledby="viewport-guard-title"
         >
           <div className="viewport-guard__panel">
-            <p
-              id="viewport-guard-title"
-              className="viewport-guard__title"
-            >
-              {t('viewportGuard.title')}
+            <p id="viewport-guard-title" className="viewport-guard__title">
+              {t("viewportGuard.title")}
             </p>
-            <p className="viewport-guard__body text-body">{t('viewportGuard.body')}</p>
+            <p className="viewport-guard__body text-body">
+              {t("viewportGuard.body")}
+            </p>
           </div>
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

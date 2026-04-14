@@ -234,7 +234,7 @@ function Works({ isActive }: WorksProps) {
     const result = []
     const count = works.length
     const START_W = 300
-    const MAX_NODE_W = 1300
+    const MAX_NODE_W = 950 // Reduced from 1300 to keep nodes within viewport
     const step = count > 1 ? (MAX_NODE_W - START_W) / (count - 1) : 0
 
     for (let i = 0; i < count; i++) {
@@ -244,8 +244,8 @@ function Works({ isActive }: WorksProps) {
       result.push({ w, h: w, ...preset, op })
     }
 
-    const decorStart = 1650
-    const decorStep = 350
+    const decorStart = 1150 // Adjusted down from 1650 to match tighter orbits
+    const decorStep = 300 // Adjusted down from 350
     DECORATIVE_RINGS.forEach((dec, i) => {
       const w = (decorStart + decorStep * i) * ringScale
       result.push({ w, h: w, ...dec })
