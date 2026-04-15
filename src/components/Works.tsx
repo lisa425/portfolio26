@@ -2,10 +2,13 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { SplitText } from "gsap/SplitText";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { createPortal } from "react-dom";
 import { useMobile } from "../hooks/useMobile";
+import { renderText } from "../utils/renderText";
+import Lenis from "lenis";
 
-gsap.registerPlugin(SplitText);
+gsap.registerPlugin(SplitText, ScrollTrigger);
 
 interface WorksProps {
   isActive: boolean;
@@ -199,6 +202,10 @@ function Works({ isActive }: WorksProps) {
   const activePanelIdxRef = useRef<number | null>(null);
   // Direct DOM refs for hover classes — eliminates React re-renders on hover
   const nodeEls = useRef<(HTMLDivElement | null)[]>([]);
+  // Mobile list container ref — used for Lenis scroll & reset on section re-entry
+  const mobileListRef = useRef<HTMLDivElement | null>(null);
+  const mobileListContentRef = useRef<HTMLDivElement | null>(null);
+  const mobileLenisRef = useRef<Lenis | null>(null);
 
   // Animation state (refs for perf — no re-renders during drag)
   const rotRef = useRef({ ...INITIAL_ROT });
@@ -217,6 +224,34 @@ function Works({ isActive }: WorksProps) {
   const ringHighlightSweeps = useRef<number[]>([]);
   const rafRef = useRef(0);
   const telemetryIntervalRef = useRef(0);
+
+  // ─── Lenis (mobile only) ───
+  useEffect(() => {
+    if (!isMobileDevice) return;
+    if (!mobileListRef.current || !mobileListContentRef.current) return;
+
+    // 1. Lenis Init
+    const lenis = new Lenis({
+      wrapper: mobileListRef.current,
+      content: mobileListContentRef.current,
+      lerp: 0.1,
+      wheelMultiplier: 1.2,
+      touchMultiplier: 1.5,
+    });
+    mobileLenisRef.current = lenis;
+
+    const rafCb = (time: number) => {
+      lenis.raf(time * 1000);
+    };
+    gsap.ticker.add(rafCb);
+    gsap.ticker.lagSmoothing(0);
+
+    return () => {
+      lenis.destroy();
+      mobileLenisRef.current = null;
+      gsap.ticker.remove(rafCb);
+    };
+  }, [isMobileDevice]);
 
   // ─── Dynamic Layout State ───
   const [ringScale, setRingScale] = useState(1);
@@ -271,11 +306,21 @@ function Works({ isActive }: WorksProps) {
     isActiveRef.current = isActive;
     if (isActive) {
       setPreviewIndex(0);
+      // Reset mobile list scroll to top on re-entry
+      if (isMobileDevice) {
+        if (mobileLenisRef.current) {
+          mobileLenisRef.current.scrollTo(0, { immediate: true });
+        } else if (mobileListRef.current) {
+          mobileListRef.current.scrollTop = 0;
+        }
+      }
     }
-  }, [isActive]);
+  }, [isActive, isMobileDevice]);
 
   // ─── Main animation loop ───
   useEffect(() => {
+    if (isMobileDevice) return;
+
     let running = true;
 
     const loop = () => {
@@ -609,7 +654,12 @@ function Works({ isActive }: WorksProps) {
       tl.fromTo(
         ".orbital-ring",
         { "--ring-scale": 0 } as any,
-        { "--ring-scale": 1, duration: 0.55, stagger: 0.07, ease: "power2.out" },
+        {
+          "--ring-scale": 1,
+          duration: 0.55,
+          stagger: 0.07,
+          ease: "power2.out",
+        },
         0.1,
       );
       ringEls.current.forEach((el, i) => {
@@ -706,6 +756,10 @@ function Works({ isActive }: WorksProps) {
         scale: 0,
         opacity: 0,
       });
+      gsap.set(".works-list-content .works-preview", {
+        opacity: 0,
+        clearProps: "y",
+      });
       indexSplitRef.current?.revert();
       indexSplitRef.current = null;
       gsap.set(".works-progress", { opacity: 0 });
@@ -725,7 +779,9 @@ function Works({ isActive }: WorksProps) {
   };
 
   return (
-    <div className={`inner works__inner ${isMobileDevice ? "is-mobile-device" : ""}`}>
+    <div
+      className={`inner works__inner ${isMobileDevice ? "is-mobile-device" : ""}`}
+    >
       {/* Terminal Progress Bar */}
       <div className="terminal-bar works-progress">
         <span className="terminal-bar__label">&gt; WORKS</span>
@@ -749,57 +805,54 @@ function Works({ isActive }: WorksProps) {
 
       {/* Mobile list: panels rendered inside scrollable container */}
       {isMobileDevice && (
-        <div className="works-list-container">
-          {works.map((work, idx) => (
-            <div
-              key={`preview-mob-${work.id}`}
-              className="works-preview active"
-              onClick={() => handleWorkClick(work)}
-              ref={(el) => {
-                panelRefs.current[idx] = el;
-              }}
-            >
-              <div className="works-preview__header">
-                <span className="works-preview__panel-id">◼︎ TARGET NODE</span>
-                <span className="works-preview__index">
-                  {String(idx + 1).padStart(3, "0")}/
-                  {String(works.length).padStart(3, "0")}
-                </span>
-              </div>
-              <div className="works-preview__thumb">
-                <img src={work.thumbnail} alt={work.title} />
-                <div className="works-preview__thumb-scan" />
-              </div>
-              <div className="works-preview__data">
-                <div className="works-preview__row">
-                  <span className="works-preview__key">GAME</span>
-                  <span className="works-preview__val">{work.game}</span>
-                </div>
-                <div className="works-preview__row">
-                  <span className="works-preview__key">NAME</span>
-                  <span className="works-preview__val works-preview__val--title">
-                    {work.title.split("\n").map((line, i, arr) => (
-                      <span key={i}>
-                        {line}
-                        {i < arr.length - 1 && <br />}
-                      </span>
-                    ))}
+        <div className="works-list-container" ref={mobileListRef}>
+          <div ref={mobileListContentRef} className="works-list-content">
+            {works.map((work, idx) => (
+              <div
+                key={`preview-mob-${work.id}`}
+                className="works-preview active"
+                onClick={() => handleWorkClick(work)}
+                ref={(el) => {
+                  panelRefs.current[idx] = el;
+                }}
+              >
+                <div className="works-preview__header">
+                  <span className="works-preview__panel-id">◼︎ TARGET NODE</span>
+                  <span className="works-preview__index">
+                    {String(idx + 1).padStart(3, "0")}/
+                    {String(works.length).padStart(3, "0")}
                   </span>
                 </div>
-                <div className="works-preview__row">
-                  <span className="works-preview__key">TECH</span>
-                  <span className="works-preview__val">{work.stack}</span>
+                <div className="works-preview__thumb">
+                  <img src={work.thumbnail} alt={work.title} />
+                  <div className="works-preview__thumb-scan" />
+                </div>
+                <div className="works-preview__data">
+                  <div className="works-preview__row">
+                    <span className="works-preview__key">GAME</span>
+                    <span className="works-preview__val">{work.game}</span>
+                  </div>
+                  <div className="works-preview__row">
+                    <span className="works-preview__key">NAME</span>
+                    <span className="works-preview__val works-preview__val--title">
+                      {renderText(work.title)}
+                    </span>
+                  </div>
+                  <div className="works-preview__row">
+                    <span className="works-preview__key">TECH</span>
+                    <span className="works-preview__val">{work.stack}</span>
+                  </div>
+                </div>
+                <div className="works-preview__footer">
+                  <span className="works-preview__status">
+                    <span className="works-preview__dot" />
+                    ONLINE
+                  </span>
+                  <span className="works-preview__action">[ ENTER ]</span>
                 </div>
               </div>
-              <div className="works-preview__footer">
-                <span className="works-preview__status">
-                  <span className="works-preview__dot" />
-                  ONLINE
-                </span>
-                <span className="works-preview__action">[ ENTER ]</span>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
@@ -832,12 +885,7 @@ function Works({ isActive }: WorksProps) {
               <div className="works-preview__row">
                 <span className="works-preview__key">NAME</span>
                 <span className="works-preview__val works-preview__val--title">
-                  {work.title.split("\n").map((line, i, arr) => (
-                    <span key={i}>
-                      {line}
-                      {i < arr.length - 1 && <br />}
-                    </span>
-                  ))}
+                  {renderText(work.title)}
                 </span>
               </div>
               <div className="works-preview__row">
@@ -1001,26 +1049,13 @@ function Works({ isActive }: WorksProps) {
                       {activeWork.game}
                     </h2>
                     <h1 className="panel-title text-display">
-                      {activeWork.title.split("\n").map((line, i, arr) => (
-                        <span key={i}>
-                          {line}
-                          {i < arr.length - 1 && <br />}
-                        </span>
-                      ))}
+                      {renderText(activeWork.title)}
                     </h1>
                   </div>
 
                   <div className="panel-description text-body">
-                    {activeWork.description.split("\n").map((line, i, arr) => (
-                      <span key={i}>
-                        {line.split("<br/>").map((part, j, parts) => (
-                          <span key={j} style={{ display: "contents" }}>
-                            {part}
-                            {j < parts.length - 1 && <br />}
-                          </span>
-                        ))}
-                        {i < arr.length - 1 && <br />}
-                      </span>
+                    {activeWork.description.split("\n").map((line, idx) => (
+                      <span key={idx}>{renderText(line)}</span>
                     ))}
                   </div>
 

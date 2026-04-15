@@ -11,7 +11,7 @@
         "game": "Azure Promilia",
         "title": "Official Website & 1st Pre-registration",
         "date": "2025.11 - 2025.12",
-        "description": "Led overall frontend development - architecture design,<br/>API integration, security audit, and load testing\nReduced project timeline by 50% through structured cross-functional collaboration\nBuilt character introduction, world reveal, and other informational interaction features for the pre-registration page",
+        "description": "Led overall frontend development - architecture design, API integration, security audit, and load testing\nReduced project timeline by 50% through structured cross-functional collaboration\nBuilt character introduction, world reveal, and other informational interaction features for the pre-registration page",
         "stack": "Next.js",
         "thumbnail": "assets/images/az_thumb1.jpg",
         "img": [
@@ -28,7 +28,7 @@
         "game": "Baram",
         "title": "Archer Remaster Teaser:\n21st Anniversary Illustration Gallery",
         "date": "2022.11 - 2022.12",
-        "description": "Built a 3D web gallery featuring historical illustrations to celebrate<br/>the Archer remaster\n Implemented scroll-based year counting, gallery control interactions, and illustration focus effects",
+        "description": "Built a 3D web gallery featuring historical illustrations to celebrate the Archer remaster\n Implemented scroll-based year counting, gallery control interactions, and illustration focus effects",
         "stack": "Three.js · GSAP",
         "thumbnail": "assets/images/br_thumb1.jpg",
         "img": [
@@ -44,7 +44,7 @@
         "game": "Blue Archive",
         "title": "Code:BOX Roadmap Promotion",
         "date": "2025.07",
-        "description": "Implemented immersive interactive web graphics with a<br/>cyberpunk theme\nGlobal multilingual support for Korean, English, and Thai",
+        "description": "Implemented immersive interactive web graphics with a cyberpunk theme\nGlobal multilingual support for Korean, English, and Thai",
         "stack": "Nuxt.js",
         "thumbnail": "assets/images/ba_thumb1.jpg",
         "img": [
@@ -61,7 +61,7 @@
         "game": "Vindictus(NA)",
         "title": "New Character 'Neamhain' Update",
         "date": "2025.01",
-        "description": "Informational page for the new character update\nAdvanced web animation crafted to guide user attention and<br/>express the character's identity",
+        "description": "Informational page for the new character update\nAdvanced web animation crafted to guide user attention and express the character's identity",
         "stack": "React · TypeScript",
         "thumbnail": "assets/images/vd_thumb1.jpg",
         "img": [
@@ -78,7 +78,7 @@
         "game": "Mabinogi Mobile",
         "title": "1st Anniversary Update Event",
         "date": "2026.03",
-        "description": "Informational intro page for the 1st anniversary update,<br/>featuring spring-themed particle web graphics\nAdaptive animation for both mobile and PC",
+        "description": "Informational intro page for the 1st anniversary update, featuring spring-themed particle web graphics\nAdaptive animation for both mobile and PC",
         "stack": "React · TypeScript",
         "thumbnail": "assets/images/mm_thumb1.jpg",
         "img": [

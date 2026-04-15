@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
+import { useMobile } from "../hooks/useMobile";
+import { renderText } from "../utils/renderText";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -24,6 +26,7 @@ function Info({ isActive }: InfoProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const lenisRef = useRef<Lenis | null>(null);
   const [activeSection, setActiveSection] = useState("profile");
+  const { isMobile } = useMobile();
   const navRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const nodeRefs = useRef<(HTMLDivElement | null)[]>([]);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -114,74 +117,78 @@ function Info({ isActive }: InfoProps) {
           ScrollTrigger.create({
             trigger: `#${section.id}`,
             scroller: containerRef.current,
-            start: "top 70%", // Trigger on scroll down when top is 10% visible from bottom
-            end: "bottom 20%", // Trigger on scroll up when bottom is 10% visible from top
+            start: isMobile ? "top 60%" : "top 70%",
+            end: isMobile ? "bottom 60%" : "bottom 30%",
             onEnter: () => setActiveSection(section.id),
             onEnterBack: () => setActiveSection(section.id),
           });
         });
 
-        // Reveal animations
-        const revealElements = gsap.utils.toArray(".info-section__body");
-        revealElements.forEach((el: any) => {
-          gsap.fromTo(
-            el,
-            { opacity: 0, y: 50 },
-            {
-              opacity: 1,
-              y: 0,
-              duration: 1.2,
-              ease: "power3.out",
-              scrollTrigger: {
-                trigger: el,
-                scroller: containerRef.current,
-                start: "top 70%",
-                end: "bottom 70%",
-                toggleActions: "play none none reverse",
+        // ─── Entry / Reveal Animations ───
+        if (!isMobile) {
+          // PC: Standard ScrollTrigger reveal animations
+          const revealElements = gsap.utils.toArray(".info-section__body");
+          revealElements.forEach((el: any) => {
+            gsap.fromTo(
+              el,
+              { opacity: 0, y: 50 },
+              {
+                opacity: 1,
+                y: 0,
+                duration: 1.2,
+                ease: "power3.out",
+                scrollTrigger: {
+                  trigger: el,
+                  scroller: containerRef.current,
+                  start: "top 70%",
+                  end: "bottom 70%",
+                  toggleActions: "play none none reverse",
+                },
               },
-            },
-          );
-        });
-
-        // Node points reveal
-        gsap.utils.toArray(".info-node").forEach((el: any) => {
-          gsap.fromTo(
-            el,
-            { scale: 0, opacity: 0 },
-            {
-              scale: 1,
-              opacity: 1,
-              duration: 0.6,
-              ease: "back.out(2)",
-              scrollTrigger: {
-                trigger: el,
-                scroller: containerRef.current,
-                start: "top 70%",
-                end: "bottom 70%",
-                toggleActions: "play none none reverse",
-              },
-            },
-          );
-        });
-
-        // Line drawing animation (each line draws as its target section scrolls in)
-        lineRefs.current.forEach((line, i) => {
-          if (!line) return;
-          const targetSection = document.getElementById(SECTIONS[i + 1]?.id);
-          if (!targetSection) return;
-
-          gsap.to(line, {
-            strokeDashoffset: 0,
-            ease: "none",
-            scrollTrigger: {
-              trigger: targetSection,
-              scroller: containerRef.current,
-              start: "top 70%",
-              end: "bottom 70%",
-              scrub: 1,
-            },
+            );
           });
-        });
+
+          // Node points reveal
+          gsap.utils.toArray(".info-node").forEach((el: any) => {
+            gsap.fromTo(
+              el,
+              { scale: 0, opacity: 0 },
+              {
+                scale: 1,
+                opacity: 1,
+                duration: 0.6,
+                ease: "back.out(2)",
+                scrollTrigger: {
+                  trigger: el,
+                  scroller: containerRef.current,
+                  start: "top 70%",
+                  end: "bottom 70%",
+                  toggleActions: "play none none reverse",
+                },
+              },
+            );
+          });
+
+          // Line drawing animation (each line draws as its target section scrolls in)
+          lineRefs.current.forEach((line, i) => {
+            if (!line) return;
+            const targetSection = document.getElementById(SECTIONS[i + 1]?.id);
+            const prevSection = document.getElementById(SECTIONS[i]?.id);
+            if (!targetSection || !prevSection) return;
+
+            gsap.to(line, {
+              strokeDashoffset: 0,
+              ease: "none",
+              scrollTrigger: {
+                trigger: targetSection,
+                scroller: containerRef.current,
+                start: "top 75%",
+                end: "top 20%",
+                scrub: 1,
+              },
+            });
+          });
+        }
 
         ScrollTrigger.refresh();
       }, 500);
@@ -190,7 +197,7 @@ function Info({ isActive }: InfoProps) {
     }, containerRef);
 
     return () => ctx.revert();
-  }, [updateLines]);
+  }, [updateLines, isMobile]);
 
   // Recalculate line positions on resize or language change
   useEffect(() => {
@@ -278,7 +285,7 @@ function Info({ isActive }: InfoProps) {
             <section
               id="profile"
               className="info-section"
-              style={{ marginLeft: `${SECTIONS[0].offsetX}%` }}
+              style={{ marginLeft: isMobile ? 0 : `${SECTIONS[0].offsetX}%` }}
             >
               <div
                 className="info-node"
@@ -307,7 +314,9 @@ function Info({ isActive }: InfoProps) {
                     {t("info.name")}
                   </h2>
                   <p className="info-role">ROLE | {t("info.role")}</p>
-                  <p className="info-about text-body">{t("info.about")}</p>
+                  <p className="info-about text-body">
+                    {renderText(t("info.about"))}
+                  </p>
                 </div>
               </div>
             </section>
@@ -316,7 +325,7 @@ function Info({ isActive }: InfoProps) {
             <section
               id="experience"
               className="info-section"
-              style={{ marginLeft: `${SECTIONS[1].offsetX}%` }}
+              style={{ marginLeft: isMobile ? 0 : `${SECTIONS[1].offsetX}%` }}
             >
               <div
                 className="info-node"
@@ -356,19 +365,7 @@ function Info({ isActive }: InfoProps) {
                             <ul>
                               {proj.bullets.map(
                                 (bullet: string, bIdx: number) => (
-                                  <li key={bIdx}>
-                                    {bullet
-                                      .split("\n")
-                                      .map((line, lIdx, lines) => (
-                                        <span
-                                          key={lIdx}
-                                          style={{ display: "contents" }}
-                                        >
-                                          {line}
-                                          {lIdx < lines.length - 1 && <br />}
-                                        </span>
-                                      ))}
-                                  </li>
+                                  <li key={bIdx}>{renderText(bullet)}</li>
                                 ),
                               )}
                             </ul>
@@ -385,7 +382,7 @@ function Info({ isActive }: InfoProps) {
             <section
               id="skills"
               className="info-section"
-              style={{ marginLeft: `${SECTIONS[2].offsetX}%` }}
+              style={{ marginLeft: isMobile ? 0 : `${SECTIONS[2].offsetX}%` }}
             >
               <div
                 className="info-node"
@@ -425,7 +422,7 @@ function Info({ isActive }: InfoProps) {
             <section
               id="education"
               className="info-section"
-              style={{ marginLeft: `${SECTIONS[3].offsetX}%` }}
+              style={{ marginLeft: isMobile ? 0 : `${SECTIONS[3].offsetX}%` }}
             >
               <div
                 className="info-node"
@@ -455,13 +452,7 @@ function Info({ isActive }: InfoProps) {
                     <ul>
                       {education.bullets.map((bullet: string, eIdx: number) => (
                         <li key={eIdx} className="text-body">
-                          -{" "}
-                          {bullet.split("\n").map((line, lIdx, lines) => (
-                            <span key={lIdx} style={{ display: "contents" }}>
-                              {line}
-                              {lIdx < lines.length - 1 && <br />}
-                            </span>
-                          ))}
+                          - {renderText(bullet)}
                         </li>
                       ))}
                     </ul>
@@ -474,7 +465,7 @@ function Info({ isActive }: InfoProps) {
             <section
               id="contact"
               className="info-section"
-              style={{ marginLeft: `${SECTIONS[4].offsetX}%` }}
+              style={{ marginLeft: isMobile ? 0 : `${SECTIONS[4].offsetX}%` }}
             >
               <div
                 className="info-node"
