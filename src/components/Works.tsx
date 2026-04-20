@@ -30,6 +30,7 @@ type WorkType = {
 const PANEL_IMG_PLACEHOLDER_H = 240;
 
 function WorkDetailImage({ src, index }: { src: string; index: number }) {
+  const { isMobile } = useMobile();
   const [loaded, setLoaded] = useState(false);
   const [heightPx, setHeightPx] = useState(PANEL_IMG_PLACEHOLDER_H);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -80,7 +81,7 @@ function WorkDetailImage({ src, index }: { src: string; index: number }) {
       <span className="corner bottom-right"></span>
       <div
         className="image-wrapper"
-        style={{ height: heightPx }}
+        style={isMobile ? undefined : { height: heightPx }}
         aria-busy={!loaded}
       >
         <div

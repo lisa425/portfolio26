@@ -26,7 +26,7 @@ function Info({ isActive }: InfoProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const lenisRef = useRef<Lenis | null>(null);
   const [activeSection, setActiveSection] = useState("profile");
-  const { isMobile } = useMobile();
+  const { isMobileDevice } = useMobile();
   const navRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const nodeRefs = useRef<(HTMLDivElement | null)[]>([]);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -117,15 +117,15 @@ function Info({ isActive }: InfoProps) {
           ScrollTrigger.create({
             trigger: `#${section.id}`,
             scroller: containerRef.current,
-            start: isMobile ? "top 60%" : "top 70%",
-            end: isMobile ? "bottom 60%" : "bottom 30%",
+            start: isMobileDevice ? "top 60%" : "top 70%",
+            end: isMobileDevice ? "bottom 60%" : "bottom 30%",
             onEnter: () => setActiveSection(section.id),
             onEnterBack: () => setActiveSection(section.id),
           });
         });
 
         // ─── Entry / Reveal Animations ───
-        if (!isMobile) {
+        if (!isMobileDevice) {
           // PC: Standard ScrollTrigger reveal animations
           const revealElements = gsap.utils.toArray(".info-section__body");
           revealElements.forEach((el: any) => {
@@ -197,7 +197,7 @@ function Info({ isActive }: InfoProps) {
     }, containerRef);
 
     return () => ctx.revert();
-  }, [updateLines, isMobile]);
+  }, [updateLines, isMobileDevice]);
 
   // Recalculate line positions on resize or language change
   useEffect(() => {
@@ -232,7 +232,7 @@ function Info({ isActive }: InfoProps) {
   return (
     <>
       {/* Terminal-style progress nav */}
-      <nav className="terminal-bar info-nav">
+      <nav className={`terminal-bar info-nav ${isMobileDevice ? "is-mobile-device" : ""}`}>
         <span className="terminal-bar__label">&gt; INFO ───</span>
         <span className="terminal-bar__bar">
           [
@@ -261,7 +261,7 @@ function Info({ isActive }: InfoProps) {
         </span>
       </nav>
       <div
-        className="inner info-inner"
+        className={`inner info-inner ${isMobileDevice ? "is-mobile-device" : ""}`}
         ref={containerRef}
         style={{ overflowY: "auto", overflowX: "hidden" }}
       >
@@ -285,7 +285,7 @@ function Info({ isActive }: InfoProps) {
             <section
               id="profile"
               className="info-section"
-              style={{ marginLeft: isMobile ? 0 : `${SECTIONS[0].offsetX}%` }}
+              style={{ marginLeft: `${SECTIONS[0].offsetX}%` }}
             >
               <div
                 className="info-node"
@@ -325,7 +325,7 @@ function Info({ isActive }: InfoProps) {
             <section
               id="experience"
               className="info-section"
-              style={{ marginLeft: isMobile ? 0 : `${SECTIONS[1].offsetX}%` }}
+              style={{ marginLeft: `${SECTIONS[1].offsetX}%` }}
             >
               <div
                 className="info-node"
@@ -382,7 +382,7 @@ function Info({ isActive }: InfoProps) {
             <section
               id="skills"
               className="info-section"
-              style={{ marginLeft: isMobile ? 0 : `${SECTIONS[2].offsetX}%` }}
+              style={{ marginLeft: `${SECTIONS[2].offsetX}%` }}
             >
               <div
                 className="info-node"
@@ -422,7 +422,7 @@ function Info({ isActive }: InfoProps) {
             <section
               id="education"
               className="info-section"
-              style={{ marginLeft: isMobile ? 0 : `${SECTIONS[3].offsetX}%` }}
+              style={{ marginLeft: `${SECTIONS[3].offsetX}%` }}
             >
               <div
                 className="info-node"
@@ -465,7 +465,7 @@ function Info({ isActive }: InfoProps) {
             <section
               id="contact"
               className="info-section"
-              style={{ marginLeft: isMobile ? 0 : `${SECTIONS[4].offsetX}%` }}
+              style={{ marginLeft: `${SECTIONS[4].offsetX}%` }}
             >
               <div
                 className="info-node"

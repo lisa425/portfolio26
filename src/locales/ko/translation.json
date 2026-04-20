@@ -94,7 +94,7 @@
     "name": "임채원",
     "role": "Frontend Developer",
     "contact": {
-      "email": "codnjs984@gmail.com",
+      "email": "imchaewon.dev@gmail.com",
       "phone": "010-9902-7913"
     },
     "about": "인터랙션의 기획부터 디자인, 구현까지 하나의 흐름으로 사고하는 프론트엔드 개발자입니다. 디자인과 공학을 함께 공부한 배경을 바탕으로 사용자 경험의 결을 이해하면서도 기술적으로 정교한 구현을 추구합니다. 눈에 보이는 결과물 뿐 아니라 그 이면의 구조 설계, 자동화, 팀의 개발 문화까지 함께 다듬어 나가는 데 관심을 두고 있습니다.",
@@ -141,14 +141,14 @@
       "categories": [
         {
           "name": "Frontend",
-          "items": "TypeScript, React, Next.js, Vue.js, Nuxt.js"
+          "items": "TypeScript, React, Next.js, Vue.js"
         },
         {
           "name": "Automation & AI",
-          "items": "Python, Node.js, CI/CD, Cursor AI, Claude API"
+          "items": "Workflow Automation, AI-Assisted Development(Claude, Codex)"
         },
         {
-          "name": "Tools",
+          "name": "Collaboration",
           "items": "GitHub, GitLab, Figma, Adobe Photoshop"
         }
       ]

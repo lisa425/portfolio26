@@ -274,12 +274,18 @@ body.ko {
       padding: 2rem 3rem;
       font-size: max(vw(14, 1920), 18px);
       gap: 3rem;
+      background: linear-gradient(to bottom, $bg-color 50%, transparent);
 
       @media (max-width: $mobile-lg) {
-        padding: 1.5rem;
-        font-size: 15px;
+        padding: 1.5rem 1.5rem 3rem 1.5rem;
+        font-size: min(vw(15, 370), 15px);
         gap: 1.5rem;
-        background: linear-gradient(to bottom, $bg-color, transparent);
+        max-width: 100vw;
+      }
+
+      @media (max-width: $mobile-lg) and (max-height: 700px) {
+        padding: 1rem 1.5rem 3rem 1.5rem;
+        font-size: min(vw(12, 370), 12px);
       }
 
       .header-left {
@@ -349,7 +355,10 @@ body.ko {
           color: rgba(255, 255, 255, 0.7);
           height: fit-content;
           @media (max-width: $mobile-lg) {
-            font-size: 14px;
+            font-size: max(vw(14, 1920), 16px);
+          }
+          @media (max-width: $mobile-lg) and (max-height: 700px) {
+            font-size: min(vw(13, 370), 13px);
           }
         }
         .menu-lang {
@@ -373,7 +382,10 @@ body.ko {
             padding: 0 0.2rem;
             height: fit-content;
             @media (max-width: $mobile-lg) {
-              font-size: 14px;
+              font-size: max(vw(14, 1920), 16px);
+            }
+            @media (max-width: $mobile-lg) and (max-height: 700px) {
+              font-size: min(vw(12, 370), 12px);
             }
             &.on {
               color: $text-primary;
@@ -463,9 +475,13 @@ body.ko {
         pointer-events: none;
 
         @media (max-width: $mobile-lg) {
-          top: 9%;
+          top: 11%;
           left: 1.5rem;
           right: 1.5rem;
+        }
+
+        @media (max-width: $mobile-lg) and (max-height: 700px) {
+          top: 12%;
         }
 
         .hero-main-text__title {
@@ -477,6 +493,10 @@ body.ko {
 
           @media (max-width: $mobile-lg) {
             font-size: min(10vw, 37px);
+          }
+
+          @media (max-width: $mobile-lg) and (max-height: 700px) {
+            font-size: min(6.5vw, 25px);
           }
         }
       }
@@ -492,6 +512,10 @@ body.ko {
           @media (max-width: $mobile-lg) {
             font-size: min(vw(13, 370), 14px);
             margin-top: 1.5em;
+          }
+
+          @media (max-width: $mobile-lg) and (max-height: 700px) {
+            font-size: min(vw(10, 370), 11px);
           }
 
           .desc-wrap {
@@ -1846,495 +1870,364 @@ body.ko {
     background: #fff;
     color: #000;
   }
-  .info-inner {
-    height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    margin-top: 5vh;
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      transparent 0%,
-      black 20%,
-      black 100%
-    );
-    mask-image: linear-gradient(
-      to bottom,
-      transparent 0%,
-      black 20%,
-      black 100%
-    );
+}
+.info-inner {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-top: 5vh;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 20%,
+    black 100%
+  );
+  mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
 
-    &::-webkit-scrollbar {
-      display: none;
-    }
-    @media (max-width: $mobile-lg) {
-      margin-top: 0;
-      -webkit-mask-image: none;
-      mask-image: none;
-    }
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  &.is-mobile-device {
+    margin-top: 0;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
+// --- Terminal Progress Nav (bottom bar) ---
+.info-nav {
+  &__sections {
+    display: flex;
+    gap: 1.2rem;
+    margin-left: 0.5rem;
   }
 
-  // --- Terminal Progress Nav (bottom bar) ---
-  .info-nav {
-    &__sections {
-      display: flex;
-      gap: 1.2rem;
-      margin-left: 0.5rem;
-      @media (max-width: $mobile-lg) {
-        gap: 0.5rem;
-        margin-left: 0.2rem;
-        display: none;
-      }
-    }
-
-    &__item {
-      cursor: pointer;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.7);
-      transition: none;
-
-      &:hover {
-        animation: textBlink 0.7s infinite;
-        @media (max-width: $mobile-lg) {
-          animation: none;
-        }
-      }
-
-      &.active {
-        color: $text-primary;
-      }
-    }
+  &.is-mobile-device &__sections {
+    gap: 0.5rem;
+    margin-left: 0.2rem;
+    display: none;
   }
 
-  // --- SVG Lines ---
-  .info-lines {
+  &__item {
+    cursor: pointer;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+    transition: none;
+
+    &:hover {
+      animation: textBlink 0.7s infinite;
+    }
+
+    &.active {
+      color: $text-primary;
+    }
+  }
+}
+
+// --- SVG Lines ---
+.info-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+  .is-mobile-device & {
+    display: none;
+  }
+}
+
+.info-line {
+  stroke: rgba($text-primary, 0.15);
+  stroke-width: 1;
+  fill: none;
+}
+
+// --- Constellation Layout Content ---
+.info-content-scroll {
+  width: 100%;
+  padding-top: 20vh;
+  display: flex;
+  flex-direction: column;
+  gap: max(vh(400, 1080), 400px);
+  position: relative;
+  z-index: 1;
+  .is-mobile-device & {
+    padding-top: 6rem;
+    gap: 0vh;
+    align-items: center;
+  }
+}
+.info-section {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 1.5rem;
+  min-height: 30vh;
+
+  .is-mobile-device & {
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-left: 0 !important;
+  }
+
+  &#profile {
+    position: relative;
+    top: 4vh;
+    .is-mobile-device & {
+      top: 0;
+    }
+  }
+}
+
+.info-section__body {
+  width: max-content;
+  max-width: 100vw;
+  position: relative;
+  padding-bottom: 2rem;
+
+  .is-mobile-device & {
+    width: 90vw;
+    max-width: 90vw;
+  }
+}
+
+.info-section__header {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: none;
+  padding: 0.6rem 1.2rem;
+  background: rgba(255, 255, 255, 0.05);
+  width: max-content;
+
+  .info-section__id {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.1em;
+  }
+}
+
+.info-section__content {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 3rem;
+  // background: rgba(0, 0, 0, 0.5);
+  background: $bg-color;
+  backdrop-filter: blur(5px);
+
+  .is-mobile-device & {
+    padding: min(vw(20, 390), 20px);
+    min-height: 23vh;
+  }
+
+  // grid lines effect
+  &::after {
+    content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 20px 20px;
     pointer-events: none;
     z-index: 0;
-    overflow: visible;
-    @media (max-width: $mobile-lg) {
-      display: none;
-    }
+    opacity: 0.8;
   }
 
-  .info-line {
-    stroke: rgba($text-primary, 0.15);
-    stroke-width: 1;
-    fill: none;
-  }
-
-  // --- Constellation Layout Content ---
-  .info-content-scroll {
-    width: 100%;
-    padding-top: 20vh;
-    display: flex;
-    flex-direction: column;
-    gap: max(vh(400, 1080), 400px);
+  > * {
     position: relative;
     z-index: 1;
-    @media (max-width: $mobile-lg) {
-      padding-top: 10vh;
-      gap: 0vh;
-      align-items: center;
+  }
+
+  .corner {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    z-index: 2;
+
+    &.top-left {
+      top: -1px;
+      left: -1px;
+      border-right: none;
+      border-bottom: none;
+    }
+    &.top-right {
+      top: -1px;
+      right: -1px;
+      border-left: none;
+      border-bottom: none;
+    }
+    &.bottom-left {
+      bottom: -1px;
+      left: -1px;
+      border-right: none;
+      border-top: none;
+    }
+    &.bottom-right {
+      bottom: -1px;
+      right: -1px;
+      border-left: none;
+      border-top: none;
     }
   }
-  .info-section {
+}
+
+// --- Node Points ---
+.info-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  height: max(vw(32, 1920), 30px);
+  width: 60px;
+
+  .is-mobile-device & {
+    display: none;
+  }
+
+  &__point {
     display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 1.5rem;
-    min-height: 30vh;
-
-    @media (max-width: $mobile-lg) {
-      flex-direction: column;
-      gap: 0.8rem;
-    }
-
-    &#profile {
-      position: relative;
-      top: 4vh;
-      @media (max-width: $mobile-lg) {
-        top: 0;
-      }
-    }
-  }
-
-  .info-section__body {
-    width: max-content;
-    max-width: 100vw;
-    position: relative;
-    padding-bottom: 2rem;
-
-    @media (max-width: $mobile-lg) {
-      width: 90vw;
-      max-width: 90vw;
-    }
-  }
-
-  .info-section__header {
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-bottom: none;
-    padding: 0.6rem 1.2rem;
-    background: rgba(255, 255, 255, 0.05);
-    width: max-content;
-
-    .info-section__id {
-      font-size: 10px;
-      color: rgba(255, 255, 255, 0.6);
-      letter-spacing: 0.1em;
-    }
-  }
-
-  .info-section__content {
-    position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 3rem;
-    // background: rgba(0, 0, 0, 0.5);
-    background: $bg-color;
-    backdrop-filter: blur(5px);
-
-    @media (max-width: $mobile-lg) {
-      padding: min(vw(20, 390), 20px);
-      min-height: 23vh;
-    }
-
-    // grid lines effect
-    &::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-      background-size: 20px 20px;
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0.8;
-    }
-
-    > * {
-      position: relative;
-      z-index: 1;
-    }
-
-    .corner {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.8);
-      z-index: 2;
-
-      &.top-left {
-        top: -1px;
-        left: -1px;
-        border-right: none;
-        border-bottom: none;
-      }
-      &.top-right {
-        top: -1px;
-        right: -1px;
-        border-left: none;
-        border-bottom: none;
-      }
-      &.bottom-left {
-        bottom: -1px;
-        left: -1px;
-        border-right: none;
-        border-top: none;
-      }
-      &.bottom-right {
-        bottom: -1px;
-        right: -1px;
-        border-left: none;
-        border-top: none;
-      }
-    }
-  }
-
-  // --- Node Points ---
-  .info-node {
-    display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.3rem;
-    flex-shrink: 0;
-    height: max(vw(32, 1920), 30px);
-    width: 60px;
-
-    @media (max-width: $mobile-lg) {
-      display: none;
-    }
-
-    &__point {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      color: rgba(255, 255, 255, 0.4);
-      font-size: 10px;
-      letter-spacing: 0.1em;
-      transition: color 0.3s ease;
-
-      .bracket {
-        color: rgba(255, 255, 255, 0.3);
-      }
-      .mark {
-        color: rgba(255, 255, 255, 0.8);
-      }
-    }
-  }
-
-  .info-name {
-    font-size: max(vw(32, 1920), 28px);
-    font-weight: 400;
-    margin: 0 0 1rem 0;
-    color: $text-primary;
-    font-family: $font-body;
-
-    @media (max-width: $mobile-lg) {
-      font-size: min(vw(24, 390), 24px);
-    }
-  }
-
-  .info-role {
-    font-size: max(vw(12, 1920), 12px);
-    color: rgba(255, 255, 255, 0.5);
-    margin: 0 0 2rem 0;
+    gap: 5px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 10px;
     letter-spacing: 0.1em;
+    transition: color 0.3s ease;
 
-    @media (max-width: $mobile-lg) {
-      font-size: min(vw(10, 390), 10px);
-      margin: 0 0 1.5rem 0;
+    .bracket {
+      color: rgba(255, 255, 255, 0.3);
+    }
+    .mark {
+      color: rgba(255, 255, 255, 0.8);
     }
   }
+}
 
-  .info-about {
-    font-size: max(vw(15, 1920), 15px);
-    opacity: 0.75;
-    line-height: 1.8;
-    word-break: keep-all;
-    width: max(vw(450, 1920), 400px);
+.info-name {
+  font-size: max(vw(32, 1920), 28px);
+  font-weight: 400;
+  margin: 0 0 1rem 0;
+  color: $text-primary;
+  font-family: $font-body;
 
-    @media (max-width: $mobile-lg) {
-      width: 100%;
-      font-size: min(vw(13, 390), 13px);
-    }
+  .is-mobile-device & {
+    font-size: min(vw(24, 390), 24px);
+  }
+}
+
+.info-role {
+  font-size: max(vw(12, 1920), 12px);
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 2rem 0;
+  letter-spacing: 0.1em;
+
+  .is-mobile-device & {
+    font-size: min(vw(10, 390), 10px);
+    margin: 0 0 1.5rem 0;
+  }
+}
+
+.info-about {
+  font-size: max(vw(15, 1920), 15px);
+  opacity: 0.75;
+  line-height: 1.8;
+  word-break: keep-all;
+  width: max(vw(450, 1920), 400px);
+
+  .is-mobile-device & {
+    width: 100%;
+    font-size: min(vw(13, 390), 13px);
+  }
+}
+
+.info-contact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  font-size: max(vw(14, 1920), 14px);
+
+  .is-mobile-device & {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    font-size: min(vw(12, 390), 12px);
   }
 
-  .info-contact {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    font-size: max(vw(14, 1920), 14px);
-
-    @media (max-width: $mobile-lg) {
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
-      font-size: min(vw(12, 390), 12px);
-    }
-
-    .btn-contact {
-      color: rgba(255, 255, 255, 0.4);
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-      .meta {
-        color: $text-primary;
-      }
-    }
-  }
-
-  .info-block-title {
-    font-size: max(vw(16, 1920), 14px);
-    color: rgba(255, 255, 255, 0.5);
-    font-weight: 400;
-    margin-bottom: 2.5rem;
-    letter-spacing: 0.05em;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 0.8rem;
-
-    @media (max-width: $mobile-lg) {
-      font-size: min(vw(14, 390), 14px);
-      margin-bottom: 1.5rem;
-      padding-bottom: 0.5rem;
-    }
-  }
-
-  // Column 1: Experience
-  .job-entry {
-    width: max(vw(500, 1920), 450px);
-
-    @media (max-width: $mobile-lg) {
-      width: 100%;
-    }
-
-    &__header {
-      margin-bottom: 1.5rem;
-
-      @media (max-width: $mobile-lg) {
-        margin-bottom: 1rem;
-      }
-
-      h4 {
-        font-size: max(vw(20, 1920), 18px);
-        font-weight: 400;
-        margin: 0 0 0.8rem 0;
-        color: $text-primary;
-
-        @media (max-width: $mobile-lg) {
-          font-size: min(vw(16, 390), 16px);
-          margin-bottom: 0.5rem;
-        }
-      }
-
-      .job-entry__meta {
-        font-size: max(vw(12, 1920), 11px);
-        color: rgba(255, 255, 255, 0.5);
-        margin: 0;
-
-        @media (max-width: $mobile-lg) {
-          font-size: min(vw(10, 390), 10px);
-        }
-      }
-    }
-
-    .project-entry {
-      border-left: 1px solid rgba(255, 255, 255, 0.15);
-      padding-left: 1.5rem;
-      position: relative;
-
-      @media (max-width: $mobile-lg) {
-        padding-left: 1rem;
-      }
-
-      &:not(:last-child) {
-        padding-bottom: 1.5rem;
-      }
-      &:last-child {
-        &::after {
-          content: "▪︎";
-          font-size: max(vw(14, 1920), 14px);
-          color: $text-primary;
-          position: absolute;
-          left: 0;
-          bottom: 0;
-          transform: translate(-50%, 10%);
-
-          @media (max-width: $mobile-lg) {
-            font-size: min(vw(12, 390), 12px);
-          }
-        }
-      }
-
-      &::before {
-        content: "▪︎";
-        font-size: max(vw(14, 1920), 14px);
-        color: $text-primary;
-        position: absolute;
-        left: 0;
-        top: 0;
-        transform: translate(-50%, -25%);
-
-        @media (max-width: $mobile-lg) {
-          font-size: min(vw(12, 390), 12px);
-        }
-      }
-
-      h5 {
-        font-size: max(vw(16, 1920), 14px);
-        font-weight: 400;
-        position: relative;
-        top: -0.3em;
-        margin-bottom: 0.8rem;
-        color: $text-primary;
-
-        @media (max-width: $mobile-lg) {
-          font-size: min(vw(14, 390), 14px);
-          margin-bottom: 0.5rem;
-        }
-      }
-
-      ul {
-        margin: 0;
-        padding: 0;
-        list-style: none;
-        padding-left: 0.1rem;
-
-        li {
-          font-size: max(vw(15, 1920), 13px);
-          color: rgba(255, 255, 255, 0.65);
-          margin-bottom: 0.8rem;
-          line-height: 1.5;
-          word-break: keep-all;
-          display: flex;
-
-          @media (max-width: $mobile-lg) {
-            font-size: min(vw(12, 390), 12px);
-            margin-bottom: 0.5rem;
-          }
-        }
-      }
-    }
-  }
-
-  // Column 2: Skills
-  .skills-list {
+  .btn-contact {
+    color: rgba(255, 255, 255, 0.4);
     display: flex;
     flex-direction: column;
-    gap: 2rem;
-    width: max(vw(400, 1920), 380px);
+    gap: 0.2rem;
+    .meta {
+      color: $text-primary;
+    }
+  }
+}
 
-    @media (max-width: $mobile-lg) {
-      width: 100%;
-      gap: 1.5rem;
+.info-block-title {
+  font-size: max(vw(16, 1920), 14px);
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
+  margin-bottom: 2.5rem;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.8rem;
+
+  .is-mobile-device & {
+    font-size: min(vw(14, 390), 14px);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+// Column 1: Experience
+.job-entry {
+  width: max(vw(500, 1920), 450px);
+
+  .is-mobile-device & {
+    width: 100%;
+  }
+
+  &__header {
+    margin-bottom: 1.5rem;
+
+    .is-mobile-device & {
+      margin-bottom: 1rem;
     }
 
-    .skill-category {
-      strong {
-        display: block;
-        font-size: max(vw(14, 1920), 14px);
-        font-weight: 400;
+    h4 {
+      font-size: max(vw(20, 1920), 18px);
+      font-weight: 400;
+      margin: 0 0 0.8rem 0;
+      color: $text-primary;
+
+      .is-mobile-device & {
+        font-size: min(vw(16, 390), 16px);
         margin-bottom: 0.5rem;
-        color: rgba(255, 255, 255, 0.85);
-        letter-spacing: 0.02em;
-
-        @media (max-width: $mobile-lg) {
-          font-size: min(vw(13, 390), 13px);
-        }
       }
+    }
 
-      span {
-        display: block;
-        font-size: max(vw(14, 1920), 14px);
-        color: rgba(255, 255, 255, 0.65);
-        line-height: 1.7;
+    .job-entry__meta {
+      font-size: max(vw(12, 1920), 11px);
+      color: rgba(255, 255, 255, 0.5);
+      margin: 0;
 
-        @media (max-width: $mobile-lg) {
-          font-size: min(vw(13, 390), 13px);
-        }
+      .is-mobile-device & {
+        font-size: min(vw(10, 390), 10px);
       }
     }
   }
 
-  // Column 3: Education
-  .education-entry {
+  .project-entry {
     border-left: 1px solid rgba(255, 255, 255, 0.15);
     padding-left: 1.5rem;
-    margin-left: 0.5rem;
-    margin-right: max(vw(100, 1920), 100px);
-    width: max-content;
-    max-width: 800px;
     position: relative;
 
-    @media (max-width: $mobile-lg) {
-      margin-left: 0;
-      margin-right: 0;
+    .is-mobile-device & {
       padding-left: 1rem;
-      width: 100%;
     }
 
     &:not(:last-child) {
@@ -2350,7 +2243,7 @@ body.ko {
         bottom: 0;
         transform: translate(-50%, 10%);
 
-        @media (max-width: $mobile-lg) {
+        .is-mobile-device & {
           font-size: min(vw(12, 390), 12px);
         }
       }
@@ -2365,30 +2258,21 @@ body.ko {
       top: 0;
       transform: translate(-50%, -25%);
 
-      @media (max-width: $mobile-lg) {
+      .is-mobile-device & {
         font-size: min(vw(12, 390), 12px);
       }
     }
 
-    h4 {
-      font-size: max(vw(20, 1920), 18px);
+    h5 {
+      font-size: max(vw(16, 1920), 14px);
       font-weight: 400;
-      color: $text-primary;
       position: relative;
       top: -0.3em;
+      margin-bottom: 0.8rem;
+      color: $text-primary;
 
-      @media (max-width: $mobile-lg) {
-        font-size: min(vw(16, 390), 16px);
-      }
-    }
-
-    &__meta {
-      font-size: max(vw(12, 1920), 11px);
-      color: rgba(255, 255, 255, 0.5);
-      margin-bottom: 1rem;
-
-      @media (max-width: $mobile-lg) {
-        font-size: min(vw(10, 390), 10px);
+      .is-mobile-device & {
+        font-size: min(vw(14, 390), 14px);
         margin-bottom: 0.5rem;
       }
     }
@@ -2397,33 +2281,167 @@ body.ko {
       margin: 0;
       padding: 0;
       list-style: none;
+      padding-left: 0.1rem;
 
       li {
-        font-size: max(vw(15, 1920), 14px);
-        color: rgba(255, 255, 255, 0.8);
-        margin-bottom: 0.2rem;
-        line-height: 1.6;
+        font-size: max(vw(15, 1920), 13px);
+        color: rgba(255, 255, 255, 0.65);
+        margin-bottom: 0.8rem;
+        line-height: 1.5;
+        word-break: keep-all;
+        display: flex;
 
-        @media (max-width: $mobile-lg) {
-          font-size: min(vw(13, 390), 13px);
+        .is-mobile-device & {
+          font-size: min(vw(12, 390), 12px);
+          margin-bottom: 0.5rem;
         }
       }
     }
   }
+}
 
-  // --- Responsive BR ---
-  .br-pc {
-    display: block;
-    @media (max-width: $mobile-lg) {
-      display: none;
+// Column 2: Skills
+.skills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: max(vw(400, 1920), 380px);
+
+  .is-mobile-device & {
+    width: 100%;
+    gap: 1.5rem;
+  }
+
+  .skill-category {
+    strong {
+      display: block;
+      font-size: max(vw(14, 1920), 14px);
+      font-weight: 400;
+      margin-bottom: 0.5rem;
+      color: rgba(255, 255, 255, 0.85);
+      letter-spacing: 0.02em;
+
+      .is-mobile-device & {
+        font-size: min(vw(13, 390), 13px);
+      }
+    }
+
+    span {
+      display: block;
+      font-size: max(vw(14, 1920), 14px);
+      color: rgba(255, 255, 255, 0.65);
+      line-height: 1.7;
+
+      .is-mobile-device & {
+        font-size: min(vw(13, 390), 13px);
+      }
+    }
+  }
+}
+
+// Column 3: Education
+.education-entry {
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  padding-left: 1.5rem;
+  margin-left: 0.5rem;
+  margin-right: max(vw(100, 1920), 100px);
+  width: max-content;
+  max-width: 800px;
+  position: relative;
+
+  .is-mobile-device & {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 1rem;
+    width: 100%;
+  }
+
+  &:not(:last-child) {
+    padding-bottom: 1.5rem;
+  }
+  &:last-child {
+    &::after {
+      content: "▪︎";
+      font-size: max(vw(14, 1920), 14px);
+      color: $text-primary;
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      transform: translate(-50%, 10%);
+
+      .is-mobile-device & {
+        font-size: min(vw(12, 390), 12px);
+      }
     }
   }
 
-  .br-mobile {
-    display: none;
-    @media (max-width: $mobile-lg) {
-      display: block;
+  &::before {
+    content: "▪︎";
+    font-size: max(vw(14, 1920), 14px);
+    color: $text-primary;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate(-50%, -25%);
+
+    .is-mobile-device & {
+      font-size: min(vw(12, 390), 12px);
     }
+  }
+
+  h4 {
+    font-size: max(vw(20, 1920), 18px);
+    font-weight: 400;
+    color: $text-primary;
+    position: relative;
+    top: -0.3em;
+
+    .is-mobile-device & {
+      font-size: min(vw(16, 390), 16px);
+    }
+  }
+
+  &__meta {
+    font-size: max(vw(12, 1920), 11px);
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 1rem;
+
+    .is-mobile-device & {
+      font-size: min(vw(10, 390), 10px);
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      font-size: max(vw(15, 1920), 14px);
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 0.2rem;
+      line-height: 1.6;
+
+      .is-mobile-device & {
+        font-size: min(vw(13, 390), 13px);
+      }
+    }
+  }
+}
+
+// --- Responsive BR ---
+.br-pc {
+  display: block;
+  .is-mobile-device & {
+    display: none;
+  }
+}
+
+.br-mobile {
+  display: none;
+  .is-mobile-device & {
+    display: block;
   }
 }
 
