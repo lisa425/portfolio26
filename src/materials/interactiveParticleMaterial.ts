@@ -129,7 +129,8 @@ void main() {
     // Distance attenuation for size
     float finalSize = uParticleSize;
     
-    gl_PointSize = (finalSize * (1.0 + randomScale * 2.0)) * (1.0 / -mvPosition.z);
+    float calculatedSize = (finalSize * (1.0 + randomScale * 2.0)) * (1.0 / -mvPosition.z);
+    gl_PointSize = max(1.0, calculatedSize);
     gl_Position = projectionMatrix * mvPosition;
     
     // 구멍 효과 페이드아웃 (nebula에만 적용, branchless)

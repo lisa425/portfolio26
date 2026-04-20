@@ -137,7 +137,7 @@ export const useHeroScene = (
     // 3. RENDERER
     const renderer = new THREE.WebGLRenderer({
       canvas: canvas,
-      alpha: heroConfig.render.alpha,
+      alpha: isMobileRef.current ? false : heroConfig.render.alpha,
       antialias: false, // 파티클 시스템에는 antialias 불필요 (성능 최적화)
     });
     renderer.setClearColor(

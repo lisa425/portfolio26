@@ -916,7 +916,8 @@ body.ko {
     display: block;
     width: 100%;
     height: 100%;
-    overflow: hidden; // Lenis takes over scrolling
+    overflow-y: auto;
+    overflow-x: hidden;
     z-index: 5;
   }
 
