@@ -805,6 +805,8 @@ export const useHeroScene = (
       const width = container.clientWidth;
       const height = container.clientHeight;
 
+      if (width === 0 || height === 0) return; // Prevent NaN matrices and 0x0 crashes
+
       camera.aspect = width / height;
 
       const isMobile = width <= 1000;
@@ -832,10 +834,20 @@ export const useHeroScene = (
         } else {
           heroConfig.camera.z = 22;
         }
+
+        // Scale down particle size on mobile for a less cluttered view
+        if (star1Mat) star1Mat.uniforms.uParticleSize.value = heroConfig.particles.coreStar.material.size * 0.65;
+        if (star2Mat) star2Mat.uniforms.uParticleSize.value = heroConfig.particles.coreStar.material.size * 0.8 * 0.65;
+        if (nebulaMat) nebulaMat.uniforms.uParticleSize.value = heroConfig.particles.nebula.material.size * 0.65;
       } else {
         currentCameraX = width < 1280 ? -7.0 : -3.5;
         currentCameraY = width < 1280 ? -2.0 : 0.0;
         heroConfig.camera.z = 22;
+
+        // Restore default particle size
+        if (star1Mat) star1Mat.uniforms.uParticleSize.value = heroConfig.particles.coreStar.material.size;
+        if (star2Mat) star2Mat.uniforms.uParticleSize.value = heroConfig.particles.coreStar.material.size * 0.8;
+        if (nebulaMat) nebulaMat.uniforms.uParticleSize.value = heroConfig.particles.nebula.material.size;
       }
 
       // We only apply camera X, Y here if we are NOT in a transition
@@ -867,6 +879,12 @@ export const useHeroScene = (
 
     // Run once on load to initialize positioning
     handleResize();
+    
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+    resizeObserver.observe(container);
+
     window.addEventListener("resize", handleResize);
 
     // 10. CLEANUP
@@ -876,6 +894,7 @@ export const useHeroScene = (
       heroTransitionRef.current = null;
       assemblyRef.current = null;
 
+      resizeObserver.disconnect();
       window.removeEventListener("resize", handleResize);
       container.removeEventListener("mousemove", handleMouseMove);
       container.removeEventListener("mouseleave", handleMouseLeave);

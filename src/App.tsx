@@ -241,7 +241,7 @@ function App() {
         gsap.set(textEl, { clearProps: "all" });
         return;
       }
-      
+
       gsap.set(textEl, { opacity: 0, x: 10 });
       cursorEl?.classList.remove("active");
 
@@ -607,7 +607,7 @@ function App() {
               onClick={handleGoWorks}
             >
               <span className="btn-text">
-                &gt; <span className="btn-text__text">works</span>
+                {!isMobile && ">"} <span className="btn-text__text">works</span>
                 <span className="btn-text__cursor"></span>
               </span>
             </button>
@@ -617,7 +617,7 @@ function App() {
               onClick={handleGoInfo}
             >
               <span className="btn-text">
-                &gt; <span className="btn-text__text">info</span>
+                {!isMobile && ">"} <span className="btn-text__text">info</span>
                 <span className="btn-text__cursor"></span>
               </span>
             </button>
