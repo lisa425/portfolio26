@@ -109,6 +109,33 @@ const CATEGORY_MAP: Record<number, string> = {
   1: "Nexon",
 };
 
+function WorksPreviewThumb({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    setLoaded(false);
+  }, [src]);
+
+  return (
+    <div className="works-preview__thumb">
+      <div
+        className={`works-preview__thumb-skeleton${loaded ? " works-preview__thumb-skeleton--hidden" : ""}`}
+        aria-hidden
+      />
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+        className={loaded ? "is-loaded" : ""}
+      />
+      <div className="works-preview__thumb-scan" />
+    </div>
+  );
+}
+
 // ─── 3D Configuration ───
 const DEG = Math.PI / 180;
 const INITIAL_ROT = { x: -50, y: 43 };
@@ -824,10 +851,7 @@ function Works({ isActive }: WorksProps) {
                     {String(works.length).padStart(3, "0")}
                   </span>
                 </div>
-                <div className="works-preview__thumb">
-                  <img src={work.thumbnail} alt={work.title} />
-                  <div className="works-preview__thumb-scan" />
-                </div>
+                <WorksPreviewThumb src={work.thumbnail} alt={work.title} />
                 <div className="works-preview__data">
                   <div className="works-preview__row">
                     <span className="works-preview__key">GAME</span>
@@ -874,10 +898,7 @@ function Works({ isActive }: WorksProps) {
                 {String(works.length).padStart(3, "0")}
               </span>
             </div>
-            <div className="works-preview__thumb">
-              <img src={work.thumbnail} alt={work.title} />
-              <div className="works-preview__thumb-scan" />
-            </div>
+            <WorksPreviewThumb src={work.thumbnail} alt={work.title} />
             <div className="works-preview__data">
               <div className="works-preview__row">
                 <span className="works-preview__key">GAME</span>

@@ -60,6 +60,7 @@ function App() {
     "hero",
   );
   const isHeroActiveRef = useRef(true);
+  const viewRef = useRef(view);
 
   // Intro log: plays every page load; false after first run so hero-return skips it
   const [showIntro, setShowIntro] = useState(true);
@@ -174,6 +175,7 @@ function App() {
 
   useEffect(() => {
     isHeroActiveRef.current = view === "hero";
+    viewRef.current = view;
   }, [view]);
 
   const killHeroTweens = useCallback(() => {
@@ -186,6 +188,7 @@ function App() {
 
   const goWorks = useCallback(() => {
     if (view !== "hero") return;
+    history.pushState({ view: "works" }, "");
     setHasShownWorks(true);
     setView("transitioning");
     killHeroTweens();
@@ -195,6 +198,7 @@ function App() {
 
   const goInfo = useCallback(() => {
     if (view !== "hero") return;
+    history.pushState({ view: "info" }, "");
     setHasShownInfo(true);
     setView("transitioning");
     killHeroTweens();
@@ -202,19 +206,62 @@ function App() {
     triggerInfoTransition(() => setView("info"));
   }, [view, triggerInfoTransition, killHeroTweens]);
 
+  // UI click → history.back() → popstate → hero transition
   const goHero = useCallback(() => {
     if (view === "hero" || view === "transitioning") return;
-    setView("transitioning");
+    history.back();
+  }, [view]);
 
-    if (heroAnimTimerRef.current) clearTimeout(heroAnimTimerRef.current);
-    heroAnimTimerRef.current = setTimeout(() => {
-      gsap.to(".hero", { opacity: 1, duration: 0.5, ease: "power2.out" });
-    }, 1000);
+  // Browser back/forward button, swipe gestures → unified popstate handler
+  // ALL history-driven transitions flow through here
+  useEffect(() => {
+    if (!history.state?.view) {
+      history.replaceState({ view: "hero" }, "");
+    }
 
-    triggerHeroTransition(() => {
-      setView("hero");
-    });
-  }, [view, triggerHeroTransition]);
+    const handlePopState = (event: PopStateEvent) => {
+      const v = viewRef.current;
+      if (v === "transitioning") return;
+
+      const target = (event.state as { view?: string })?.view;
+
+      if (target === "works" || target === "info") {
+        // Forward navigation → re-enter a section
+        if (v !== "hero") return;
+
+        if (target === "works") {
+          setHasShownWorks(true);
+          setView("transitioning");
+          killHeroTweens();
+          gsap.set(".hero", { opacity: 0 });
+          triggerWorksTransition(() => setView("works"));
+        } else {
+          setHasShownInfo(true);
+          setView("transitioning");
+          killHeroTweens();
+          gsap.set(".hero", { opacity: 0 });
+          triggerInfoTransition(() => setView("info"));
+        }
+      } else {
+        // Back navigation → return to hero
+        if (v === "hero") return;
+
+        setView("transitioning");
+
+        if (heroAnimTimerRef.current) clearTimeout(heroAnimTimerRef.current);
+        heroAnimTimerRef.current = setTimeout(() => {
+          gsap.to(".hero", { opacity: 1, duration: 0.5, ease: "power2.out" });
+        }, 1000);
+
+        triggerHeroTransition(() => {
+          setView("hero");
+        });
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [triggerWorksTransition, triggerInfoTransition, triggerHeroTransition, killHeroTweens]);
 
   const handleGoWorks = useCallback(() => goWorks(), [goWorks]);
   const handleGoInfo = useCallback(() => goInfo(), [goInfo]);
