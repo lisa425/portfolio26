@@ -500,14 +500,17 @@ export const useHeroScene = (
     // Reusable Vector3 for projectHoleToScreen — allocated once, never GC'd per frame
     const _projVec3 = new THREE.Vector3();
 
-    // Project a 2D hole position (world XY, Z=0) into CSS pixel coords for button placement
-    // Defined OUTSIDE update() so the function object is not re-created every frame
+    // Project a 2D hole position (world XY, Z=0) into CSS pixel coords for button placement.
+    // Uses visualViewport when available (iOS Safari) so the NDC→pixel mapping always matches
+    // the actual painted canvas size, which is driven by 100dvh (= visual viewport height).
     const projectHoleToScreen = (hx: number, hy: number) => {
       _projVec3.set(hx, hy, 0);
       _projVec3.project(camera); // NDC (-1 ~ 1)
+      const vvw = window.visualViewport?.width ?? container.clientWidth;
+      const vvh = window.visualViewport?.height ?? container.clientHeight;
       return {
-        x: (_projVec3.x * 0.5 + 0.5) * container.clientWidth,
-        y: (-_projVec3.y * 0.5 + 0.5) * container.clientHeight,
+        x: (_projVec3.x * 0.5 + 0.5) * vvw,
+        y: (-_projVec3.y * 0.5 + 0.5) * vvh,
       };
     };
 
@@ -654,24 +657,24 @@ export const useHeroScene = (
       star2Points.rotation.y +=
         (targetRotationY - star2Points.rotation.y) * 0.1;
 
-      // Sync button positions to the projected 3D hole centres
-      // Buttons are position:fixed, so we need to add the container's viewport offset
-      const containerRect = container.getBoundingClientRect();
+      // Sync button positions to the projected 3D hole centres.
+      // Buttons are position:fixed (viewport-relative); projectHoleToScreen now returns
+      // viewport-relative coords via visualViewport, so no container offset needed.
       if (buttonWorksRef?.current) {
         const s1 = projectHoleToScreen(
           nebulaMat.uniforms.uStar1Position.value.x,
           nebulaMat.uniforms.uStar1Position.value.y,
         );
-        buttonWorksRef.current.style.left = `${containerRect.left + s1.x}px`;
-        buttonWorksRef.current.style.top = `${containerRect.top + s1.y}px`;
+        buttonWorksRef.current.style.left = `${s1.x}px`;
+        buttonWorksRef.current.style.top = `${s1.y}px`;
       }
       if (buttonInfoRef?.current) {
         const s2 = projectHoleToScreen(
           nebulaMat.uniforms.uStar2Position.value.x,
           nebulaMat.uniforms.uStar2Position.value.y,
         );
-        buttonInfoRef.current.style.left = `${containerRect.left + s2.x}px`;
-        buttonInfoRef.current.style.top = `${containerRect.top + s2.y}px`;
+        buttonInfoRef.current.style.left = `${s2.x}px`;
+        buttonInfoRef.current.style.top = `${s2.y}px`;
       }
     };
 
@@ -804,8 +807,10 @@ export const useHeroScene = (
     // -------------------------------------------------------------
     const handleResize = () => {
       if (!container) return;
-      const width = container.clientWidth;
-      const height = container.clientHeight;
+      // Use visualViewport when available (iOS Safari) so camera aspect + renderer size
+      // always match the actual painted canvas driven by 100dvh = visual viewport height.
+      const width = window.visualViewport?.width ?? container.clientWidth;
+      const height = window.visualViewport?.height ?? container.clientHeight;
 
       if (width === 0 || height === 0) return; // Prevent NaN matrices and 0x0 crashes
 
@@ -888,6 +893,8 @@ export const useHeroScene = (
     resizeObserver.observe(container);
 
     window.addEventListener("resize", handleResize);
+    // iOS Safari: address bar show/hide changes visualViewport without firing window resize
+    window.visualViewport?.addEventListener("resize", handleResize);
 
     // 10. CLEANUP
     return () => {
@@ -898,6 +905,7 @@ export const useHeroScene = (
 
       resizeObserver.disconnect();
       window.removeEventListener("resize", handleResize);
+      window.visualViewport?.removeEventListener("resize", handleResize);
       container.removeEventListener("mousemove", handleMouseMove);
       container.removeEventListener("mouseleave", handleMouseLeave);
 

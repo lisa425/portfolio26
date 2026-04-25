@@ -250,11 +250,11 @@ body.ko {
     z-index: 10;
     width: 100vw;
     height: 100dvh;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
     pointer-events: none;
+    overflow: hidden; // iOS Safari: prevents scroll from dvh recalculation timing mismatch on fixed elements
     opacity: 0;
     .header,
     .hero {
@@ -1487,7 +1487,7 @@ body.ko {
       justify-items: center;
       padding-top: 1.5rem;
       align-items: flex-start;
-      justify-content: flex-start;
+      justify-content: center;
     }
 
     &.active {
@@ -1537,6 +1537,7 @@ body.ko {
         width: 90vw;
         height: calc(100dvh - 3rem);
         min-height: auto;
+        margin: 0 auto;
       }
     }
 
