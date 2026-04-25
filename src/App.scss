@@ -150,6 +150,8 @@ body.ko {
     position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
     z-index: 1;
     pointer-events: none;
     filter: brightness(0);
@@ -1691,6 +1693,12 @@ body.ko {
         overflow: hidden;
         background: rgba(255, 255, 255, 0.02);
         transition: height 0.7s ease;
+
+        @media (max-width: $mobile-lg) {
+          // On mobile height is not JS-driven; use aspect-ratio so skeleton has visible area
+          aspect-ratio: 16 / 9;
+          height: auto;
+        }
 
         @media (prefers-reduced-motion: reduce) {
           transition: none;

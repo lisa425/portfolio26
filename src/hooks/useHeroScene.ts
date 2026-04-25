@@ -655,21 +655,23 @@ export const useHeroScene = (
         (targetRotationY - star2Points.rotation.y) * 0.1;
 
       // Sync button positions to the projected 3D hole centres
+      // Buttons are position:fixed, so we need to add the container's viewport offset
+      const containerRect = container.getBoundingClientRect();
       if (buttonWorksRef?.current) {
         const s1 = projectHoleToScreen(
           nebulaMat.uniforms.uStar1Position.value.x,
           nebulaMat.uniforms.uStar1Position.value.y,
         );
-        buttonWorksRef.current.style.left = `${s1.x}px`;
-        buttonWorksRef.current.style.top = `${s1.y}px`;
+        buttonWorksRef.current.style.left = `${containerRect.left + s1.x}px`;
+        buttonWorksRef.current.style.top = `${containerRect.top + s1.y}px`;
       }
       if (buttonInfoRef?.current) {
         const s2 = projectHoleToScreen(
           nebulaMat.uniforms.uStar2Position.value.x,
           nebulaMat.uniforms.uStar2Position.value.y,
         );
-        buttonInfoRef.current.style.left = `${s2.x}px`;
-        buttonInfoRef.current.style.top = `${s2.y}px`;
+        buttonInfoRef.current.style.left = `${containerRect.left + s2.x}px`;
+        buttonInfoRef.current.style.top = `${containerRect.top + s2.y}px`;
       }
     };
 
