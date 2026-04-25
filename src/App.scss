@@ -248,16 +248,13 @@ body.ko {
     top: 0px;
     left: 0;
     z-index: 10;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
     pointer-events: none;
-    // Start invisible — JS sets opacity: 1 after intro or on navigation back
-    // Prevents FOUC (flash before React hydrates)
     opacity: 0;
-    /* Re-enable pointer events for interactive elements */
     .header,
     .hero {
       pointer-events: auto;
@@ -270,7 +267,6 @@ body.ko {
       width: 100%;
       display: flex;
       justify-content: space-between;
-      // align-items: center;
       pointer-events: none;
       z-index: 10;
       padding: 2rem 3rem;
@@ -283,8 +279,7 @@ body.ko {
         font-size: min(vw(15, 370), 15px);
         gap: 1.5rem;
         max-width: 100vw;
-        max-height: 80px;
-        background: linear-gradient(to bottom, black 50%, transparent);
+        background: linear-gradient(to bottom, black 10%, transparent);
       }
 
       @media (max-width: $mobile-lg) and (max-height: 700px) {
