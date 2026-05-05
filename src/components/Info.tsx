@@ -232,7 +232,9 @@ function Info({ isActive }: InfoProps) {
   return (
     <>
       {/* Terminal-style progress nav */}
-      <nav className={`terminal-bar info-nav ${isMobileDevice ? "is-mobile-device" : ""}`}>
+      <nav
+        className={`terminal-bar info-nav ${isMobileDevice ? "is-mobile-device" : ""}`}
+      >
         <span className="terminal-bar__label">&gt; INFO ───</span>
         <span className="terminal-bar__bar">
           [
@@ -506,6 +508,16 @@ function Info({ isActive }: InfoProps) {
                         href={`tel:${contact.phone.replace(/\s/g, "")}`}
                       >
                         {contact.phone}
+                      </a>
+                    </p>
+                    <p className="btn-contact">
+                      LinkedIn
+                      <a
+                        className="meta text-body"
+                        href={contact.LinkedIn}
+                        target="_blank"
+                      >
+                        {contact.LinkedIn}
                       </a>
                     </p>
                   </div>
