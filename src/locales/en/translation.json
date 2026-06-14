@@ -11,7 +11,7 @@
         "game": "Azure Promilia",
         "title": "Official Website & 1st Pre-registration",
         "date": "2025.11 - 2025.12",
-        "description": "Led overall frontend development — architecture design, BFF layer, API integration, security audit, and load testing\nReduced project timeline by 50% through structured cross-functional collaboration\nBuilt character introduction, world reveal, and other informational interaction features for the pre-registration page",
+        "description": "Led the full project from architecture design as the sole frontend engineer\nDesigned a BFF layer using Next.js Route Handlers to proxy external APIs and centralise request validation\nDelivered on a 50% compressed timeline by adopting a rolling design-to-development handoff, enabling parallel workstreams across design, development, and QA\nBuilt interactions for contents from scratch, tuning each animation to fit the game's visual identity",
         "stack": "Next.js",
         "thumbnail": "assets/images/az_thumb1.jpg",
         "img": [
@@ -28,8 +28,8 @@
         "game": "Baram",
         "title": "Archer Remaster Teaser:\n21st Anniversary Illustration Gallery",
         "date": "2022.11 - 2022.12",
-        "description": "Built a 3D web gallery featuring historical illustrations to celebrate the Archer remaster\nImplemented scroll-based year counting, gallery control interactions, and illustration focus effects",
-        "stack": "Three.js · GSAP",
+        "description": "Built a 3D gallery from scratch to showcase 21 years of brand illustrations\nConsolidated 162 VBOs into a single draw call via shared geometry instancing, significantly reducing GPU memory overhead\nDeveloped scroll-driven interaction logic for gallery rotation and year-counting animations with GSAP\nStabilising input responsiveness through debouncing",
+        "stack": "HTML · CSS · JavaScript · Three.js · GSAP",
         "thumbnail": "assets/images/br_thumb1.jpg",
         "img": ["assets/images/br_img1.jpg", "assets/images/br_img2.jpg", "assets/images/br_img3.jpg"],
         "url": "https://baram.nexon.com/E221215/Intro"
@@ -38,9 +38,9 @@
         "id": 3,
         "category": 1,
         "game": "Blue Archive",
-        "title": "Code:BOX Roadmap Promotion",
+        "title": "Code:BOX-The Shadow Approaching Millennum",
         "date": "2025.07",
-        "description": "Implemented immersive interactive web graphics with a cyberpunk theme\nGlobal multilingual support for Korean, English, and Thai",
+        "description": "Built an immersive interactive web experience from scratch around the game's futuristic sci-fi aesthetic, tuning animation timing and transitions to stay true to its visual identity\nDelivered multilingual support across Korean, English, and Thai for a large-scale global audience",
         "stack": "Nuxt.js",
         "thumbnail": "assets/images/ba_thumb1.jpg",
         "img": [
@@ -54,10 +54,10 @@
       {
         "id": 4,
         "category": 1,
-        "game": "Vindictus (NA)",
+        "game": "Vindictus",
         "title": "New Character 'Neamhain' Update",
         "date": "2025.01",
-        "description": "Informational page for the new character update\nAdvanced web animation crafted to guide user attention and express the character's identity",
+        "description": "Designed and built an informational character page from scratch for the North American market\nCrafted web animations to guide user attention and express the character's identity, with motion pacing shaped around the page's narrative structure",
         "stack": "React · TypeScript",
         "thumbnail": "assets/images/vd_thumb1.jpg",
         "img": [
@@ -72,9 +72,9 @@
         "id": 5,
         "category": 1,
         "game": "Mabinogi Mobile",
-        "title": "1st Anniversary Update Event",
+        "title": "1st Anniversary Festival",
         "date": "2026.03",
-        "description": "Informational intro page for the 1st anniversary update, featuring spring-themed particle web graphics\nAdaptive animation for both mobile and PC",
+        "description": "Built an anniversary intro page featuring spring-themed particle graphics, with animation sequences designed to set the tone for the update\nImplemented adaptive layouts and animations across mobile and PC to ensure a consistent experience on all screen sizes",
         "stack": "React · TypeScript",
         "thumbnail": "assets/images/mm_thumb1.jpg",
         "img": ["assets/images/mm_img1.jpg", "assets/images/mm_img2.jpg", "assets/images/mm_img3.jpg"],
@@ -87,7 +87,7 @@
     "role": "Frontend Developer",
     "contact": {
       "email": "imchaewon.dev@gmail.com",
-      "phone": "+82 10-9902-7913",
+      "phone": "0451 481 874",
       "LinkedIn": "https://www.linkedin.com/in/chxxwn"
     },
     "about": "Frontend developer crafting both sides of the screen — interactions users see, and environments developers feel. Having studied both design and engineering, I care about craft on screen and the systems behind it. I'm drawn to building not just polished interfaces, but better ways to build them: structure, automation, and the kind of tooling that makes a team's day-to-day a little less painful.",
@@ -98,34 +98,19 @@
           "company": "NEXON Korea",
           "role": "Frontend Engineer",
           "period": "May 2022 – Jun 2026",
-          "location": "Seoul, South Korea",
+          "location": "South Korea",
           "projects": [
             {
-              "name": "Azure Promilia (KR) – Official Website Launch (Frontend Lead)",
-              "bullets": [
-                "Owned frontend development end-to-end: tech stack selection, architecture design, and reusable component structure",
-                "Designed a BFF layer using Next.js Route Handlers for API proxying, server-side token isolation, and centralized validation",
-                "Established security audit and load testing strategy for up to 5,000 concurrent users",
-                "Streamlined cross-functional collaboration and scheduling, reducing project timeline by 50%"
-              ]
+              "name": "Mabinogi Web Development Team",
+              "bullets": ["Franchise Synergy Group · Jan 2026 - Jun 2026"]
             },
             {
-              "name": "Mabinogi Heroes (KR/NA) – Legacy Modernization & Automation (Frontend Lead)",
-              "bullets": [
-                "Led modernization of a legacy website into a scalable React + Vite architecture with a structured dev/prod branching strategy",
-                "Introduced shared components, event templates, and automation scripts — cutting dev time by 85% and new event turnaround by 50%",
-                "Built internal dev tools to automate repetitive content operations including image path generation and HTML production, reducing manual prep time by 95%",
-                "Developed terminal-based scripts to automate the full build and deployment pipeline, reducing deploy time by 80%"
-              ]
+              "name": "Game Web Frontend Development Team",
+              "bullets": ["Platform Division · Apr 2025 - Dec 2025"]
             },
             {
-              "name": "Interactive Global Web Campaigns",
-              "bullets": [
-                "Built and optimized a Three.js 3D gallery rendering 162 image panels — reduced GPU memory via geometry instancing (162 VBOs → 1) and stabilized scroll navigation through input debouncing",
-                "Introduced an image optimization pipeline across all web event projects, cutting file sizes by 50% and load time from 3s to under 1s",
-                "Built character introduction slides, map drag interactions, and other content interactions for Azure Promilia pre-registration",
-                "Delivered multilingual, in-game integrated web events for KR and NA audiences across Mabinogi Heroes, Blue Archive, and KartRider Rush+"
-              ]
+              "name": "Live Web Frontend Development Team",
+              "bullets": ["Intelligence Labs · May 2022 - Mar 2025"]
             }
           ]
         }
@@ -136,7 +121,11 @@
       "categories": [
         {
           "name": "Frontend",
-          "items": "TypeScript, React, Next.js, Vue.js, Three.js, GSAP"
+          "items": "HTML, CSS, JavaScript, TypeScript, React, Next.js, Vue.js, Three.js, GSAP"
+        },
+        {
+          "name": "Backend",
+          "items": "Node.js, NestJS, Python, Supabase, MongoDB"
         },
         {
           "name": "Automation & AI",

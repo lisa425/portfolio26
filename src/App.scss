@@ -1,36 +1,36 @@
-@use "sass:math";
-@import url("https://fonts.googleapis.com/css2?family=Azeret+Mono:ital,wght@0,100..900;1,100..900&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@100..900&family=Space+Grotesk:wght@300..700&display=swap");
-@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
-@import url("https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css");
-@import url("https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/monas.css");
+@use 'sass:math';
+@import url('https://fonts.googleapis.com/css2?family=Azeret+Mono:ital,wght@0,100..900;1,100..900&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@100..900&family=Space+Grotesk:wght@300..700&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+@import url('https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css');
+@import url('https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/monas.css');
 
 // Absolute paths: bundled CSS lives under /assets/*.css, so relative
 // `assets/fonts/...` would resolve to /assets/assets/fonts/... (404).
 @font-face {
-  font-family: "nbarchitekt";
-  src: url(/assets/fonts/NBArchitektStd-Regular.woff2) format("woff2");
+  font-family: 'nbarchitekt';
+  src: url(/assets/fonts/NBArchitektStd-Regular.woff2) format('woff2');
   font-style: normal;
   font-weight: 400;
 }
 @font-face {
-  font-family: "nbarchitekt";
-  src: url(/assets/fonts/NBArchitektStd-Bold.woff2) format("woff2");
+  font-family: 'nbarchitekt';
+  src: url(/assets/fonts/NBArchitektStd-Bold.woff2) format('woff2');
   font-style: normal;
   font-weight: 700;
 }
 @font-face {
-  font-family: "NexonLv2Gothic";
+  font-family: 'NexonLv2Gothic';
   src:
-    url(/assets/fonts/NEXONLv2GothicOTF.otf) format("opentype"),
-    url(/assets/fonts/NEXONLv2Gothic.ttf) format("truetype");
+    url(/assets/fonts/NEXONLv2GothicOTF.otf) format('opentype'),
+    url(/assets/fonts/NEXONLv2Gothic.ttf) format('truetype');
   font-style: normal;
   font-weight: 400;
 }
 @font-face {
-  font-family: "NexonLv2Gothic";
+  font-family: 'NexonLv2Gothic';
   src:
-    url(/assets/fonts/NEXONLv2GothicOTFBold.otf) format("opentype"),
-    url(/assets/fonts/NEXONLv2GothicBold.ttf) format("truetype");
+    url(/assets/fonts/NEXONLv2GothicOTFBold.otf) format('opentype'),
+    url(/assets/fonts/NEXONLv2GothicBold.ttf) format('truetype');
   font-style: normal;
   font-weight: 700;
 }
@@ -43,9 +43,8 @@
 
 $bg-color: #0d0d0d;
 $text-primary: #ffffff;
-$font-display: "nbarchitekt", "Azeret Mono", "IBM Plex Mono", monospace;
-$font-body:
-  "Space Grotesk", "IBM Plex Mono", "Azeret Mono", "Outfit", sans-serif;
+$font-display: 'nbarchitekt', 'Azeret Mono', 'IBM Plex Mono', monospace;
+$font-body: 'Space Grotesk', 'IBM Plex Mono', 'Azeret Mono', 'Outfit', sans-serif;
 $mobile-sm: 640px;
 $mobile-md: 720px;
 $mobile-lg: 1000px;
@@ -74,16 +73,16 @@ body {
   letter-spacing: -0.02em;
 }
 .emoji {
-  font-family: "Mona12", sans-serif;
+  font-family: 'Mona12', sans-serif;
 }
 
 body.ko {
   .text-display {
-    font-family: "NexonLv2Gothic", "Helvetica", sans-serif;
+    font-family: 'NexonLv2Gothic', 'Helvetica', sans-serif;
     letter-spacing: -0.02em;
   }
   .text-body {
-    font-family: "Pretendard", sans-serif;
+    font-family: 'Pretendard', sans-serif;
   }
 }
 
@@ -126,12 +125,7 @@ body.ko {
     padding-top: 10dvh;
     font-size: min(vw(10, 390), 12px);
     gap: 0.3em;
-    background: linear-gradient(
-      to top,
-      $bg-color 0%,
-      $bg-color 10%,
-      transparent 100%
-    );
+    background: linear-gradient(to top, $bg-color 0%, $bg-color 10%, transparent 100%);
     width: 100vw;
     backdrop-filter: 10px;
     * {
@@ -225,7 +219,7 @@ body.ko {
 
     &::before,
     &::after {
-      content: "";
+      content: '';
       position: absolute;
       top: 50%;
       left: 50%;
@@ -418,7 +412,7 @@ body.ko {
       align-items: center;
       &::before,
       &::after {
-        content: "+";
+        content: '+';
         color: rgba(255, 255, 255, 0.4);
         font-size: max(vw(12, 1920), 12px);
         line-height: 1;
@@ -560,7 +554,7 @@ body.ko {
 
             // Corner brackets
             &::before {
-              content: "";
+              content: '';
               position: absolute;
               inset: -1px;
               background:
@@ -773,10 +767,7 @@ body.ko {
         position: fixed;
         left: 0;
         top: 0;
-        transform: translate(
-          -50%,
-          -50%
-        ); // JS controls left/top relative to center
+        transform: translate(-50%, -50%); // JS controls left/top relative to center
         background: transparent;
         border: none;
         font-size: max(vw(15, 1920), 16px);
@@ -888,7 +879,7 @@ body.ko {
     align-items: center;
     gap: 10px;
     &::before {
-      content: "";
+      content: '';
       display: block;
       width: 10px;
       height: 10px;
@@ -1037,7 +1028,7 @@ body.ko {
 
       // Top-left coord marker
       &::before {
-        content: "+ + +";
+        content: '+ + +';
         position: absolute;
         top: vw(6, 1920);
         left: vw(8, 1920);
@@ -1346,14 +1337,8 @@ body.ko {
     box-shadow: 0 0 10px rgba($text-primary, 0.2);
     transform-style: preserve-3d;
     will-change: transform, opacity;
-    mask-image: conic-gradient(
-      #ffffff var(--sweep, 360deg),
-      transparent var(--sweep, 360deg)
-    );
-    -webkit-mask-image: conic-gradient(
-      #ffffff var(--sweep, 360deg),
-      transparent var(--sweep, 360deg)
-    );
+    mask-image: conic-gradient(#ffffff var(--sweep, 360deg), transparent var(--sweep, 360deg));
+    -webkit-mask-image: conic-gradient(#ffffff var(--sweep, 360deg), transparent var(--sweep, 360deg));
   }
 
   .orbital-ring-highlight {
@@ -1382,8 +1367,7 @@ body.ko {
 
     &.active {
       opacity: 1;
-      filter: drop-shadow(0 0 10px rgba($text-primary, 0.6))
-        drop-shadow(0 0 20px rgba($text-primary, 0.4));
+      filter: drop-shadow(0 0 10px rgba($text-primary, 0.6)) drop-shadow(0 0 20px rgba($text-primary, 0.4));
     }
   }
 
@@ -1521,7 +1505,7 @@ body.ko {
       transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 
       &::before {
-        content: "";
+        content: '';
         position: absolute;
         inset: 0;
         background-image:
@@ -1623,7 +1607,7 @@ body.ko {
         padding: 3rem;
         display: flex;
         flex-direction: column;
-        max-height: 600px;
+        max-height: 630px;
         overflow-y: auto;
 
         @media (max-width: $mobile-lg) {
@@ -1846,7 +1830,7 @@ body.ko {
         }
       }
       span::before {
-        content: ">";
+        content: '>';
         display: inline-block;
         font-size: 15px;
         position: absolute;
@@ -1917,12 +1901,7 @@ body.ko {
   overflow-y: auto;
   overflow-x: hidden;
   margin-top: 5dvh;
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 20%,
-    black 100%
-  );
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
   mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
 
   &::-webkit-scrollbar {
@@ -2063,7 +2042,7 @@ body.ko {
 
   // grid lines effect
   &::after {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
     background-image:
@@ -2251,7 +2230,7 @@ body.ko {
     }
 
     .job-entry__meta {
-      font-size: max(vw(12, 1920), 11px);
+      font-size: max(vw(13, 1920), 14px);
       color: rgba(255, 255, 255, 0.5);
       margin: 0;
 
@@ -2262,7 +2241,6 @@ body.ko {
   }
 
   .project-entry {
-    border-left: 1px solid rgba(255, 255, 255, 0.15);
     padding-left: 1.5rem;
     position: relative;
 
@@ -2271,26 +2249,12 @@ body.ko {
     }
 
     &:not(:last-child) {
+      border-left: 1px solid rgba(255, 255, 255, 0.15);
       padding-bottom: 1.5rem;
-    }
-    &:last-child {
-      &::after {
-        content: "▪︎";
-        font-size: max(vw(14, 1920), 14px);
-        color: $text-primary;
-        position: absolute;
-        left: 0;
-        bottom: 0;
-        transform: translate(-50%, 10%);
-
-        .is-mobile-device & {
-          font-size: min(vw(12, 390), 12px);
-        }
-      }
     }
 
     &::before {
-      content: "▪︎";
+      content: '▪︎';
       font-size: max(vw(14, 1920), 14px);
       color: $text-primary;
       position: absolute;
@@ -2308,7 +2272,6 @@ body.ko {
       font-weight: 400;
       position: relative;
       top: -0.3em;
-      margin-bottom: 0.8rem;
       color: $text-primary;
 
       .is-mobile-device & {
@@ -2321,7 +2284,6 @@ body.ko {
       margin: 0;
       padding: 0;
       list-style: none;
-      padding-left: 0.1rem;
 
       li {
         font-size: max(vw(15, 1920), 13px);
@@ -2401,7 +2363,7 @@ body.ko {
   }
   &:last-child {
     &::after {
-      content: "▪︎";
+      content: '▪︎';
       font-size: max(vw(14, 1920), 14px);
       color: $text-primary;
       position: absolute;
@@ -2416,7 +2378,7 @@ body.ko {
   }
 
   &::before {
-    content: "▪︎";
+    content: '▪︎';
     font-size: max(vw(14, 1920), 14px);
     color: $text-primary;
     position: absolute;

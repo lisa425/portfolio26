@@ -1,8 +1,8 @@
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import i18n from 'i18next'
+import { initReactI18next } from 'react-i18next'
 
-import translationEN from './locales/en/translation.json';
-import translationKO from './locales/ko/translation.json';
+import translationEN from './locales/en/translation.json'
+import translationKO from './locales/ko/translation.json'
 
 const resources = {
   en: {
@@ -11,17 +11,15 @@ const resources = {
   ko: {
     translation: translationKO,
   },
-};
+}
 
-i18n
-  .use(initReactI18next)
-  .init({
-    resources,
-    lng: 'ko', // 기본 언어
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false,
-    },
-  });
+i18n.use(initReactI18next).init({
+  resources,
+  lng: 'en', // 기본 언어
+  fallbackLng: 'ko',
+  interpolation: {
+    escapeValue: false,
+  },
+})
 
-export default i18n;
+export default i18n

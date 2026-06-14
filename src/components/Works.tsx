@@ -614,10 +614,11 @@ function Works({ isActive }: WorksProps) {
     [calculateHover, handleNodeHover, isMobileDevice],
   );
 
-  const handlePointerUp = useCallback(() => {
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
     if (isMobileDevice) return;
     if (!isDragRef.current) return;
     isDragRef.current = false;
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     if (!hasDraggedRef.current && hoveredIndexRef.current !== null) {
       const work = worksRef.current[hoveredIndexRef.current];
       if (work) handleWorkClick(work);
@@ -628,9 +629,10 @@ function Works({ isActive }: WorksProps) {
     }
   }, [handleWorkClick, isMobileDevice]);
 
-  const handlePointerLeave = useCallback(() => {
+  const handlePointerLeave = useCallback((e: React.PointerEvent) => {
     if (isMobileDevice) return;
     isDragRef.current = false;
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     if (activePanelIdxRef.current !== null) {
       panelRefs.current[activePanelIdxRef.current]?.classList.remove("active");
       activePanelIdxRef.current = null;
