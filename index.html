@@ -4,7 +4,34 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/assets/images/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- Static fallbacks for crawlers/unfurlers that don't run JS.
+         The Seo component removes these (data-seo-fallback) on mount and
+         renders route/language-specific tags instead. -->
     <title>Chaewon | Frontend Developer</title>
+    <meta
+      data-seo-fallback
+      name="description"
+      content="Interactive web frontend developer crafting immersive, motion-driven experiences with Three.js, WebGL and GSAP."
+    />
+    <meta data-seo-fallback property="og:type" content="website" />
+    <meta
+      data-seo-fallback
+      property="og:site_name"
+      content="Chaewon | Frontend Developer"
+    />
+    <meta
+      data-seo-fallback
+      property="og:title"
+      content="Chaewon | Frontend Developer"
+    />
+    <meta
+      data-seo-fallback
+      property="og:description"
+      content="Interactive web frontend developer crafting immersive, motion-driven experiences with Three.js, WebGL and GSAP."
+    />
+    <meta data-seo-fallback name="twitter:card" content="summary" />
   </head>
   <body>
     <div id="root"></div>

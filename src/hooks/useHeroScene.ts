@@ -19,6 +19,8 @@ const heroConfig = {
     z: 22, // Move camera back to see the volumetric shapes
     x: window.innerWidth < 1280 ? -7.0 : -3.5, // 별이 화면 오른쪽에 보이도록 카메라를 좌측으로
     y: window.innerWidth < 1280 ? -2.0 : -0.0, // 별이 화면 위쪽에 보이도록 카메라를 아래로
+    // 별 내부로 줌인이 완료된 시점의 카메라 상태 (works/info 진입 완료 상태)
+    zoomedIn: { z: 1.0, fov: 8 },
   },
   render: {
     maxPixelRatio: Math.min(window.devicePixelRatio, 1.5),
@@ -87,6 +89,7 @@ export const useHeroScene = (
   triggerInfoTransition: (onComplete: () => void) => void;
   triggerHeroTransition: (onComplete: () => void) => void;
   triggerAssembly: () => void;
+  applyViewInstant: (view: "hero" | "works" | "info") => void;
 } => {
   const worksTransitionRef = useRef<((onComplete: () => void) => void) | null>(
     null,
@@ -98,6 +101,9 @@ export const useHeroScene = (
     null,
   );
   const assemblyRef = useRef<(() => void) | null>(null);
+  const applyInstantRef = useRef<
+    ((view: "hero" | "works" | "info") => void) | null
+  >(null);
 
   const { isMobile } = useMobile();
   const isMobileRef = useRef(isMobile);
@@ -717,7 +723,7 @@ export const useHeroScene = (
         {
           x: star1Pos[0],
           y: star1Pos[1],
-          z: 1.0,
+          z: heroConfig.camera.zoomedIn.z,
           duration: 1.8,
           ease: "power4.in",
         },
@@ -726,7 +732,7 @@ export const useHeroScene = (
       tl.to(
         camera,
         {
-          fov: 8,
+          fov: heroConfig.camera.zoomedIn.fov,
           duration: 1.8,
           ease: "power4.in",
           onUpdate: () => camera.updateProjectionMatrix(),
@@ -754,7 +760,7 @@ export const useHeroScene = (
         {
           x: star2Pos[0],
           y: star2Pos[1],
-          z: 1.0,
+          z: heroConfig.camera.zoomedIn.z,
           duration: 1.8,
           ease: "power4.in",
         },
@@ -763,13 +769,45 @@ export const useHeroScene = (
       tl.to(
         camera,
         {
-          fov: 8,
+          fov: heroConfig.camera.zoomedIn.fov,
           duration: 1.8,
           ease: "power4.in",
           onUpdate: () => camera.updateProjectionMatrix(),
         },
         0,
       );
+    };
+
+    // Jump straight to a transition's END state without any tween.
+    // Used for deep links / refreshes where the intro & camera flight are skipped.
+    applyInstantRef.current = (view: "hero" | "works" | "info") => {
+      // Particles: assembled star shape (assembly tween's t=1 state)
+      (star1Geo.attributes.position.array as Float32Array).set(originalPos1);
+      star1Geo.attributes.position.needsUpdate = true;
+      (star2Geo.attributes.position.array as Float32Array).set(originalPos2);
+      star2Geo.attributes.position.needsUpdate = true;
+
+      // Camera: same end values the works/info/hero transitions tween towards
+      if (view === "hero") {
+        camera.position.set(
+          heroConfig.camera.x,
+          heroConfig.camera.y,
+          heroConfig.camera.z,
+        );
+        camera.fov = heroConfig.camera.fov;
+      } else {
+        const starPos =
+          view === "works"
+            ? heroConfig.particles.coreStar.starPosition.star1
+            : heroConfig.particles.coreStar.starPosition.star2;
+        camera.position.set(
+          starPos[0],
+          starPos[1],
+          heroConfig.camera.zoomedIn.z,
+        );
+        camera.fov = heroConfig.camera.zoomedIn.fov;
+      }
+      camera.updateProjectionMatrix();
     };
 
     heroTransitionRef.current = (onComplete: () => void) => {
@@ -950,6 +988,13 @@ export const useHeroScene = (
     heroTransitionRef.current?.(onComplete);
   }, []);
 
+  const applyViewInstant = useCallback(
+    (view: "hero" | "works" | "info") => {
+      applyInstantRef.current?.(view);
+    },
+    [],
+  );
+
   const triggerAssembly = useCallback(() => {
     assemblyRef.current?.();
   }, []);
@@ -959,5 +1004,6 @@ export const useHeroScene = (
     triggerInfoTransition,
     triggerHeroTransition,
     triggerAssembly,
+    applyViewInstant,
   };
 };

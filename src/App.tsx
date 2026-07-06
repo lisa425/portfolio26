@@ -6,17 +6,20 @@ import {
   useRef,
   useState,
 } from "react";
+import { Outlet } from "react-router";
 import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { SplitText } from "gsap/SplitText";
-import type { LangType } from "./types";
 import { useMobile } from "./hooks/useMobile";
+import { savePreferredLang } from "./utils/routing";
 
 gsap.registerPlugin(SplitText);
 import "./App.scss";
 import { useHeroScene } from "./hooks/useHeroScene";
+import { useViewRouter } from "./hooks/useViewRouter";
 import { useCursorTrail } from "./hooks/useCursorTrail";
 import IntroLog from "./components/IntroLog";
+import Seo from "./components/Seo";
 
 // Code-split: Works & Info are lazy-loaded on first visit
 const Works = lazy(() => import("./components/Works"));
@@ -48,38 +51,17 @@ function App() {
   const buttonWorksRef = useRef<HTMLButtonElement>(null);
   const buttonInfoRef = useRef<HTMLButtonElement>(null);
   const trailCanvasRef = useRef<HTMLCanvasElement>(null);
-  const heroAnimTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [language, setLanguage] = useState(i18n.language);
   const [loadProgress, setLoadProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const [locationStr, setLocationStr] = useState("37° 33' N ■ 126° 58' E");
   const [currentTime, setCurrentTime] = useState("");
   const [currentDate, setCurrentDate] = useState("");
-  const [view, setView] = useState<"hero" | "transitioning" | "works" | "info">(
-    "hero",
-  );
   const isHeroActiveRef = useRef(true);
-  const viewRef = useRef(view);
 
   // Intro log: plays every page load; false after first run so hero-return skips it
   const [showIntro, setShowIntro] = useState(true);
   const heroContentRef = useRef<HTMLDivElement>(null);
-
-  // Keep-alive: mount Works/Info on first visit, stay mounted to preserve state
-  // Set at transition START (not on view change) to avoid Suspense flash
-  const [hasShownWorks, setHasShownWorks] = useState(false);
-  const [hasShownInfo, setHasShownInfo] = useState(false);
-
-  const changeLanguage = (lang: LangType) => {
-    i18n.changeLanguage(lang);
-    setLanguage(lang);
-  };
-
-  useEffect(() => {
-    document.body.classList.remove("ko", "en");
-    document.body.classList.add(language);
-  }, [language]);
 
   // WebGL init reports 100 in the same tick as scene setup; the intro still waits on
   // `document.fonts.ready` + delay. Without tying the counter to that, (100/100) looked
@@ -162,6 +144,7 @@ function App() {
     triggerInfoTransition,
     triggerHeroTransition,
     triggerAssembly,
+    applyViewInstant,
   } = useHeroScene(
     canvasRef,
     containerRef,
@@ -173,99 +156,34 @@ function App() {
 
   useCursorTrail(trailCanvasRef);
 
+  // URL-first routing: button clicks and browser back/forward all change the
+  // URL, and the hook runs the same camera-transition pipeline for every source
+  const {
+    view,
+    lang,
+    hasShownWorks,
+    hasShownInfo,
+    goWorks,
+    goInfo,
+    goHero,
+    switchLang,
+  } = useViewRouter({
+    triggerWorksTransition,
+    triggerInfoTransition,
+    triggerHeroTransition,
+    isHeroActiveRef,
+    isReady: !showIntro,
+  });
+
+  // URL lang → i18next / <html> lang / <body> class / persisted preference
+  // (one-way sync; the reverse direction is switchLang, which navigates)
   useEffect(() => {
-    isHeroActiveRef.current = view === "hero";
-    viewRef.current = view;
-  }, [view]);
-
-  const killHeroTweens = useCallback(() => {
-    if (heroAnimTimerRef.current) {
-      clearTimeout(heroAnimTimerRef.current);
-      heroAnimTimerRef.current = null;
-    }
-    gsap.killTweensOf(".hero");
-  }, []);
-
-  const goWorks = useCallback(() => {
-    if (view !== "hero") return;
-    history.pushState({ view: "works" }, "");
-    setHasShownWorks(true);
-    setView("transitioning");
-    killHeroTweens();
-    gsap.set(".hero", { opacity: 0 });
-    triggerWorksTransition(() => setView("works"));
-  }, [view, triggerWorksTransition, killHeroTweens]);
-
-  const goInfo = useCallback(() => {
-    if (view !== "hero") return;
-    history.pushState({ view: "info" }, "");
-    setHasShownInfo(true);
-    setView("transitioning");
-    killHeroTweens();
-    gsap.set(".hero", { opacity: 0 });
-    triggerInfoTransition(() => setView("info"));
-  }, [view, triggerInfoTransition, killHeroTweens]);
-
-  // UI click → history.back() → popstate → hero transition
-  const goHero = useCallback(() => {
-    if (view === "hero" || view === "transitioning") return;
-    history.back();
-  }, [view]);
-
-  // Browser back/forward button, swipe gestures → unified popstate handler
-  // ALL history-driven transitions flow through here
-  useEffect(() => {
-    if (!history.state?.view) {
-      history.replaceState({ view: "hero" }, "");
-    }
-
-    const handlePopState = (event: PopStateEvent) => {
-      const v = viewRef.current;
-      if (v === "transitioning") return;
-
-      const target = (event.state as { view?: string })?.view;
-
-      if (target === "works" || target === "info") {
-        // Forward navigation → re-enter a section
-        if (v !== "hero") return;
-
-        if (target === "works") {
-          setHasShownWorks(true);
-          setView("transitioning");
-          killHeroTweens();
-          gsap.set(".hero", { opacity: 0 });
-          triggerWorksTransition(() => setView("works"));
-        } else {
-          setHasShownInfo(true);
-          setView("transitioning");
-          killHeroTweens();
-          gsap.set(".hero", { opacity: 0 });
-          triggerInfoTransition(() => setView("info"));
-        }
-      } else {
-        // Back navigation → return to hero
-        if (v === "hero") return;
-
-        setView("transitioning");
-
-        if (heroAnimTimerRef.current) clearTimeout(heroAnimTimerRef.current);
-        heroAnimTimerRef.current = setTimeout(() => {
-          gsap.to(".hero", { opacity: 1, duration: 0.5, ease: "power2.out" });
-        }, 1000);
-
-        triggerHeroTransition(() => {
-          setView("hero");
-        });
-      }
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, [triggerWorksTransition, triggerInfoTransition, triggerHeroTransition, killHeroTweens]);
-
-  const handleGoWorks = useCallback(() => goWorks(), [goWorks]);
-  const handleGoInfo = useCallback(() => goInfo(), [goInfo]);
-  const handleGoHero = useCallback(() => goHero(), [goHero]);
+    if (i18n.language !== lang) i18n.changeLanguage(lang);
+    savePreferredLang(lang);
+    document.documentElement.lang = lang;
+    document.body.classList.remove("ko", "en");
+    document.body.classList.add(lang);
+  }, [lang, i18n]);
 
   // Btn hover — terminal typewriter effect via GSAP
   useEffect(() => {
@@ -466,21 +384,36 @@ function App() {
 
   return (
     <div className="app-container" ref={containerRef}>
+      <Seo />
       <canvas className="webgl-canvas" ref={canvasRef} />
       <canvas className="trail-canvas" ref={trailCanvasRef} />
 
       {/* ── IntroLog: mounts immediately, acts as loading screen + intro ── */}
+      {/* Deep link (view !== hero): log acts as loading gate only — no line
+          cycling, and the scene snaps to the zoomed-in state instead of
+          playing the hero intro motion */}
       {showIntro && (
         <IntroLog
           loadProgress={loadProgress}
           isLoaded={isLoaded}
+          instant={view !== "hero"}
           onComplete={() => {
             setShowIntro(false);
             // Prefetch Works & Info chunks in the background after intro
             // so they're ready before the user clicks a nav button
             import("./components/Works");
             import("./components/Info");
-            heroIntroMotion();
+            if (view === "hero") {
+              heroIntroMotion();
+            } else {
+              applyViewInstant(view === "info" ? "info" : "works");
+              gsap.set(".webgl-canvas", { filter: "brightness(1)" });
+              gsap.fromTo(
+                heroContentRef.current,
+                { opacity: 0 },
+                { opacity: 1, duration: 0.5, ease: "linear" },
+              );
+            }
           }}
         />
       )}
@@ -494,7 +427,7 @@ function App() {
         }}
       >
         <header className="header">
-          <div className="header-left" onClick={handleGoHero}>
+          <div className="header-left" onClick={goHero}>
             <div className="title">ImChaewon</div>
             <div
               className={`header-sub-flip${view !== "hero" ? " is-sub" : ""}`}
@@ -509,15 +442,15 @@ function App() {
             <span className="menu-lang-label">&gt; LAN</span>
             <div className="menu-lang">
               <button
-                className={language === "ko" ? "btn-lang on" : "btn-lang"}
-                onClick={() => changeLanguage("ko")}
+                className={lang === "ko" ? "btn-lang on" : "btn-lang"}
+                onClick={() => switchLang("ko")}
               >
                 KO
               </button>
               <span className="divider"></span>
               <button
-                className={language === "en" ? "btn-lang on" : "btn-lang"}
-                onClick={() => changeLanguage("en")}
+                className={lang === "en" ? "btn-lang on" : "btn-lang"}
+                onClick={() => switchLang("en")}
               >
                 EN
               </button>
@@ -651,7 +584,7 @@ function App() {
             <button
               ref={buttonWorksRef}
               className="btn-hud btn-hud--works"
-              onClick={handleGoWorks}
+              onClick={goWorks}
             >
               <span className="btn-text">
                 {!isMobile && ">"} <span className="btn-text__text">works</span>
@@ -661,7 +594,7 @@ function App() {
             <button
               ref={buttonInfoRef}
               className="btn-hud btn-hud--info"
-              onClick={handleGoInfo}
+              onClick={goInfo}
             >
               <span className="btn-text">
                 {!isMobile && ">"} <span className="btn-text__text">info</span>
@@ -693,6 +626,9 @@ function App() {
           </Suspense>
         )}
       </div>
+
+      {/* Child routes render nothing visible; the catch-all redirect lives here */}
+      <Outlet />
     </div>
   );
 }

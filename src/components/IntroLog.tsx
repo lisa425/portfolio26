@@ -23,12 +23,14 @@ interface IntroLogProps {
   onComplete: () => void;
   loadProgress: number; // 0-100, shown as counter on first line
   isLoaded: boolean; // when true → start cycling after 0.5s
+  instant?: boolean; // deep link: skip line cycling, fade out as soon as loaded
 }
 
 export default function IntroLog({
   onComplete,
   loadProgress,
   isLoaded,
+  instant = false,
 }: IntroLogProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -93,6 +95,12 @@ export default function IntroLog({
   // `isLoaded` flips after WebGL + fonts gate + 500ms hold (see App `handleProgress`)
   useEffect(() => {
     if (!isLoaded || !visible || doneRef.current) return;
+
+    // Deep link: the log is only a loading gate — no cycling ceremony
+    if (instant) {
+      finish();
+      return;
+    }
 
     const track = trackRef.current;
     if (!track) return;
