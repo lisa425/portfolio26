@@ -165,10 +165,23 @@ export function useViewRouter({
         // overlay never has a frame without an opacity source.
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            for (const el of [outPage, inPage]) el?.classList.remove("page-sub--switching");
-            if (outPage) gsap.set(outPage, { clearProps: "opacity" });
-            if (outInner) gsap.set(outInner, { clearProps: "all" });
-            if (inPage) gsap.set(inPage, { clearProps: "opacity,zIndex" });
+            // Outgoing FIRST, with transitions disabled: clearing its inline
+            // opacity:1 must snap to 0, not run the 0.8s .page-sub transition —
+            // when the outgoing page sits later in the DOM (about), that slow
+            // fade would flash it on top of the incoming page the moment the
+            // zIndex lift below is removed. (React clobbered the switching
+            // class on its first re-render, so re-add it for this snap.)
+            if (outPage) {
+              outPage.classList.add("page-sub--switching");
+              gsap.set(outPage, { clearProps: "opacity" });
+              if (outInner) gsap.set(outInner, { clearProps: "all" });
+              void outPage.offsetWidth; // flush opacity:0 while transitions are off
+              outPage.classList.remove("page-sub--switching");
+            }
+            if (inPage) {
+              inPage.classList.remove("page-sub--switching");
+              gsap.set(inPage, { clearProps: "opacity,zIndex" });
+            }
             if (inInner) gsap.set(inInner, { clearProps: "all" });
           });
         });
@@ -196,10 +209,13 @@ export function useViewRouter({
         // section snap-hides, the incoming one starts its entry sequence
         // behind an inner that is still autoAlpha:0.
         setDirectActive(target);
-        // One frame so React commits isActive before the reveal begins
+        // Double rAF spans the React commit, so the target's isActive enter
+        // logic is guaranteed to have run before the reveal begins
         requestAnimationFrame(() => {
-          handoffDone = true;
-          maybeStartFadeIn();
+          requestAnimationFrame(() => {
+            handoffDone = true;
+            maybeStartFadeIn();
+          });
         });
       };
 

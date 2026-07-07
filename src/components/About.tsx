@@ -112,6 +112,15 @@ function About({ isActive }: AboutProps) {
   // ScrollTrigger setup: section tracking + reveal animations + line drawing
   useEffect(() => {
     const ctx = gsap.context(() => {
+      // 마운트 직후 ~500ms(리빌 트윈 생성 전)에 콘텐츠가 원래 상태로 노출되지
+      // 않도록 미리 숨김 — works↔about 직접 전환의 페이드인이 이 창을 드러내면
+      // "노출 → 리셋 → 리빌 재생"으로 두 번 재생되는 것처럼 보인다.
+      // 아래 fromTo 리빌이 같은 from 값에서 그대로 이어받는다.
+      if (!isMobileDevice) {
+        gsap.set('.about-section__body', { opacity: 0, y: 50 })
+        gsap.set('.about-node', { scale: 0, opacity: 0 })
+      }
+
       const timer = setTimeout(() => {
         updateLines()
 
