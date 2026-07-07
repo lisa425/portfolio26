@@ -160,6 +160,7 @@ function App() {
   // URL, and the hook runs the same camera-transition pipeline for every source
   const {
     view,
+    urlView,
     lang,
     hasShownWorks,
     hasShownAbout,
@@ -171,9 +172,14 @@ function App() {
     triggerWorksTransition,
     triggerAboutTransition,
     triggerHeroTransition,
+    applyViewInstant,
     isHeroActiveRef,
     isReady: !showIntro,
   });
+
+  // Header section nav: visible only while a section (works/about) is the
+  // URL target — hidden on hero, where the star buttons are the navigation
+  const sectionNavVisible = urlView === "works" || urlView === "about";
 
   // URL lang → i18next / <html> lang / <body> class / persisted preference
   // (one-way sync; the reverse direction is switchLang, which navigates)
@@ -437,6 +443,31 @@ function App() {
               <span className="header-sub-flip__back">← back</span>
             </div>
           </div>
+
+          {/* Section nav — visible in works/about only; hero keeps star buttons */}
+          <nav
+            className={`header-nav${sectionNavVisible ? " visible" : ""}`}
+            aria-label="Section navigation"
+          >
+            <span className="header-nav__label">&gt; NAV</span>
+            <div className="header-nav__menu">
+              <button
+                className={`btn-nav${urlView === "works" ? " on" : ""}`}
+                onClick={goWorks}
+                aria-current={urlView === "works" ? "page" : undefined}
+              >
+                WORKS
+              </button>
+              <span className="divider"></span>
+              <button
+                className={`btn-nav${urlView === "about" ? " on" : ""}`}
+                onClick={goAbout}
+                aria-current={urlView === "about" ? "page" : undefined}
+              >
+                ABOUT
+              </button>
+            </div>
+          </nav>
 
           <div className="header-right">
             <span className="menu-lang-label">&gt; LAN</span>

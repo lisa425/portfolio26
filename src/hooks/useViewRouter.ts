@@ -14,6 +14,7 @@ import {
   pathForView,
   viewFromPath,
   type SectionView,
+  type StableView,
   type ViewType,
 } from "../utils/routing";
 
@@ -23,11 +24,20 @@ interface UseViewRouterParams {
   triggerWorksTransition: TransitionTrigger;
   triggerAboutTransition: TransitionTrigger;
   triggerHeroTransition: TransitionTrigger;
+  /** Snaps camera/particles to a view's end state — used by the direct
+   *  works ↔ about switch (no zoom flight, the swap hides behind the overlay) */
+  applyViewInstant: (view: StableView) => void;
   /** Shared with useHeroScene — kept in sync with `view === "hero"` */
   isHeroActiveRef: React.RefObject<boolean>;
   /** false while IntroLog is showing; location changes are ignored until ready */
   isReady: boolean;
 }
+
+/** works ↔ about direct-switch motion (cut + directional fade) */
+const SWITCH_OUT = { y: -24, duration: 0.25, ease: "power2.in" };
+const SWITCH_IN = { y: 24, duration: 0.3, ease: "power2.out", delay: 0.15 };
+/** Give up waiting for the target section's chunk and commit without motion */
+const SWITCH_MOUNT_TIMEOUT_MS = 3000;
 
 /**
  * URL-first view orchestration.
@@ -42,6 +52,7 @@ export function useViewRouter({
   triggerWorksTransition,
   triggerAboutTransition,
   triggerHeroTransition,
+  applyViewInstant,
   isHeroActiveRef,
   isReady,
 }: UseViewRouterParams) {
@@ -108,6 +119,82 @@ export function useViewRouter({
     [killHeroTweens, triggerWorksTransition, triggerAboutTransition],
   );
 
+  // works ↔ about direct switch: no camera flight — the outgoing section's
+  // content fades out upward, the camera snaps behind the (near-opaque)
+  // section overlays, and the incoming section fades in from below.
+  // Both page-sub overlays share the same background color, so keeping both
+  // at full opacity during the swap makes the snap invisible.
+  const startDirectSwitch = useCallback(
+    (target: SectionView) => {
+      const from = viewRef.current as SectionView;
+      if (target === "works") setHasShownWorks(true);
+      else setHasShownAbout(true);
+
+      const outPage = document.querySelector<HTMLElement>(`.page-sub.${from}`);
+      const outInner = outPage?.querySelector<HTMLElement>(".inner") ?? null;
+
+      // Take over from the .page-sub CSS opacity transition for the whole
+      // switch — inline opacity keeps the outgoing overlay solid even after
+      // React drops its .visible class on the next commit.
+      outPage?.classList.add("page-sub--switching");
+      if (outPage) gsap.set(outPage, { opacity: 1 });
+
+      setView("transitioning");
+      killHeroTweens();
+      applyViewInstant(target);
+
+      if (outInner) {
+        gsap.fromTo(outInner, { y: 0, autoAlpha: 1 }, { ...SWITCH_OUT, autoAlpha: 0 });
+      }
+
+      const releaseControl = (inPage: HTMLElement | null, inInner: HTMLElement | null) => {
+        setView(target);
+        // Clear inline styles only after React has committed the new view's
+        // .visible class — double rAF spans that commit, so the incoming
+        // overlay never has a frame without an opacity source.
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            for (const el of [outPage, inPage]) el?.classList.remove("page-sub--switching");
+            if (outPage) gsap.set(outPage, { clearProps: "opacity" });
+            if (outInner) gsap.set(outInner, { clearProps: "all" });
+            if (inPage) gsap.set(inPage, { clearProps: "opacity,zIndex" });
+            if (inInner) gsap.set(inInner, { clearProps: "all" });
+          });
+        });
+      };
+
+      // The incoming section may still be mounting (lazy chunk + Suspense) —
+      // poll for its DOM before animating it in.
+      const waitStart = performance.now();
+      const animateIn = () => {
+        const inPage = document.querySelector<HTMLElement>(`.page-sub.${target}`);
+        const inInner = inPage?.querySelector<HTMLElement>(".inner");
+        if (!inPage || !inInner) {
+          if (performance.now() - waitStart < SWITCH_MOUNT_TIMEOUT_MS) {
+            requestAnimationFrame(animateIn);
+          } else {
+            releaseControl(null, null); // chunk never arrived — commit without motion
+          }
+          return;
+        }
+        inPage.classList.add("page-sub--switching");
+        // zIndex lifts the incoming overlay above the outgoing one regardless
+        // of their DOM order (works is rendered before about)
+        gsap.set(inPage, { opacity: 1, zIndex: 5 });
+        gsap.fromTo(inInner, { y: SWITCH_IN.y, autoAlpha: 0 }, {
+          y: 0,
+          autoAlpha: 1,
+          duration: SWITCH_IN.duration,
+          ease: SWITCH_IN.ease,
+          delay: SWITCH_IN.delay,
+          onComplete: () => releaseControl(inPage, inInner),
+        });
+      };
+      requestAnimationFrame(animateIn);
+    },
+    [applyViewInstant, killHeroTweens],
+  );
+
   const startHeroTransition = useCallback(() => {
     setView("transitioning");
     killHeroTweens();
@@ -134,11 +221,8 @@ export function useViewRouter({
     } else if (current === "hero") {
       startSectionTransition(target);
     } else {
-      // works ↔ about without passing hero — unreachable from Phase 1 UI.
-      // Defensive chain (zoom out, then into the other star); Phase 4 polishes this.
-      setView("transitioning");
-      killHeroTweens();
-      triggerHeroTransition(() => startSectionTransition(target));
+      // works ↔ about (header nav, back/forward): direct cut + fade
+      startDirectSwitch(target);
     }
   }, [
     location.pathname,
@@ -146,17 +230,21 @@ export function useViewRouter({
     view,
     startHeroTransition,
     startSectionTransition,
-    killHeroTweens,
-    triggerHeroTransition,
+    startDirectSwitch,
   ]);
 
+  // Section navigation is allowed from hero (star buttons → zoom) AND from
+  // the other section (header nav → direct switch); only mid-transition
+  // clicks and no-op clicks are ignored.
   const goWorks = useCallback(() => {
-    if (viewRef.current !== "hero") return;
+    const v = viewRef.current;
+    if (v === "transitioning" || v === "works") return;
     navigate(pathForView("works", lang));
   }, [navigate, lang]);
 
   const goAbout = useCallback(() => {
-    if (viewRef.current !== "hero") return;
+    const v = viewRef.current;
+    if (v === "transitioning" || v === "about") return;
     navigate(pathForView("about", lang));
   }, [navigate, lang]);
 
@@ -177,8 +265,14 @@ export function useViewRouter({
     [navigate, lang],
   );
 
+  // View the current URL points at — updates the instant navigation happens,
+  // unlike `view` which lags until the transition completes. Drives the
+  // header nav's visibility/active state so it never flickers mid-switch.
+  const urlView = viewFromPath(location.pathname);
+
   return {
     view,
+    urlView,
     lang,
     hasShownWorks,
     hasShownAbout,

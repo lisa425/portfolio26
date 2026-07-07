@@ -341,6 +341,77 @@ body.ko {
         }
       }
 
+      // ─── Section Nav (works/about에서만 노출, hero는 별 버튼이 담당) ───
+      // header가 space-between이라 좌우 폭 차이로 중앙이 틀어지므로 absolute 중앙 고정
+      .header-nav {
+        position: absolute;
+        left: 50%;
+        top: 2rem; // header padding-top과 정렬
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        font-size: min(vw(14, 370), 16px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+
+        &.visible {
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        @media (max-width: $tablet) {
+          top: 1.5rem;
+          font-size: min(vw(15, 370), 15px);
+        }
+        @media (max-width: $tablet) and (max-height: 700px) {
+          top: 1rem;
+          font-size: min(vw(12, 370), 12px);
+        }
+
+        .header-nav__label {
+          color: rgba(255, 255, 255, 0.7);
+          height: fit-content;
+        }
+
+        .header-nav__menu {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 0.2rem;
+          height: fit-content;
+
+          .divider {
+            width: 1px;
+            height: max(vw(12, 1920), 12px);
+            background-color: rgba(255, 255, 255, 0.4);
+          }
+
+          .btn-nav {
+            padding: 0 0.2rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            pointer-events: auto;
+            font-family: inherit;
+            font-size: inherit;
+            color: rgba(255, 255, 255, 0.7);
+            height: fit-content;
+
+            &.on {
+              color: $text-primary;
+            }
+            &:hover {
+              animation: textBlink 0.7s infinite;
+              @media (max-width: $tablet) {
+                animation: none;
+              }
+            }
+          }
+        }
+      }
+
       .header-right {
         flex-shrink: 0;
         display: flex;
@@ -864,6 +935,12 @@ body.ko {
   &.visible {
     opacity: 1;
     pointer-events: auto;
+  }
+
+  // works ↔ about 직접 전환 동안 GSAP이 opacity 전권을 갖는다 —
+  // .visible 탈착에 따른 CSS transition이 끼어들지 않도록 차단
+  &--switching {
+    transition: none;
   }
   .inner {
     width: 100%;
