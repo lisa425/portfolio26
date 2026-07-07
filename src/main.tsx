@@ -38,7 +38,9 @@ const redirectWithLang = (pathname: string) => {
 const router = createBrowserRouter([
   { path: '/', loader: () => redirectWithLang('/') },
   { path: `/${VIEW_SEGMENTS.works}`, loader: () => redirectWithLang(`/${VIEW_SEGMENTS.works}`) },
-  { path: `/${VIEW_SEGMENTS.info}`, loader: () => redirectWithLang(`/${VIEW_SEGMENTS.info}`) },
+  { path: `/${VIEW_SEGMENTS.about}`, loader: () => redirectWithLang(`/${VIEW_SEGMENTS.about}`) },
+  // Legacy (v2.0): /info was renamed to /about in v3.0 — old links redirect
+  { path: '/info', loader: () => redirectWithLang(`/${VIEW_SEGMENTS.about}`) },
   {
     path: '/:lang',
     // Unknown language segment (/jp/...) → preferred-language hero
@@ -50,7 +52,18 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: null },
       { path: VIEW_SEGMENTS.works, element: null },
-      { path: VIEW_SEGMENTS.info, element: null },
+      { path: VIEW_SEGMENTS.about, element: null },
+      // Legacy (v2.0): /:lang/info → /:lang/about
+      {
+        path: 'info',
+        loader: ({ params }) =>
+          redirect(
+            pathForView(
+              'about',
+              isSupportedLang(params.lang) ? params.lang : getPreferredLang(),
+            ),
+          ),
+      },
       // Unknown view under a valid lang (/en/foo) → that language's hero
       {
         path: '*',

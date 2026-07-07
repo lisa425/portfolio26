@@ -19,7 +19,7 @@ const heroConfig = {
     z: 22, // Move camera back to see the volumetric shapes
     x: window.innerWidth < 1280 ? -7.0 : -3.5, // 별이 화면 오른쪽에 보이도록 카메라를 좌측으로
     y: window.innerWidth < 1280 ? -2.0 : -0.0, // 별이 화면 위쪽에 보이도록 카메라를 아래로
-    // 별 내부로 줌인이 완료된 시점의 카메라 상태 (works/info 진입 완료 상태)
+    // 별 내부로 줌인이 완료된 시점의 카메라 상태 (works/about 진입 완료 상태)
     zoomedIn: { z: 1.0, fov: 8 },
   },
   render: {
@@ -81,20 +81,20 @@ export const useHeroScene = (
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
   containerRef: React.RefObject<HTMLElement | null>,
   buttonWorksRef?: React.RefObject<HTMLElement | null>,
-  buttonInfoRef?: React.RefObject<HTMLElement | null>,
+  buttonAboutRef?: React.RefObject<HTMLElement | null>,
   onProgress?: (progress: number) => void,
   isHeroActiveRef?: React.RefObject<boolean>,
 ): {
   triggerWorksTransition: (onComplete: () => void) => void;
-  triggerInfoTransition: (onComplete: () => void) => void;
+  triggerAboutTransition: (onComplete: () => void) => void;
   triggerHeroTransition: (onComplete: () => void) => void;
   triggerAssembly: () => void;
-  applyViewInstant: (view: "hero" | "works" | "info") => void;
+  applyViewInstant: (view: "hero" | "works" | "about") => void;
 } => {
   const worksTransitionRef = useRef<((onComplete: () => void) => void) | null>(
     null,
   );
-  const infoTransitionRef = useRef<((onComplete: () => void) => void) | null>(
+  const aboutTransitionRef = useRef<((onComplete: () => void) => void) | null>(
     null,
   );
   const heroTransitionRef = useRef<((onComplete: () => void) => void) | null>(
@@ -102,7 +102,7 @@ export const useHeroScene = (
   );
   const assemblyRef = useRef<(() => void) | null>(null);
   const applyInstantRef = useRef<
-    ((view: "hero" | "works" | "info") => void) | null
+    ((view: "hero" | "works" | "about") => void) | null
   >(null);
 
   const { isMobile } = useMobile();
@@ -386,7 +386,7 @@ export const useHeroScene = (
 
     // Button hover effect: 버튼에 마우스오버하면 구멍 효과 발생
     let targetButtonHoverStar1 = 0.0; // star1용 (btn-go-works)
-    let targetButtonHoverStar2 = 0.0; // star2용 (btn-go-info)
+    let targetButtonHoverStar2 = 0.0; // star2용 (btn-go-about)
     let buttonCleanup: (() => void) | null = null;
 
     // btn-go-works: star1에만 효과
@@ -425,9 +425,9 @@ export const useHeroScene = (
       };
     }
 
-    // btn-go-info: star2에만 효과
-    if (buttonInfoRef?.current) {
-      const button = buttonInfoRef.current;
+    // btn-go-about: star2에만 효과
+    if (buttonAboutRef?.current) {
+      const button = buttonAboutRef.current;
 
       const handleButtonMouseEnter = () => {
         if (isTransitioning) return;
@@ -597,7 +597,7 @@ export const useHeroScene = (
           mouseParams.currentY - star2Points.position.y,
         );
 
-        // Smooth lerp for uButtonHover transition (btn-go-info 호버 시 0→1, 마우스아웃 시 1→0)
+        // Smooth lerp for uButtonHover transition (btn-go-about 호버 시 0→1, 마우스아웃 시 1→0)
         const currentButtonHover = star2Mat.uniforms.uButtonHover.value;
         star2Mat.uniforms.uButtonHover.value +=
           (targetButtonHoverStar2 - currentButtonHover) * 0.1; // 부드러운 트랜지션 속도
@@ -674,13 +674,13 @@ export const useHeroScene = (
         buttonWorksRef.current.style.left = `${s1.x}px`;
         buttonWorksRef.current.style.top = `${s1.y}px`;
       }
-      if (buttonInfoRef?.current) {
+      if (buttonAboutRef?.current) {
         const s2 = projectHoleToScreen(
           nebulaMat.uniforms.uStar2Position.value.x,
           nebulaMat.uniforms.uStar2Position.value.y,
         );
-        buttonInfoRef.current.style.left = `${s2.x}px`;
-        buttonInfoRef.current.style.top = `${s2.y}px`;
+        buttonAboutRef.current.style.left = `${s2.x}px`;
+        buttonAboutRef.current.style.top = `${s2.y}px`;
       }
     };
 
@@ -741,7 +741,7 @@ export const useHeroScene = (
       );
     };
 
-    infoTransitionRef.current = (onComplete: () => void) => {
+    aboutTransitionRef.current = (onComplete: () => void) => {
       isTransitioning = true;
       targetButtonHoverStar2 = 1.0;
       isButtonHoveredStar2 = true;
@@ -780,14 +780,14 @@ export const useHeroScene = (
 
     // Jump straight to a transition's END state without any tween.
     // Used for deep links / refreshes where the intro & camera flight are skipped.
-    applyInstantRef.current = (view: "hero" | "works" | "info") => {
+    applyInstantRef.current = (view: "hero" | "works" | "about") => {
       // Particles: assembled star shape (assembly tween's t=1 state)
       (star1Geo.attributes.position.array as Float32Array).set(originalPos1);
       star1Geo.attributes.position.needsUpdate = true;
       (star2Geo.attributes.position.array as Float32Array).set(originalPos2);
       star2Geo.attributes.position.needsUpdate = true;
 
-      // Camera: same end values the works/info/hero transitions tween towards
+      // Camera: same end values the works/about/hero transitions tween towards
       if (view === "hero") {
         camera.position.set(
           heroConfig.camera.x,
@@ -937,7 +937,7 @@ export const useHeroScene = (
     // 10. CLEANUP
     return () => {
       worksTransitionRef.current = null;
-      infoTransitionRef.current = null;
+      aboutTransitionRef.current = null;
       heroTransitionRef.current = null;
       assemblyRef.current = null;
 
@@ -974,14 +974,14 @@ export const useHeroScene = (
       scene.clear();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvasRef, containerRef, buttonWorksRef, buttonInfoRef, isHeroActiveRef]);
+  }, [canvasRef, containerRef, buttonWorksRef, buttonAboutRef, isHeroActiveRef]);
 
   const triggerWorksTransition = useCallback((onComplete: () => void) => {
     worksTransitionRef.current?.(onComplete);
   }, []);
 
-  const triggerInfoTransition = useCallback((onComplete: () => void) => {
-    infoTransitionRef.current?.(onComplete);
+  const triggerAboutTransition = useCallback((onComplete: () => void) => {
+    aboutTransitionRef.current?.(onComplete);
   }, []);
 
   const triggerHeroTransition = useCallback((onComplete: () => void) => {
@@ -989,7 +989,7 @@ export const useHeroScene = (
   }, []);
 
   const applyViewInstant = useCallback(
-    (view: "hero" | "works" | "info") => {
+    (view: "hero" | "works" | "about") => {
       applyInstantRef.current?.(view);
     },
     [],
@@ -1001,7 +1001,7 @@ export const useHeroScene = (
 
   return {
     triggerWorksTransition,
-    triggerInfoTransition,
+    triggerAboutTransition,
     triggerHeroTransition,
     triggerAssembly,
     applyViewInstant,

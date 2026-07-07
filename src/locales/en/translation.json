@@ -9,8 +9,8 @@
       "title": "Works | Chaewon",
       "description": "Selected interactive web projects — game promotion sites, 3D galleries, and immersive brand experiences."
     },
-    "info": {
-      "title": "Info | Chaewon",
+    "about": {
+      "title": "About | Chaewon",
       "description": "About Chaewon — frontend developer focused on interactive experiences, structure and motion. Career, skills and contact."
     }
   },
@@ -46,7 +46,11 @@
         "description": "Built a 3D gallery from scratch to showcase 21 years of brand illustrations\nConsolidated 162 VBOs into a single draw call via shared geometry instancing, significantly reducing GPU memory overhead\nDeveloped scroll-driven interaction logic for gallery rotation and year-counting animations with GSAP\nStabilising input responsiveness through debouncing",
         "stack": "HTML · CSS · JavaScript · Three.js · GSAP",
         "thumbnail": "/assets/images/br_thumb1.jpg",
-        "img": ["/assets/images/br_img1.jpg", "/assets/images/br_img2.jpg", "/assets/images/br_img3.jpg"],
+        "img": [
+          "/assets/images/br_img1.jpg",
+          "/assets/images/br_img2.jpg",
+          "/assets/images/br_img3.jpg"
+        ],
         "url": "https://baram.nexon.com/E221215/Intro"
       },
       {
@@ -92,21 +96,25 @@
         "description": "Built an anniversary intro page featuring spring-themed particle graphics, with animation sequences designed to set the tone for the update\nImplemented adaptive layouts and animations across mobile and PC to ensure a consistent experience on all screen sizes",
         "stack": "React · TypeScript",
         "thumbnail": "/assets/images/mm_thumb1.jpg",
-        "img": ["/assets/images/mm_img1.jpg", "/assets/images/mm_img2.jpg", "/assets/images/mm_img3.jpg"],
+        "img": [
+          "/assets/images/mm_img1.jpg",
+          "/assets/images/mm_img2.jpg",
+          "/assets/images/mm_img3.jpg"
+        ],
         "url": "https://mabinogimobile.nexon.com/events2026/0326/1stanniversary"
       }
     ]
   },
-  "info": {
+  "about": {
     "name": "Hello, I'm Chaewon!",
     "role": "Frontend Developer",
     "contact": {
       "email": "imchaewon.dev@gmail.com",
-      "phone": "0451 481 874",
+      "phone": "+61 451 481 874",
       "LinkedIn": "https://www.linkedin.com/in/chxxwn",
       "Blog": "https://iamchaewon.tistory.com/"
     },
-    "about": "Frontend developer crafting both sides of the screen — interactions users see, and environments developers feel. Having studied both design and engineering, I care about craft on screen and the systems behind it. I'm drawn to building not just polished interfaces, but better ways to build them: structure, automation, and the kind of tooling that makes a team's day-to-day a little less painful.",
+    "intro": "Frontend developer crafting both sides of the screen — interactions users see, and environments developers feel. Having studied both design and engineering, I care about craft on screen and the systems behind it. I'm drawn to building not just polished interfaces, but better ways to build them: structure, automation, and the kind of tooling that makes a team's day-to-day a little less painful.",
     "workExperience": {
       "title": "WORK EXPERIENCE",
       "jobs": [
@@ -118,15 +126,21 @@
           "projects": [
             {
               "name": "Mabinogi Web Development Team",
-              "bullets": ["Jan 2026 - Jun 2026"]
+              "bullets": [
+                "Jan 2026 - Jun 2026"
+              ]
             },
             {
               "name": "Game Web Frontend Development Team",
-              "bullets": ["Apr 2025 - Dec 2025"]
+              "bullets": [
+                "Apr 2025 - Dec 2025"
+              ]
             },
             {
               "name": "Live Web Frontend Development Team",
-              "bullets": ["May 2022 - Mar 2025"]
+              "bullets": [
+                "May 2022 - Mar 2025"
+              ]
             }
           ]
         }
@@ -145,22 +159,33 @@
         },
         {
           "name": "Backend",
-          "items": ["Node.js, NestJS, Python, Django", "Supabase, MongoDB, MySQL"]
+          "items": [
+            "Node.js, NestJS, Python, Django",
+            "Supabase, MongoDB, MySQL"
+          ]
         },
         {
           "name": "AI",
-          "items": ["Claude Code, Codex, Cursor, Antigravity"]
+          "items": [
+            "Claude Code, Codex, Cursor, Antigravity"
+          ]
         },
         {
           "name": "Collaboration",
-          "items": ["GitHub, GitLab, Figma, Adobe Photoshop", "Jira, Slack, Confluence, Notion"]
+          "items": [
+            "GitHub, GitLab, Figma, Adobe Photoshop",
+            "Jira, Slack, Confluence, Notion"
+          ]
         }
       ]
     },
     "education": {
       "school": "Sookmyung Women's University",
       "period": "Mar 2017 – Aug 2022 | Seoul, South Korea",
-      "bullets": ["Bachelor of Arts in Visual & Media Design", "Bachelor of Science in IT Engineering"]
+      "bullets": [
+        "Bachelor of Arts in Visual & Media Design",
+        "Bachelor of Science in IT Engineering"
+      ]
     }
   }
 }

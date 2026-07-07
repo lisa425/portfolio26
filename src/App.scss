@@ -98,7 +98,7 @@ body.ko {
   }
 }
 
-.info .info-section__content {
+.about .about-section__content {
   user-select: text;
   &::selection {
     background: #fff;
@@ -349,6 +349,13 @@ body.ko {
         gap: 0.8rem;
         position: relative;
         height: fit-content;
+        font-size: min(vw(14, 370), 16px);
+        @media (max-width: $tablet) {
+          font-size: min(vw(15, 370), 15px);
+        }
+        @media (max-width: $tablet) and (max-height: 700px) {
+          font-size: min(vw(12, 370), 12px);
+        }
 
         .divider {
           width: 1px;
@@ -357,15 +364,8 @@ body.ko {
         }
 
         .menu-lang-label {
-          font-size: max(vw(13, 1920), 15px);
           color: rgba(255, 255, 255, 0.7);
           height: fit-content;
-          @media (max-width: $tablet) {
-            font-size: max(vw(14, 1920), 16px);
-          }
-          @media (max-width: $tablet) and (max-height: 700px) {
-            font-size: min(vw(12, 370), 12px);
-          }
         }
         .menu-lang {
           display: flex;
@@ -373,7 +373,6 @@ body.ko {
           align-items: center;
           gap: 0.2rem;
           position: relative;
-          font-size: max(vw(14, 1920), 16px);
           height: fit-content;
 
           .btn-lang {
@@ -387,12 +386,7 @@ body.ko {
             background-color: transparent;
             padding: 0 0.2rem;
             height: fit-content;
-            @media (max-width: $tablet) {
-              font-size: max(vw(14, 1920), 16px);
-            }
-            @media (max-width: $tablet) and (max-height: 700px) {
-              font-size: min(vw(12, 370), 12px);
-            }
+
             &.on {
               color: $text-primary;
             }
@@ -841,7 +835,7 @@ body.ko {
             margin-left: 0;
           }
         }
-        &--info .btn-text {
+        &--about .btn-text {
           margin-left: -12%;
           @media (max-width: $tablet) {
             margin-left: 0;
@@ -1896,14 +1890,14 @@ body.ko {
   }
 }
 
-// ─── Info Section ───
-.info {
+// ─── About Section ───
+.about {
   ::selection {
     background: #fff;
     color: #000;
   }
 }
-.info-inner {
+.about-inner {
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
@@ -1922,7 +1916,7 @@ body.ko {
 }
 
 // --- Terminal Progress Nav (bottom bar) ---
-.info-nav {
+.about-nav {
   &__sections {
     display: flex;
     gap: 1.2rem;
@@ -1952,7 +1946,7 @@ body.ko {
 }
 
 // --- SVG Lines ---
-.info-lines {
+.about-lines {
   position: absolute;
   top: 0;
   left: 0;
@@ -1965,7 +1959,7 @@ body.ko {
   }
 }
 
-.info-line {
+.about-line {
   stroke: rgba($text-primary, 0.35); // 0.15 → 0.35: 라인 가시성 개선
   stroke-width: 1;
   fill: none;
@@ -1974,7 +1968,7 @@ body.ko {
 // --- Constellation Layout Content ---
 // 중앙 정렬된 컬럼 컨테이너: 창이 줄어도 지그재그가 중앙 기준으로 유지되고
 // 양옆 여백만 줄어든다 (섹션은 --left/--right로 컨테이너 가장자리에 정렬)
-.info-content-scroll {
+.about-content-scroll {
   width: min(1240px, 92vw);
   margin: 0 auto;
   padding-top: calc(20 * var(--vhu));
@@ -1992,7 +1986,7 @@ body.ko {
     align-items: center;
   }
 }
-.info-section {
+.about-section {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
@@ -2022,7 +2016,7 @@ body.ko {
   }
 }
 
-.info-section__body {
+.about-section__body {
   width: max-content;
   max-width: 100%;
   position: relative;
@@ -2034,21 +2028,21 @@ body.ko {
   }
 }
 
-.info-section__header {
+.about-section__header {
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-bottom: none;
   padding: 0.6rem 1.2rem;
   background: rgba(255, 255, 255, 0.05);
   width: max-content;
 
-  .info-section__id {
+  .about-section__id {
     font-size: 10px;
     color: rgba(255, 255, 255, 0.6);
     letter-spacing: 0.1em;
   }
 }
 
-.info-section__content {
+.about-section__content {
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 3rem;
@@ -2115,7 +2109,7 @@ body.ko {
 }
 
 // --- Node Points ---
-.info-node {
+.about-node {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2148,7 +2142,7 @@ body.ko {
   }
 }
 
-.info-name {
+.about-name {
   font-size: max(vw(32, 1920), 28px);
   font-weight: 400;
   margin: 0 0 1rem 0;
@@ -2160,7 +2154,7 @@ body.ko {
   }
 }
 
-.info-role {
+.about-role {
   font-size: max(vw(12, 1920), 12px);
   color: rgba(255, 255, 255, 0.5);
   margin: 0 0 2rem 0;
@@ -2172,7 +2166,7 @@ body.ko {
   }
 }
 
-.info-about {
+.about-intro {
   font-size: max(vw(15, 1920), 15px);
   opacity: 0.75;
   line-height: 1.8;
@@ -2185,7 +2179,7 @@ body.ko {
   }
 }
 
-.info-contact {
+.about-contact {
   display: grid;
   gap: 1.5rem;
   font-size: max(vw(14, 1920), 14px);
@@ -2207,7 +2201,7 @@ body.ko {
   }
 }
 
-.info-block-title {
+.about-block-title {
   font-size: max(vw(16, 1920), 14px);
   color: rgba(255, 255, 255, 0.5);
   font-weight: 400;
@@ -2468,8 +2462,8 @@ body.ko {
   }
 }
 
-.info-section__footer {
-  width: 100vw;
+.about-section__footer {
+  width: 100%;
   height: calc(10 * var(--vhu));
   text-align: center;
   font-size: max(vw(10, 1920), 10px);

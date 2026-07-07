@@ -21,9 +21,9 @@ import { useCursorTrail } from "./hooks/useCursorTrail";
 import IntroLog from "./components/IntroLog";
 import Seo from "./components/Seo";
 
-// Code-split: Works & Info are lazy-loaded on first visit
+// Code-split: Works & About are lazy-loaded on first visit
 const Works = lazy(() => import("./components/Works"));
-const Info = lazy(() => import("./components/Info"));
+const About = lazy(() => import("./components/About"));
 
 // ---------------------------------------------------------------------------
 // Static timezone info — computed once at module load, never on re-render
@@ -49,7 +49,7 @@ function App() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const buttonWorksRef = useRef<HTMLButtonElement>(null);
-  const buttonInfoRef = useRef<HTMLButtonElement>(null);
+  const buttonAboutRef = useRef<HTMLButtonElement>(null);
   const trailCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const [loadProgress, setLoadProgress] = useState(0);
@@ -141,7 +141,7 @@ function App() {
   // Three.js Scene
   const {
     triggerWorksTransition,
-    triggerInfoTransition,
+    triggerAboutTransition,
     triggerHeroTransition,
     triggerAssembly,
     applyViewInstant,
@@ -149,7 +149,7 @@ function App() {
     canvasRef,
     containerRef,
     buttonWorksRef,
-    buttonInfoRef,
+    buttonAboutRef,
     handleProgress,
     isHeroActiveRef,
   );
@@ -162,14 +162,14 @@ function App() {
     view,
     lang,
     hasShownWorks,
-    hasShownInfo,
+    hasShownAbout,
     goWorks,
-    goInfo,
+    goAbout,
     goHero,
     switchLang,
   } = useViewRouter({
     triggerWorksTransition,
-    triggerInfoTransition,
+    triggerAboutTransition,
     triggerHeroTransition,
     isHeroActiveRef,
     isReady: !showIntro,
@@ -189,7 +189,7 @@ function App() {
   useEffect(() => {
     if (!isLoaded) return;
 
-    const btnRefs = [buttonWorksRef.current, buttonInfoRef.current];
+    const btnRefs = [buttonWorksRef.current, buttonAboutRef.current];
     const cleanups: (() => void)[] = [];
 
     btnRefs.forEach((btn) => {
@@ -399,14 +399,14 @@ function App() {
           instant={view !== "hero"}
           onComplete={() => {
             setShowIntro(false);
-            // Prefetch Works & Info chunks in the background after intro
+            // Prefetch Works & About chunks in the background after intro
             // so they're ready before the user clicks a nav button
             import("./components/Works");
-            import("./components/Info");
+            import("./components/About");
             if (view === "hero") {
               heroIntroMotion();
             } else {
-              applyViewInstant(view === "info" ? "info" : "works");
+              applyViewInstant(view === "about" ? "about" : "works");
               gsap.set(".webgl-canvas", { filter: "brightness(1)" });
               gsap.fromTo(
                 heroContentRef.current,
@@ -592,12 +592,12 @@ function App() {
               </span>
             </button>
             <button
-              ref={buttonInfoRef}
-              className="btn-hud btn-hud--info"
-              onClick={goInfo}
+              ref={buttonAboutRef}
+              className="btn-hud btn-hud--about"
+              onClick={goAbout}
             >
               <span className="btn-text">
-                {!isMobile && ">"} <span className="btn-text__text">info</span>
+                {!isMobile && ">"} <span className="btn-text__text">about</span>
                 <span className="btn-text__cursor"></span>
               </span>
             </button>
@@ -615,13 +615,13 @@ function App() {
           </Suspense>
         )}
 
-        {/* Info — lazy-loaded on first visit, kept mounted after */}
-        {hasShownInfo && (
+        {/* About — lazy-loaded on first visit, kept mounted after */}
+        {hasShownAbout && (
           <Suspense fallback={null}>
             <section
-              className={`page-sub info${view === "info" ? " visible" : ""}`}
+              className={`page-sub about${view === "about" ? " visible" : ""}`}
             >
-              <Info isActive={view === "info"} />
+              <About isActive={view === "about"} />
             </section>
           </Suspense>
         )}

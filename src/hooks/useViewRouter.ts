@@ -21,7 +21,7 @@ type TransitionTrigger = (onComplete: () => void) => void;
 
 interface UseViewRouterParams {
   triggerWorksTransition: TransitionTrigger;
-  triggerInfoTransition: TransitionTrigger;
+  triggerAboutTransition: TransitionTrigger;
   triggerHeroTransition: TransitionTrigger;
   /** Shared with useHeroScene — kept in sync with `view === "hero"` */
   isHeroActiveRef: React.RefObject<boolean>;
@@ -40,7 +40,7 @@ interface UseViewRouterParams {
  */
 export function useViewRouter({
   triggerWorksTransition,
-  triggerInfoTransition,
+  triggerAboutTransition,
   triggerHeroTransition,
   isHeroActiveRef,
   isReady,
@@ -63,10 +63,10 @@ export function useViewRouter({
   const viewRef = useRef<ViewType>(view);
   const heroAnimTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Keep-alive: mount Works/Info on first visit, stay mounted to preserve state
+  // Keep-alive: mount Works/About on first visit, stay mounted to preserve state
   // Set at transition START (not on view change) to avoid Suspense flash
   const [hasShownWorks, setHasShownWorks] = useState(view === "works");
-  const [hasShownInfo, setHasShownInfo] = useState(view === "info");
+  const [hasShownAbout, setHasShownAbout] = useState(view === "about");
 
   // useLayoutEffect (not useEffect): the refs must be in sync the moment the
   // commit lands — guards like switchLang read viewRef on the very next click,
@@ -97,15 +97,15 @@ export function useViewRouter({
   const startSectionTransition = useCallback(
     (target: SectionView) => {
       if (target === "works") setHasShownWorks(true);
-      else setHasShownInfo(true);
+      else setHasShownAbout(true);
       setView("transitioning");
       killHeroTweens();
       gsap.set(".hero", { opacity: 0 });
       const trigger =
-        target === "works" ? triggerWorksTransition : triggerInfoTransition;
+        target === "works" ? triggerWorksTransition : triggerAboutTransition;
       trigger(() => setView(target));
     },
-    [killHeroTweens, triggerWorksTransition, triggerInfoTransition],
+    [killHeroTweens, triggerWorksTransition, triggerAboutTransition],
   );
 
   const startHeroTransition = useCallback(() => {
@@ -134,7 +134,7 @@ export function useViewRouter({
     } else if (current === "hero") {
       startSectionTransition(target);
     } else {
-      // works ↔ info without passing hero — unreachable from Phase 1 UI.
+      // works ↔ about without passing hero — unreachable from Phase 1 UI.
       // Defensive chain (zoom out, then into the other star); Phase 4 polishes this.
       setView("transitioning");
       killHeroTweens();
@@ -155,9 +155,9 @@ export function useViewRouter({
     navigate(pathForView("works", lang));
   }, [navigate, lang]);
 
-  const goInfo = useCallback(() => {
+  const goAbout = useCallback(() => {
     if (viewRef.current !== "hero") return;
-    navigate(pathForView("info", lang));
+    navigate(pathForView("about", lang));
   }, [navigate, lang]);
 
   const goHero = useCallback(() => {
@@ -181,9 +181,9 @@ export function useViewRouter({
     view,
     lang,
     hasShownWorks,
-    hasShownInfo,
+    hasShownAbout,
     goWorks,
-    goInfo,
+    goAbout,
     goHero,
     switchLang,
   };
