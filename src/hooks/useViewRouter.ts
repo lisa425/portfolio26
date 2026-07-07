@@ -35,7 +35,7 @@ interface UseViewRouterParams {
 
 /** works ↔ about direct-switch motion (cut + directional fade) */
 const SWITCH_OUT = { y: -24, duration: 0.25, ease: "power2.in" };
-const SWITCH_IN = { y: 24, duration: 0.3, ease: "power2.out", delay: 0.15 };
+const SWITCH_IN = { y: 24, duration: 0.3, ease: "power2.out" };
 /** Give up waiting for the target section's chunk and commit without motion */
 const SWITCH_MOUNT_TIMEOUT_MS = 3000;
 
@@ -78,6 +78,12 @@ export function useViewRouter({
   // Set at transition START (not on view change) to avoid Suspense flash
   const [hasShownWorks, setHasShownWorks] = useState(view === "works");
   const [hasShownAbout, setHasShownAbout] = useState(view === "about");
+
+  // During a direct works ↔ about switch, `view` sits at "transitioning" but
+  // section content must stay/become live at precise moments (see
+  // startDirectSwitch). directActive overrides the view-derived active section
+  // for that window only; null everywhere else.
+  const [directActive, setDirectActive] = useState<SectionView | null>(null);
 
   // useLayoutEffect (not useEffect): the refs must be in sync the moment the
   // commit lands — guards like switchLang read viewRef on the very next click,
@@ -124,6 +130,13 @@ export function useViewRouter({
   // section overlays, and the incoming section fades in from below.
   // Both page-sub overlays share the same background color, so keeping both
   // at full opacity during the swap makes the snap invisible.
+  //
+  // Content activation is handed off in the middle of the switch (via
+  // directActive → activeSection): the outgoing section stays "active" until
+  // its fade-out finishes (its isActive=false branch hides content instantly,
+  // which must not happen while it's still on screen), and the incoming
+  // section activates BEFORE its fade-in starts so entry animations and
+  // scroll resets run while its inner is still invisible.
   const startDirectSwitch = useCallback(
     (target: SectionView) => {
       const from = viewRef.current as SectionView;
@@ -139,16 +152,14 @@ export function useViewRouter({
       outPage?.classList.add("page-sub--switching");
       if (outPage) gsap.set(outPage, { opacity: 1 });
 
+      setDirectActive(from); // keep outgoing content live through its fade-out
       setView("transitioning");
       killHeroTweens();
       applyViewInstant(target);
 
-      if (outInner) {
-        gsap.fromTo(outInner, { y: 0, autoAlpha: 1 }, { ...SWITCH_OUT, autoAlpha: 0 });
-      }
-
       const releaseControl = (inPage: HTMLElement | null, inInner: HTMLElement | null) => {
         setView(target);
+        setDirectActive(null);
         // Clear inline styles only after React has committed the new view's
         // .visible class — double rAF spans that commit, so the incoming
         // overlay never has a frame without an opacity source.
@@ -163,15 +174,54 @@ export function useViewRouter({
         });
       };
 
+      // Fade-in starts only when BOTH are true: the out-fade finished (and the
+      // activation handoff committed), and the incoming DOM is mounted with
+      // its inner hidden. Either can happen first (lazy chunk vs. tween).
+      let mounted: { inPage: HTMLElement; inInner: HTMLElement } | null = null;
+      let handoffDone = false;
+      const maybeStartFadeIn = () => {
+        if (!mounted || !handoffDone) return;
+        const { inPage, inInner } = mounted;
+        gsap.to(inInner, {
+          y: 0,
+          autoAlpha: 1,
+          duration: SWITCH_IN.duration,
+          ease: SWITCH_IN.ease,
+          onComplete: () => releaseControl(inPage, inInner),
+        });
+      };
+
+      const finishHandoff = () => {
+        // Hand content activation to the target: the (now invisible) outgoing
+        // section snap-hides, the incoming one starts its entry sequence
+        // behind an inner that is still autoAlpha:0.
+        setDirectActive(target);
+        // One frame so React commits isActive before the reveal begins
+        requestAnimationFrame(() => {
+          handoffDone = true;
+          maybeStartFadeIn();
+        });
+      };
+
+      if (outInner) {
+        gsap.fromTo(
+          outInner,
+          { y: 0, autoAlpha: 1 },
+          { ...SWITCH_OUT, autoAlpha: 0, onComplete: finishHandoff },
+        );
+      } else {
+        finishHandoff();
+      }
+
       // The incoming section may still be mounting (lazy chunk + Suspense) —
-      // poll for its DOM before animating it in.
+      // poll for its DOM, hide its inner, then wait for the handoff.
       const waitStart = performance.now();
-      const animateIn = () => {
+      const pollMount = () => {
         const inPage = document.querySelector<HTMLElement>(`.page-sub.${target}`);
         const inInner = inPage?.querySelector<HTMLElement>(".inner");
         if (!inPage || !inInner) {
           if (performance.now() - waitStart < SWITCH_MOUNT_TIMEOUT_MS) {
-            requestAnimationFrame(animateIn);
+            requestAnimationFrame(pollMount);
           } else {
             releaseControl(null, null); // chunk never arrived — commit without motion
           }
@@ -179,18 +229,14 @@ export function useViewRouter({
         }
         inPage.classList.add("page-sub--switching");
         // zIndex lifts the incoming overlay above the outgoing one regardless
-        // of their DOM order (works is rendered before about)
+        // of their DOM order (works is rendered before about); the inner is
+        // hidden in the same tick, so no frame of it ever paints early.
         gsap.set(inPage, { opacity: 1, zIndex: 5 });
-        gsap.fromTo(inInner, { y: SWITCH_IN.y, autoAlpha: 0 }, {
-          y: 0,
-          autoAlpha: 1,
-          duration: SWITCH_IN.duration,
-          ease: SWITCH_IN.ease,
-          delay: SWITCH_IN.delay,
-          onComplete: () => releaseControl(inPage, inInner),
-        });
+        gsap.set(inInner, { y: SWITCH_IN.y, autoAlpha: 0 });
+        mounted = { inPage, inInner };
+        maybeStartFadeIn();
       };
-      requestAnimationFrame(animateIn);
+      requestAnimationFrame(pollMount);
     },
     [applyViewInstant, killHeroTweens],
   );
@@ -270,9 +316,16 @@ export function useViewRouter({
   // header nav's visibility/active state so it never flickers mid-switch.
   const urlView = viewFromPath(location.pathname);
 
+  // Which section's CONTENT should be live (drives isActive props). Normally
+  // derived from view; during a direct switch, directActive controls the
+  // handoff timing so enter/exit side effects never run while visible.
+  const activeSection: SectionView | null =
+    directActive ?? (view === "works" || view === "about" ? view : null);
+
   return {
     view,
     urlView,
+    activeSection,
     lang,
     hasShownWorks,
     hasShownAbout,

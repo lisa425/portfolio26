@@ -161,6 +161,7 @@ function App() {
   const {
     view,
     urlView,
+    activeSection,
     lang,
     hasShownWorks,
     hasShownAbout,
@@ -641,7 +642,7 @@ function App() {
             <section
               className={`page-sub works${view === "works" ? " visible" : ""}`}
             >
-              <Works isActive={view === "works"} />
+              <Works isActive={activeSection === "works"} />
             </section>
           </Suspense>
         )}
@@ -652,7 +653,7 @@ function App() {
             <section
               className={`page-sub about${view === "about" ? " visible" : ""}`}
             >
-              <About isActive={view === "about"} />
+              <About isActive={activeSection === "about"} />
             </section>
           </Suspense>
         )}
