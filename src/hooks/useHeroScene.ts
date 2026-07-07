@@ -854,7 +854,7 @@ export const useHeroScene = (
 
       camera.aspect = width / height;
 
-      const isMobile = width <= 1000;
+      const isMobile = width <= 1023; // SCSS $tablet과 동기
       let currentCameraX = -3.5;
       let currentCameraY = 0.0;
       let s1X = -6,

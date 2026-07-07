@@ -30,7 +30,6 @@ type WorkType = {
 const PANEL_IMG_PLACEHOLDER_H = 240;
 
 function WorkDetailImage({ src, index }: { src: string; index: number }) {
-  const { isMobile } = useMobile();
   const [loaded, setLoaded] = useState(false);
   const [heightPx, setHeightPx] = useState(PANEL_IMG_PLACEHOLDER_H);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -79,9 +78,11 @@ function WorkDetailImage({ src, index }: { src: string; index: number }) {
       <span className="corner top-right"></span>
       <span className="corner bottom-left"></span>
       <span className="corner bottom-right"></span>
+      {/* 모든 기기에서 JS 고정 높이: 로드 전에는 240px 플레이스홀더로 팝업
+          크기를 유지하고(스켈레톤 표시 영역), 로드 후 자연 높이로 전환 */}
       <div
         className="image-wrapper"
-        style={isMobile ? undefined : { height: heightPx }}
+        style={{ height: heightPx }}
         aria-busy={!loaded}
       >
         <div

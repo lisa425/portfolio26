@@ -12,6 +12,19 @@ import {
   VIEW_SEGMENTS,
 } from './utils/routing'
 
+// 구형 Safari(dvh 미지원): CSS의 --vhu(1vh 폴백)를 visualViewport 실측값으로
+// 덮어써서 브라우저 UI 표시/숨김에 따른 실제 가시 높이를 추적한다.
+// 모던 브라우저는 CSS의 1dvh를 그대로 사용하므로 여기서 아무것도 하지 않음.
+if (typeof CSS === 'undefined' || !CSS.supports('height', '1dvh')) {
+  const setVhu = () => {
+    const h = window.visualViewport?.height ?? window.innerHeight
+    document.documentElement.style.setProperty('--vhu', `${h / 100}px`)
+  }
+  setVhu()
+  window.visualViewport?.addEventListener('resize', setVhu)
+  window.addEventListener('resize', setVhu)
+}
+
 // Bare paths (no language prefix) keep their view, gain the preferred language
 const redirectWithLang = (pathname: string) => {
   const view = parsePath(pathname).view ?? 'hero'

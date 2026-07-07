@@ -12,13 +12,16 @@ interface InfoProps {
   isActive?: boolean
 }
 
+// 지그재그 배치: 중앙 정렬된 컨테이너(.info-content-scroll) 안에서
+// side에 따라 왼쪽/오른쪽 가장자리에 정렬 — 창 너비가 줄어도 지그재그가
+// 중앙 기준으로 유지되고 양옆 여백만 줄어든다 (SCSS .info-section--left/right)
 const SECTIONS = [
-  { id: 'profile', label: 'Profile', offsetX: 18 },
-  { id: 'experience', label: 'Experience', offsetX: 48 },
-  { id: 'skills', label: 'Skills', offsetX: 18 },
-  { id: 'education', label: 'Education', offsetX: 48 },
-  { id: 'contact', label: 'Contact', offsetX: 18 },
-]
+  { id: 'profile', label: 'Profile', side: 'left' },
+  { id: 'experience', label: 'Career', side: 'right' },
+  { id: 'skills', label: 'Skills', side: 'left' },
+  { id: 'education', label: 'Education', side: 'right' },
+  { id: 'contact', label: 'Contact', side: 'left' },
+] as const
 
 function Info({ isActive }: InfoProps) {
   const { t, i18n } = useTranslation()
@@ -169,24 +172,45 @@ function Info({ isActive }: InfoProps) {
             )
           })
 
-          // Line drawing animation (each line draws as its target section scrolls in)
+          // Line drawing animation:
+          // - 시작: 다음 섹션이 뷰포트 하단에 들어오는 순간 (최상단에서 이미
+          //   들어와 있으면 8px 스크롤 지점으로 클램프 → 스크롤 0에서는 항상 길이 0)
+          // - 도달: 다음 섹션 박스 리빌(top 70% 트리거)이 끝나는 top 55% 지점
+          // - scrub: true(지연 없음) + fromTo/invalidateOnRefresh로
+          //   리사이즈·언어 변경 후에도 스크롤 위치와 정확히 동기화 (잔상 방지)
           lineRefs.current.forEach((line, i) => {
             if (!line) return
             const targetSection = document.getElementById(SECTIONS[i + 1]?.id)
-            const prevSection = document.getElementById(SECTIONS[i]?.id)
-            if (!targetSection || !prevSection) return
+            const scroller = containerRef.current
+            if (!targetSection || !scroller) return
 
-            gsap.to(line, {
-              strokeDashoffset: 0,
-              ease: 'none',
-              scrollTrigger: {
-                trigger: targetSection,
-                scroller: containerRef.current,
-                start: 'top 75%',
-                end: 'top 20%',
-                scrub: 1,
+            const sectionTopInContent = () => {
+              const sRect = scroller.getBoundingClientRect()
+              const tRect = targetSection.getBoundingClientRect()
+              return tRect.top - sRect.top + scroller.scrollTop
+            }
+
+            gsap.fromTo(
+              line,
+              {
+                strokeDashoffset: () =>
+                  parseFloat(line.style.strokeDasharray || '0') || 0,
               },
-            })
+              {
+                strokeDashoffset: 0,
+                ease: 'none',
+                scrollTrigger: {
+                  trigger: targetSection,
+                  scroller,
+                  start: () =>
+                    Math.max(sectionTopInContent() - scroller.clientHeight, 8),
+                  end: () =>
+                    sectionTopInContent() - scroller.clientHeight * 0.55,
+                  scrub: true,
+                  invalidateOnRefresh: true,
+                },
+              },
+            )
           })
         }
 
@@ -291,8 +315,7 @@ function Info({ isActive }: InfoProps) {
             {/* 1. Profile */}
             <section
               id="profile"
-              className="info-section"
-              style={{ marginLeft: `${SECTIONS[0].offsetX}%` }}
+              className={`info-section info-section--${SECTIONS[0].side}`}
             >
               <div
                 className="info-node"
@@ -325,8 +348,7 @@ function Info({ isActive }: InfoProps) {
             {/* 2. Experience */}
             <section
               id="experience"
-              className="info-section"
-              style={{ marginLeft: `${SECTIONS[1].offsetX}%` }}
+              className={`info-section info-section--${SECTIONS[1].side}`}
             >
               <div
                 className="info-node"
@@ -340,14 +362,13 @@ function Info({ isActive }: InfoProps) {
               </div>
               <div className="info-section__body">
                 <div className="info-section__header">
-                  <span className="info-section__id">◼ 002.EXPERIENCE</span>
+                  <span className="info-section__id">◼ 002.CAREER</span>
                 </div>
                 <div className="info-section__content">
                   <span className="corner top-left"></span>
                   <span className="corner top-right"></span>
                   <span className="corner bottom-left"></span>
                   <span className="corner bottom-right"></span>
-                  <h3 className="info-block-title">CAREER_SUMMARY</h3>
                   {workExperience.jobs.map((job: any, jIdx: number) => (
                     <div
                       key={jIdx}
@@ -356,7 +377,7 @@ function Info({ isActive }: InfoProps) {
                       <div className="job-entry__header">
                         <h4 className="text-display">{job.company}</h4>
                         <p className={`job-entry__meta ${i18n.language === 'ko' && 'text-body'}`}>
-                          {job.role} &nbsp;|&nbsp; {job.period} &nbsp;|&nbsp; {job.location}
+                          {job.role} &nbsp;|&nbsp; {job.period} &nbsp;
                         </p>
                       </div>
                       <div className="job-entry__projects">
@@ -383,8 +404,7 @@ function Info({ isActive }: InfoProps) {
             {/* 3. Skills */}
             <section
               id="skills"
-              className="info-section"
-              style={{ marginLeft: `${SECTIONS[2].offsetX}%` }}
+              className={`info-section info-section--${SECTIONS[2].side}`}
             >
               <div
                 className="info-node"
@@ -405,7 +425,6 @@ function Info({ isActive }: InfoProps) {
                   <span className="corner top-right"></span>
                   <span className="corner bottom-left"></span>
                   <span className="corner bottom-right"></span>
-                  <h3 className="info-block-title">TECHNICAL_SKILLS</h3>
                   <div className="skills-list">
                     {skills.categories.map((cat: any, cIdx: number) => (
                       <div
@@ -413,7 +432,9 @@ function Info({ isActive }: InfoProps) {
                         className="skill-category"
                       >
                         <strong>{cat.name}</strong>
-                        <span className="text-body">▪︎ {cat.items}</span>
+                        {cat.items.map((item: any) => (
+                          <span className="text-body">▪︎ {item}</span>
+                        ))}
                       </div>
                     ))}
                   </div>
@@ -424,8 +445,7 @@ function Info({ isActive }: InfoProps) {
             {/* 4. Education */}
             <section
               id="education"
-              className="info-section"
-              style={{ marginLeft: `${SECTIONS[3].offsetX}%` }}
+              className={`info-section info-section--${SECTIONS[3].side}`}
             >
               <div
                 className="info-node"
@@ -446,7 +466,6 @@ function Info({ isActive }: InfoProps) {
                   <span className="corner top-right"></span>
                   <span className="corner bottom-left"></span>
                   <span className="corner bottom-right"></span>
-                  <h3 className="info-block-title">ACADEMIC_HISTORY</h3>
                   <div className="education-entry">
                     <h4 className="text-display">{education.school}</h4>
                     <p className="education-entry__meta">{education.period}</p>
@@ -468,8 +487,7 @@ function Info({ isActive }: InfoProps) {
             {/* 5. Contact */}
             <section
               id="contact"
-              className="info-section"
-              style={{ marginLeft: `${SECTIONS[4].offsetX}%` }}
+              className={`info-section info-section--${SECTIONS[4].side}`}
             >
               <div
                 className="info-node"
@@ -490,7 +508,6 @@ function Info({ isActive }: InfoProps) {
                   <span className="corner top-right"></span>
                   <span className="corner bottom-left"></span>
                   <span className="corner bottom-right"></span>
-                  <h3 className="info-block-title">GET_IN_TOUCH</h3>
                   <div className="info-contact">
                     <p className="btn-contact">
                       Email
@@ -518,6 +535,16 @@ function Info({ isActive }: InfoProps) {
                         target="_blank"
                       >
                         {contact.LinkedIn}
+                      </a>
+                    </p>
+                    <p className="btn-contact">
+                      Blog
+                      <a
+                        className="meta text-body"
+                        href={contact.Blog}
+                        target="_blank"
+                      >
+                        {contact.Blog}
                       </a>
                     </p>
                   </div>

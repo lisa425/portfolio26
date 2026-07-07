@@ -118,15 +118,15 @@
           "projects": [
             {
               "name": "Mabinogi Web Development Team",
-              "bullets": ["Franchise Synergy Group · Jan 2026 - Jun 2026"]
+              "bullets": ["Jan 2026 - Jun 2026"]
             },
             {
               "name": "Game Web Frontend Development Team",
-              "bullets": ["Platform Division · Apr 2025 - Dec 2025"]
+              "bullets": ["Apr 2025 - Dec 2025"]
             },
             {
               "name": "Live Web Frontend Development Team",
-              "bullets": ["Intelligence Labs · May 2022 - Mar 2025"]
+              "bullets": ["May 2022 - Mar 2025"]
             }
           ]
         }
@@ -137,19 +137,23 @@
       "categories": [
         {
           "name": "Frontend",
-          "items": "HTML, CSS, JavaScript, TypeScript, React, Next.js, Vue.js, Three.js, GSAP"
+          "items": [
+            "HTML, CSS, JavaScript, TypeScript",
+            "React, Next.js, Vue.js",
+            "GSAP, Three.js, Emotion, Tailwind CSS, StoryBook, Jest"
+          ]
         },
         {
           "name": "Backend",
-          "items": "Node.js, NestJS, Python, Supabase, MongoDB"
+          "items": ["Node.js, NestJS, Python, Django", "Supabase, MongoDB, MySQL"]
         },
         {
-          "name": "Automation & AI",
-          "items": "Workflow Automation, CI/CD Scripting, AI-Assisted Development (Claude, Codex)"
+          "name": "AI",
+          "items": ["Claude Code, Codex, Cursor, Antigravity"]
         },
         {
           "name": "Collaboration",
-          "items": "GitHub, GitLab, Figma, Adobe Photoshop"
+          "items": ["GitHub, GitLab, Figma, Adobe Photoshop", "Jira, Slack, Confluence, Notion"]
         }
       ]
     },

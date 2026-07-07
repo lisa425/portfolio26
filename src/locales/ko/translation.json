@@ -113,19 +113,19 @@
           "company": "넥슨코리아(NEXON Korea)",
           "role": "프론트엔드 엔지니어",
           "period": "2022.05 – 2026.06",
-          "location": "대한민국, 성남",
+          "location": "대한민국, 성남시",
           "projects": [
             {
               "name": "마비노기웹개발팀",
-              "bullets": ["프랜차이즈시너지그룹 | 2026.01 - 2026.06"]
+              "bullets": ["대리 | 2026.01 - 2026.06"]
             },
             {
               "name": "게임웹프론트개발팀",
-              "bullets": ["플랫폼본부 | 2025.04 - 2025.12"]
+              "bullets": ["사원 | 2025.04 - 2025.12"]
             },
             {
               "name": "라이브웹프론트엔드팀",
-              "bullets": ["인텔리전스랩스 | 2022.05 - 2025.03"]
+              "bullets": ["사원 | 2022.05 - 2025.03"]
             }
           ]
         }
@@ -135,26 +135,30 @@
       "categories": [
         {
           "name": "Frontend",
-          "items": "HTML, CSS, JavaScript, TypeScript, React, Next.js, Vue.js, Three.js, GSAP"
+          "items": [
+            "HTML, CSS, JavaScript, TypeScript",
+            "React, Next.js, Vue.js",
+            "GSAP, Three.js, Emotion, Tailwind CSS, StoryBook, Jest"
+          ]
         },
         {
           "name": "Backend",
-          "items": "Node.js, NestJS, Python, Supabase, MongoDB"
+          "items": ["Node.js, NestJS, Python, Django", "Supabase, MongoDB, MySQL"]
         },
         {
-          "name": "Automation & AI",
-          "items": "워크플로우 자동화, CI/CD 스크립팅, AI 활용 개발(Claude, Codex)"
+          "name": "AI",
+          "items": ["Claude Code, Codex, Cursor, Antigravity"]
         },
         {
           "name": "Collaboration",
-          "items": "GitHub, GitLab, Figma, Adobe Photoshop"
+          "items": ["GitHub, GitLab, Figma, Adobe Photoshop", "Jira, Slack, Confluence, Notion"]
         }
       ]
     },
     "education": {
       "school": "숙명여자대학교",
-      "period": "2017.03 – 2022.08 | 대한민국 서울",
-      "bullets": ["시각·영상디자인과", "IT공학과(복수전공)"]
+      "period": "2017.03 – 2022.08 | 대한민국, 서울",
+      "bullets": ["시각·영상디자인과", "IT 공학과"]
     }
   }
 }

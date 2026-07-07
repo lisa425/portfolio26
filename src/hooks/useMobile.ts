@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const MOBILE_BREAKPOINT_PX = 1000;
+const MOBILE_BREAKPOINT_PX = 1023; // 태블릿 상한 — SCSS $tablet과 동기
 
 /**
  * Detects whether the current environment should be treated as "mobile".
