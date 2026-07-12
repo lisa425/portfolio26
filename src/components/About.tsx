@@ -5,6 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
 import { useMobile } from '../hooks/useMobile'
 import { renderText } from '../utils/renderText'
+import { Corners } from './ui'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -338,10 +339,7 @@ function About({ isActive }: AboutProps) {
                   <span className="about-section__id">◼ 001.PROFILE</span>
                 </div>
                 <div className="about-section__content">
-                  <span className="corner top-left"></span>
-                  <span className="corner top-right"></span>
-                  <span className="corner bottom-left"></span>
-                  <span className="corner bottom-right"></span>
+                  <Corners />
                   <h2 className={`about-name ${i18n.language === 'ko' ? 'text-display' : 'text-body'}`}>
                     {t('about.name')}
                   </h2>
@@ -371,10 +369,7 @@ function About({ isActive }: AboutProps) {
                   <span className="about-section__id">◼ 002.CAREER</span>
                 </div>
                 <div className="about-section__content">
-                  <span className="corner top-left"></span>
-                  <span className="corner top-right"></span>
-                  <span className="corner bottom-left"></span>
-                  <span className="corner bottom-right"></span>
+                  <Corners />
                   {workExperience.jobs.map((job: any, jIdx: number) => (
                     <div
                       key={jIdx}
@@ -427,10 +422,7 @@ function About({ isActive }: AboutProps) {
                   <span className="about-section__id">◼ 003.SKILLS</span>
                 </div>
                 <div className="about-section__content">
-                  <span className="corner top-left"></span>
-                  <span className="corner top-right"></span>
-                  <span className="corner bottom-left"></span>
-                  <span className="corner bottom-right"></span>
+                  <Corners />
                   <div className="skills-list">
                     {skills.categories.map((cat: any, cIdx: number) => (
                       <div
@@ -468,10 +460,7 @@ function About({ isActive }: AboutProps) {
                   <span className="about-section__id">◼ 004.EDUCATION</span>
                 </div>
                 <div className="about-section__content">
-                  <span className="corner top-left"></span>
-                  <span className="corner top-right"></span>
-                  <span className="corner bottom-left"></span>
-                  <span className="corner bottom-right"></span>
+                  <Corners />
                   <div className="education-entry">
                     <h4 className="text-display">{education.school}</h4>
                     <p className="education-entry__meta">{education.period}</p>
@@ -510,10 +499,7 @@ function About({ isActive }: AboutProps) {
                   <span className="about-section__id">◼ 005.CONTACT</span>
                 </div>
                 <div className="about-section__content">
-                  <span className="corner top-left"></span>
-                  <span className="corner top-right"></span>
-                  <span className="corner bottom-left"></span>
-                  <span className="corner bottom-right"></span>
+                  <Corners />
                   <div className="about-contact">
                     <p className="btn-contact">
                       Email

@@ -7,6 +7,8 @@ import { createPortal } from "react-dom";
 import { useMobile } from "../hooks/useMobile";
 import { renderText } from "../utils/renderText";
 import Lenis from "lenis";
+import type { WorkType } from "../types";
+import { WorkDetailImage, WorksPreviewCard } from "./ui";
 
 gsap.registerPlugin(SplitText, ScrollTrigger);
 
@@ -14,134 +16,11 @@ interface WorksProps {
   isActive: boolean;
 }
 
-type WorkHighlight = {
-  title: string;
-  p: string[];
-};
-
-type WorkType = {
-  id: number;
-  category: number;
-  game: string;
-  title: string;
-  intro: string;
-  date: string;
-  description: WorkHighlight[];
-  stack: string;
-  thumbnail: string;
-  img: string[];
-  url: string;
-};
-
-const PANEL_IMG_PLACEHOLDER_H = 240;
-
-function WorkDetailImage({ src, index }: { src: string; index: number }) {
-  const [loaded, setLoaded] = useState(false);
-  const [heightPx, setHeightPx] = useState(PANEL_IMG_PLACEHOLDER_H);
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  const settleNaturalHeight = useCallback(() => {
-    const img = imgRef.current;
-    if (!img?.naturalWidth) {
-      setHeightPx(PANEL_IMG_PLACEHOLDER_H);
-      return;
-    }
-    setHeightPx(img.offsetHeight);
-  }, []);
-
-  useEffect(() => {
-    setLoaded(false);
-    setHeightPx(PANEL_IMG_PLACEHOLDER_H);
-    const el = imgRef.current;
-    if (el?.complete && el.naturalWidth > 0) {
-      setLoaded(true);
-      // Two rAFs so the browser paints placeholder height first; then `height` can transition.
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          settleNaturalHeight();
-        });
-      });
-    }
-  }, [src, settleNaturalHeight]);
-
-  const handleLoad = () => {
-    setLoaded(true);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        settleNaturalHeight();
-      });
-    });
-  };
-
-  const handleError = () => {
-    setLoaded(true);
-    setHeightPx(PANEL_IMG_PLACEHOLDER_H);
-  };
-
-  return (
-    <div className="panel-image-container">
-      <span className="corner top-left"></span>
-      <span className="corner top-right"></span>
-      <span className="corner bottom-left"></span>
-      <span className="corner bottom-right"></span>
-      {/* 모든 기기에서 JS 고정 높이: 로드 전에는 240px 플레이스홀더로 팝업
-          크기를 유지하고(스켈레톤 표시 영역), 로드 후 자연 높이로 전환 */}
-      <div
-        className="image-wrapper"
-        style={{ height: heightPx }}
-        aria-busy={!loaded}
-      >
-        <div
-          className={`panel-image__skeleton${loaded ? " panel-image__skeleton--hidden" : ""}`}
-          aria-hidden
-        />
-        <img
-          ref={imgRef}
-          src={src}
-          alt=""
-          loading={index < 2 ? "eager" : "lazy"}
-          decoding="async"
-          onLoad={handleLoad}
-          onError={handleError}
-          className={loaded ? "is-loaded" : ""}
-        />
-      </div>
-    </div>
-  );
-}
-
 // ─── Category Map (확장 시 여기에만 추가) ───
 const CATEGORY_MAP: Record<number, string> = {
   0: "Personal_work",
   1: "Nexon",
 };
-
-function WorksPreviewThumb({ src, alt }: { src: string; alt: string }) {
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    setLoaded(false);
-  }, [src]);
-
-  return (
-    <div className="works-preview__thumb">
-      <div
-        className={`works-preview__thumb-skeleton${loaded ? " works-preview__thumb-skeleton--hidden" : ""}`}
-        aria-hidden
-      />
-      <img
-        src={src}
-        alt={alt}
-        loading="lazy"
-        decoding="async"
-        onLoad={() => setLoaded(true)}
-        onError={() => setLoaded(true)}
-        className={loaded ? "is-loaded" : ""}
-      />
-      <div className="works-preview__thumb-scan" />
-    </div>
-  );
-}
 
 // ─── 3D Configuration ───
 const DEG = Math.PI / 180;
@@ -845,46 +724,17 @@ function Works({ isActive }: WorksProps) {
         <div className="works-list-container" ref={mobileListRef}>
           <div ref={mobileListContentRef} className="works-list-content">
             {works.map((work, idx) => (
-              <div
+              <WorksPreviewCard
                 key={`preview-mob-${work.id}`}
-                className="works-preview active"
+                work={work}
+                index={idx}
+                total={works.length}
+                active
                 onClick={() => handleWorkClick(work)}
                 ref={(el) => {
                   panelRefs.current[idx] = el;
                 }}
-              >
-                <div className="works-preview__header">
-                  <span className="works-preview__panel-id">◼︎ TARGET NODE</span>
-                  <span className="works-preview__index">
-                    {String(idx + 1).padStart(3, "0")}/
-                    {String(works.length).padStart(3, "0")}
-                  </span>
-                </div>
-                <WorksPreviewThumb src={work.thumbnail} alt={work.title} />
-                <div className="works-preview__data">
-                  <div className="works-preview__row">
-                    <span className="works-preview__key">GAME</span>
-                    <span className="works-preview__val">{work.game}</span>
-                  </div>
-                  <div className="works-preview__row">
-                    <span className="works-preview__key">NAME</span>
-                    <span className="works-preview__val works-preview__val--title">
-                      {renderText(work.title)}
-                    </span>
-                  </div>
-                  <div className="works-preview__row">
-                    <span className="works-preview__key">TECH</span>
-                    <span className="works-preview__val">{work.stack}</span>
-                  </div>
-                </div>
-                <div className="works-preview__footer">
-                  <span className="works-preview__status">
-                    <span className="works-preview__dot" />
-                    ONLINE
-                  </span>
-                  <span className="works-preview__action">[ ENTER ]</span>
-                </div>
-              </div>
+              />
             ))}
           </div>
         </div>
@@ -893,45 +743,15 @@ function Works({ isActive }: WorksProps) {
       {/* PC hover panels: fixed-positioned, shown on node hover via direct DOM */}
       {!isMobileDevice &&
         works.map((work, idx) => (
-          <div
+          <WorksPreviewCard
             key={`preview-pc-${work.id}`}
-            className="works-preview"
+            work={work}
+            index={idx}
+            total={works.length}
             ref={(el) => {
               panelRefs.current[idx] = el;
             }}
-          >
-            <div className="works-preview__header">
-              <span className="works-preview__panel-id">◼︎ TARGET NODE</span>
-              <span className="works-preview__index">
-                {String(idx + 1).padStart(3, "0")}/
-                {String(works.length).padStart(3, "0")}
-              </span>
-            </div>
-            <WorksPreviewThumb src={work.thumbnail} alt={work.title} />
-            <div className="works-preview__data">
-              <div className="works-preview__row">
-                <span className="works-preview__key">GAME</span>
-                <span className="works-preview__val">{work.game}</span>
-              </div>
-              <div className="works-preview__row">
-                <span className="works-preview__key">NAME</span>
-                <span className="works-preview__val works-preview__val--title">
-                  {renderText(work.title)}
-                </span>
-              </div>
-              <div className="works-preview__row">
-                <span className="works-preview__key">TECH</span>
-                <span className="works-preview__val">{work.stack}</span>
-              </div>
-            </div>
-            <div className="works-preview__footer">
-              <span className="works-preview__status">
-                <span className="works-preview__dot" />
-                ONLINE
-              </span>
-              <span className="works-preview__action">[ ENTER ]</span>
-            </div>
-          </div>
+          />
         ))}
 
       {/* Telemetry Panel */}

@@ -106,6 +106,75 @@ body.ko {
   }
 }
 
+// ─── Shared UI: 4-corner frame (ui/Corners) ───
+// 부모 컨텍스트에서 --corner-color로 색 조절 (기본 0.6)
+.corner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--corner-color, rgba(255, 255, 255, 0.6));
+  z-index: 2;
+
+  &.top-left {
+    top: -1px;
+    left: -1px;
+    border-right: none;
+    border-bottom: none;
+  }
+  &.top-right {
+    top: -1px;
+    right: -1px;
+    border-left: none;
+    border-bottom: none;
+  }
+  &.bottom-left {
+    bottom: -1px;
+    left: -1px;
+    border-right: none;
+    border-top: none;
+  }
+  &.bottom-right {
+    bottom: -1px;
+    right: -1px;
+    border-left: none;
+    border-top: none;
+  }
+}
+
+// ─── Shared UI: loading shimmer overlay (ui/Skeleton) ───
+.ui-skeleton {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0.08) 48%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  background-size: 200% 100%;
+  animation: ui-skeleton-shimmer 1.4s ease-in-out infinite;
+  pointer-events: none;
+  transition:
+    opacity 0.4s ease,
+    visibility 0s linear 0.4s;
+
+  &--hidden {
+    opacity: 0;
+    visibility: hidden;
+    animation: none;
+  }
+}
+
+@keyframes ui-skeleton-shimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
 // ─── Shared Terminal Bar ───
 .terminal-bar {
   position: fixed;
@@ -1140,29 +1209,7 @@ body.ko {
       }
     }
 
-    &__thumb-skeleton {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-      background: linear-gradient(
-        105deg,
-        rgba(255, 255, 255, 0.03) 0%,
-        rgba(255, 255, 255, 0.08) 48%,
-        rgba(255, 255, 255, 0.03) 100%
-      );
-      background-size: 200% 100%;
-      animation: panel-image-skeleton-shimmer 1.4s ease-in-out infinite;
-      pointer-events: none;
-      transition:
-        opacity 0.4s ease,
-        visibility 0s linear 0.4s;
-
-      &--hidden {
-        opacity: 0;
-        visibility: hidden;
-        animation: none;
-      }
-    }
+    // 로딩 셔머는 전역 .ui-skeleton(ui/Skeleton) 사용
 
     // Scanline overlay on thumbnail
     &__thumb-scan {
@@ -1785,37 +1832,7 @@ body.ko {
       border: 1px solid rgba(255, 255, 255, 0.2);
       padding: 10px;
 
-      .corner {
-        position: absolute;
-        width: 10px;
-        height: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.6);
-
-        &.top-left {
-          top: -1px;
-          left: -1px;
-          border-right: none;
-          border-bottom: none;
-        }
-        &.top-right {
-          top: -1px;
-          right: -1px;
-          border-left: none;
-          border-bottom: none;
-        }
-        &.bottom-left {
-          bottom: -1px;
-          left: -1px;
-          border-right: none;
-          border-top: none;
-        }
-        &.bottom-right {
-          bottom: -1px;
-          right: -1px;
-          border-left: none;
-          border-top: none;
-        }
-      }
+      // corner 프레임은 전역 .corner(ui/Corners) 사용 (기본색 0.6)
 
       // Height is set in px from JS on ALL devices so we can transition
       // (CSS cannot animate to `auto`) and the popup keeps its size while
@@ -1833,31 +1850,7 @@ body.ko {
         }
       }
 
-      .panel-image__skeleton {
-        position: absolute;
-        inset: 0;
-        z-index: 1;
-        background: linear-gradient(
-          105deg,
-          rgba(255, 255, 255, 0.03) 0%,
-          rgba(255, 255, 255, 0.08) 48%,
-          rgba(255, 255, 255, 0.03) 100%
-        );
-        background-size: 200% 100%;
-        animation: panel-image-skeleton-shimmer 1.4s ease-in-out infinite;
-        animation-play-state: running;
-        pointer-events: none;
-        transition:
-          opacity 0.4s ease,
-          visibility 0s linear 0.4s;
-
-        &--hidden {
-          opacity: 0;
-          visibility: hidden;
-          animation: none;
-          animation-play-state: paused;
-        }
-      }
+      // 로딩 셔머는 전역 .ui-skeleton(ui/Skeleton) 사용
 
       img {
         position: relative;
@@ -1874,15 +1867,6 @@ body.ko {
         &.is-loaded {
           opacity: 1;
         }
-      }
-    }
-
-    @keyframes panel-image-skeleton-shimmer {
-      0% {
-        background-position: 120% 0;
-      }
-      100% {
-        background-position: -120% 0;
       }
     }
 
@@ -2228,38 +2212,8 @@ body.ko {
     z-index: 1;
   }
 
-  .corner {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    z-index: 2;
-
-    &.top-left {
-      top: -1px;
-      left: -1px;
-      border-right: none;
-      border-bottom: none;
-    }
-    &.top-right {
-      top: -1px;
-      right: -1px;
-      border-left: none;
-      border-bottom: none;
-    }
-    &.bottom-left {
-      bottom: -1px;
-      left: -1px;
-      border-right: none;
-      border-top: none;
-    }
-    &.bottom-right {
-      bottom: -1px;
-      right: -1px;
-      border-left: none;
-      border-top: none;
-    }
-  }
+  // corner 프레임은 전역 .corner(ui/Corners) 사용 — 색만 오버라이드
+  --corner-color: rgba(255, 255, 255, 0.8);
 }
 
 // --- Node Points ---
