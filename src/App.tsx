@@ -1,67 +1,56 @@
-import {
-  lazy,
-  Suspense,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import { Outlet } from "react-router";
-import { useTranslation } from "react-i18next";
-import gsap from "gsap";
-import { SplitText } from "gsap/SplitText";
-import { useMobile } from "./hooks/useMobile";
-import { savePreferredLang } from "./utils/routing";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { Outlet } from 'react-router'
+import { useTranslation } from 'react-i18next'
+import gsap from 'gsap'
+import { SplitText } from 'gsap/SplitText'
+import { useMobile } from './hooks/useMobile'
+import { savePreferredLang } from './utils/routing'
 
-gsap.registerPlugin(SplitText);
-import "./App.scss";
-import { useHeroScene } from "./hooks/useHeroScene";
-import { useViewRouter } from "./hooks/useViewRouter";
-import { useCursorTrail } from "./hooks/useCursorTrail";
-import IntroLog from "./components/IntroLog";
-import Seo from "./components/Seo";
+gsap.registerPlugin(SplitText)
+import './App.scss'
+import { useHeroScene } from './hooks/useHeroScene'
+import { useViewRouter } from './hooks/useViewRouter'
+import { useCursorTrail } from './hooks/useCursorTrail'
+import IntroLog from './components/IntroLog'
+import Seo from './components/Seo'
 
 // Code-split: Works & About are lazy-loaded on first visit
-const Works = lazy(() => import("./components/Works"));
-const About = lazy(() => import("./components/About"));
+const Works = lazy(() => import('./components/Works'))
+const About = lazy(() => import('./components/About'))
 
 // ---------------------------------------------------------------------------
 // Static timezone info — computed once at module load, never on re-render
 // (setCurrentTime fires every second; keeping these here prevents repeated
 //  Intl / Date API calls on each React re-render)
 // ---------------------------------------------------------------------------
-const _tzName = Intl.DateTimeFormat().resolvedOptions().timeZone;
-const _tzShort =
-  new Date()
-    .toLocaleTimeString("en-US", { timeZoneName: "short" })
-    .split(" ")
-    .at(-1) ?? _tzName;
-const _utcOffsetH = -new Date().getTimezoneOffset() / 60;
-const _utcLabel = `UTC${_utcOffsetH >= 0 ? "+" : ""}${String(_utcOffsetH).padStart(2, "0")}:00`;
+const _tzName = Intl.DateTimeFormat().resolvedOptions().timeZone
+const _tzShort = new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').at(-1) ?? _tzName
+const _utcOffsetH = -new Date().getTimezoneOffset() / 60
+const _utcLabel = `UTC${_utcOffsetH >= 0 ? '+' : ''}${String(_utcOffsetH).padStart(2, '0')}:00`
 
 /** Max wait for `document.fonts.ready` before continuing intro (avoids hanging on slow/broken fonts). */
-const FONTS_READY_MAX_WAIT_MS = 2500;
+const FONTS_READY_MAX_WAIT_MS = 2500
 
 function App() {
-  const { i18n } = useTranslation();
-  const { isMobile } = useMobile();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const { i18n } = useTranslation()
+  const { isMobile } = useMobile()
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  const buttonWorksRef = useRef<HTMLButtonElement>(null);
-  const buttonAboutRef = useRef<HTMLButtonElement>(null);
-  const trailCanvasRef = useRef<HTMLCanvasElement>(null);
+  const buttonWorksRef = useRef<HTMLButtonElement>(null)
+  const buttonAboutRef = useRef<HTMLButtonElement>(null)
+  const trailCanvasRef = useRef<HTMLCanvasElement>(null)
 
-  const [loadProgress, setLoadProgress] = useState(0);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [locationStr, setLocationStr] = useState("37° 33' N ■ 126° 58' E");
-  const [currentTime, setCurrentTime] = useState("");
-  const [currentDate, setCurrentDate] = useState("");
-  const isHeroActiveRef = useRef(true);
+  const [loadProgress, setLoadProgress] = useState(0)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [locationStr, setLocationStr] = useState("37° 33' N ■ 126° 58' E")
+  const [currentTime, setCurrentTime] = useState('')
+  const [currentDate, setCurrentDate] = useState('')
+  const isHeroActiveRef = useRef(true)
 
   // Intro log: plays every page load; false after first run so hero-return skips it
-  const [showIntro, setShowIntro] = useState(true);
-  const heroContentRef = useRef<HTMLDivElement>(null);
+  const [showIntro, setShowIntro] = useState(true)
+  const heroContentRef = useRef<HTMLDivElement>(null)
 
   // WebGL init reports 100 in the same tick as scene setup; the intro still waits on
   // `document.fonts.ready` + delay. Without tying the counter to that, (100/100) looked
@@ -69,225 +58,193 @@ function App() {
 
   const handleProgress = useCallback((progress: number) => {
     if (progress < 100) {
-      setLoadProgress(progress);
-      return;
+      setLoadProgress(progress)
+      return
     }
-    setLoadProgress(99);
+    setLoadProgress(99)
     Promise.race([
       document.fonts.ready,
       new Promise<void>((resolve) => {
-        setTimeout(resolve, FONTS_READY_MAX_WAIT_MS);
+        setTimeout(resolve, FONTS_READY_MAX_WAIT_MS)
       }),
     ]).then(() => {
-      setLoadProgress(100);
+      setLoadProgress(100)
       // Brief hold so 100/100 is readable before line cycling starts
-      setTimeout(() => setIsLoaded(true), 500);
-    });
-  }, []);
+      setTimeout(() => setIsLoaded(true), 500)
+    })
+  }, [])
 
   // Geolocation
   useEffect(() => {
-    if ("geolocation" in navigator) {
+    if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
+          const lat = position.coords.latitude
+          const lng = position.coords.longitude
 
-          const dLat = Math.floor(Math.abs(lat));
-          const mLat = Math.floor((Math.abs(lat) - dLat) * 60);
-          const dLng = Math.floor(Math.abs(lng));
-          const mLng = Math.floor((Math.abs(lng) - dLng) * 60);
+          const dLat = Math.floor(Math.abs(lat))
+          const mLat = Math.floor((Math.abs(lat) - dLat) * 60)
+          const dLng = Math.floor(Math.abs(lng))
+          const mLng = Math.floor((Math.abs(lng) - dLng) * 60)
 
-          const dirLat = lat >= 0 ? "N" : "S";
-          const dirLng = lng >= 0 ? "E" : "W";
+          const dirLat = lat >= 0 ? 'N' : 'S'
+          const dirLng = lng >= 0 ? 'E' : 'W'
 
-          setLocationStr(
-            `${dLat}° ${mLat}' ${dirLat} ■ ${dLng}° ${mLng}' ${dirLng}`,
-          );
+          setLocationStr(`${dLat}° ${mLat}' ${dirLat} ■ ${dLng}° ${mLng}' ${dirLng}`)
         },
         (error) => {
-          console.error("Geolocation error:", error);
-          setLocationStr("37° 33' N ■ 126° 58' E");
+          console.error('Geolocation error:', error)
+          setLocationStr("37° 33' N ■ 126° 58' E")
         },
-      );
+      )
     } else {
-      setLocationStr("37° 33' N ■ 126° 58' E");
+      setLocationStr("37° 33' N ■ 126° 58' E")
     }
-  }, []);
+  }, [])
 
   // Live Clock
   useEffect(() => {
-    const DAY = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+    const DAY = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
     const tick = () => {
-      const now = new Date();
+      const now = new Date()
       setCurrentTime(
-        now.toLocaleTimeString("en-US", {
+        now.toLocaleTimeString('en-US', {
           hour12: true,
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
         }),
-      );
-      const y = now.getFullYear();
-      const m = String(now.getMonth() + 1).padStart(2, "0");
-      const d = String(now.getDate()).padStart(2, "0");
-      setCurrentDate(`${y}.${m}.${d}  ${DAY[now.getDay()]}`);
-    };
-    tick();
-    const timer = setInterval(tick, 1000);
-    return () => clearInterval(timer);
-  }, []);
+      )
+      const y = now.getFullYear()
+      const m = String(now.getMonth() + 1).padStart(2, '0')
+      const d = String(now.getDate()).padStart(2, '0')
+      setCurrentDate(`${y}.${m}.${d}  ${DAY[now.getDay()]}`)
+    }
+    tick()
+    const timer = setInterval(tick, 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   // Three.js Scene
-  const {
-    triggerWorksTransition,
-    triggerAboutTransition,
-    triggerHeroTransition,
-    triggerAssembly,
-    applyViewInstant,
-  } = useHeroScene(
-    canvasRef,
-    containerRef,
-    buttonWorksRef,
-    buttonAboutRef,
-    handleProgress,
-    isHeroActiveRef,
-  );
+  const { triggerWorksTransition, triggerAboutTransition, triggerHeroTransition, triggerAssembly, applyViewInstant } =
+    useHeroScene(canvasRef, containerRef, buttonWorksRef, buttonAboutRef, handleProgress, isHeroActiveRef)
 
-  useCursorTrail(trailCanvasRef);
+  useCursorTrail(trailCanvasRef)
 
   // URL-first routing: button clicks and browser back/forward all change the
   // URL, and the hook runs the same camera-transition pipeline for every source
-  const {
-    view,
-    urlView,
-    activeSection,
-    lang,
-    hasShownWorks,
-    hasShownAbout,
-    goWorks,
-    goAbout,
-    goHero,
-    switchLang,
-  } = useViewRouter({
-    triggerWorksTransition,
-    triggerAboutTransition,
-    triggerHeroTransition,
-    applyViewInstant,
-    isHeroActiveRef,
-    isReady: !showIntro,
-  });
+  const { view, urlView, activeSection, lang, hasShownWorks, hasShownAbout, goWorks, goAbout, goHero, switchLang } =
+    useViewRouter({
+      triggerWorksTransition,
+      triggerAboutTransition,
+      triggerHeroTransition,
+      applyViewInstant,
+      isHeroActiveRef,
+      isReady: !showIntro,
+    })
 
   // Header section nav: visible only while a section (works/about) is the
   // URL target — hidden on hero, where the star buttons are the navigation
-  const sectionNavVisible = urlView === "works" || urlView === "about";
+  const sectionNavVisible = urlView === 'works' || urlView === 'about'
 
   // URL lang → i18next / <html> lang / <body> class / persisted preference
   // (one-way sync; the reverse direction is switchLang, which navigates)
   useEffect(() => {
-    if (i18n.language !== lang) i18n.changeLanguage(lang);
-    savePreferredLang(lang);
-    document.documentElement.lang = lang;
-    document.body.classList.remove("ko", "en");
-    document.body.classList.add(lang);
-  }, [lang, i18n]);
+    if (i18n.language !== lang) i18n.changeLanguage(lang)
+    savePreferredLang(lang)
+    document.documentElement.lang = lang
+    document.body.classList.remove('ko', 'en')
+    document.body.classList.add(lang)
+  }, [lang, i18n])
 
   // Btn hover — terminal typewriter effect via GSAP
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded) return
 
-    const btnRefs = [buttonWorksRef.current, buttonAboutRef.current];
-    const cleanups: (() => void)[] = [];
+    const btnRefs = [buttonWorksRef.current, buttonAboutRef.current]
+    const cleanups: (() => void)[] = []
 
     btnRefs.forEach((btn) => {
-      if (!btn) return;
+      if (!btn) return
 
-      const textEl = btn.querySelector<HTMLElement>(".btn-text");
-      const textContent = btn.querySelector<HTMLElement>(".btn-text__text");
-      const cursorEl = btn.querySelector<HTMLElement>(".btn-text__cursor");
-      if (!textEl || !textContent) return;
+      const textEl = btn.querySelector<HTMLElement>('.btn-text')
+      const textContent = btn.querySelector<HTMLElement>('.btn-text__text')
+      const cursorEl = btn.querySelector<HTMLElement>('.btn-text__cursor')
+      if (!textEl || !textContent) return
 
       if (isMobile) {
         // Mobile uses CSS blinking animations; skip all GSAP text interventions to prevent inline style overrides
         // Clear any GSAP inline styles that might hide the text
-        gsap.set(textEl, { clearProps: "all" });
-        return;
+        gsap.set(textEl, { clearProps: 'all' })
+        return
       }
 
-      gsap.set(textEl, { opacity: 0, x: 10 });
-      cursorEl?.classList.remove("active");
+      gsap.set(textEl, { opacity: 0, x: 10 })
+      cursorEl?.classList.remove('active')
 
-      const split = new SplitText(textContent, { type: "chars" });
-      gsap.set(split.chars, { opacity: 0, display: "inline-block" });
-      gsap.set(textContent, { clearProps: "opacity" });
+      const split = new SplitText(textContent, { type: 'chars' })
+      gsap.set(split.chars, { opacity: 0, display: 'inline-block' })
+      gsap.set(textContent, { clearProps: 'opacity' })
 
-      const CHAR_DELAY = 0.07; // gap between each char
-      const HOLD = 0.05; // how long the active highlight stays
+      const CHAR_DELAY = 0.07 // gap between each char
+      const HOLD = 0.05 // how long the active highlight stays
 
       const tl = gsap.timeline({
         paused: true,
         // cursor CSS animation starts only after all chars are done
-        onComplete: () => cursorEl?.classList.add("active"),
-      });
+        onComplete: () => cursorEl?.classList.add('active'),
+      })
 
       // Slide wrapper in
-      tl.to(textEl, { opacity: 1, x: 0, duration: 0.15, ease: "power2.out" });
+      tl.to(textEl, { opacity: 1, x: 0, duration: 0.15, ease: 'power2.out' })
 
       // Per-char: active highlight (white bg + black text) → settled (transparent + white)
       split.chars.forEach((char, i) => {
-        const t = 0.15 + i * CHAR_DELAY;
-        tl.set(
-          char,
-          { opacity: 1, backgroundColor: "#ffffff", color: "#000000" },
-          t,
-        );
-        tl.to(
-          char,
-          { backgroundColor: "transparent", color: "#ffffff", duration: HOLD },
-          t + HOLD,
-        );
-      });
+        const t = 0.15 + i * CHAR_DELAY
+        tl.set(char, { opacity: 1, backgroundColor: '#ffffff', color: '#000000' }, t)
+        tl.to(char, { backgroundColor: 'transparent', color: '#ffffff', duration: HOLD }, t + HOLD)
+      })
 
       const reset = () => {
-        tl.pause(0);
-        gsap.set(textEl, { opacity: 0, x: 10 });
+        tl.pause(0)
+        gsap.set(textEl, { opacity: 0, x: 10 })
         gsap.set(split.chars, {
           opacity: 0,
-          backgroundColor: "transparent",
-          color: "#ffffff",
-        });
-        cursorEl?.classList.remove("active");
-      };
+          backgroundColor: 'transparent',
+          color: '#ffffff',
+        })
+        cursorEl?.classList.remove('active')
+      }
 
       const onEnter = () => {
-        cursorEl?.classList.remove("active");
-        tl.restart();
-      };
-      const onLeave = () => reset();
+        cursorEl?.classList.remove('active')
+        tl.restart()
+      }
+      const onLeave = () => reset()
 
-      btn.addEventListener("mouseenter", onEnter);
-      btn.addEventListener("mouseleave", onLeave);
+      btn.addEventListener('mouseenter', onEnter)
+      btn.addEventListener('mouseleave', onLeave)
 
       cleanups.push(() => {
-        btn.removeEventListener("mouseenter", onEnter);
-        btn.removeEventListener("mouseleave", onLeave);
-        tl.kill();
-        split.revert();
-      });
-    });
+        btn.removeEventListener('mouseenter', onEnter)
+        btn.removeEventListener('mouseleave', onLeave)
+        tl.kill()
+        split.revert()
+      })
+    })
 
-    return () => cleanups.forEach((fn) => fn());
-  }, [isLoaded, isMobile]);
+    return () => cleanups.forEach((fn) => fn())
+  }, [isLoaded, isMobile])
 
   const heroIntroMotion = () => {
-    let split1: SplitText | undefined;
-    let split2: SplitText | undefined;
-    let split3: SplitText | undefined;
+    let split1: SplitText | undefined
+    let split2: SplitText | undefined
+    let split3: SplitText | undefined
 
     if (!isMobile) {
-      split1 = new SplitText(".desc-text-1", { type: "chars" });
-      split2 = new SplitText(".desc-text-2", { type: "chars" });
-      split3 = new SplitText(".desc-text-3", { type: "chars" });
+      split1 = new SplitText('.desc-text-1', { type: 'chars' })
+      split2 = new SplitText('.desc-text-2', { type: 'chars' })
+      split3 = new SplitText('.desc-text-3', { type: 'chars' })
     }
 
     const tl = gsap
@@ -295,105 +252,74 @@ function App() {
       // 0. particles converge from scatter → star shape
       .call(() => triggerAssembly())
       // 1. fade in hero content
-      .fromTo(
-        heroContentRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.5, ease: "linear" },
-      )
+      .fromTo(heroContentRef.current, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: 'linear' })
       // 2. canvas brightness reveal
-      .to(
-        ".webgl-canvas",
-        { filter: "brightness(1)", duration: 2, ease: "circ.out" },
-        "<",
-      );
+      .to('.webgl-canvas', { filter: 'brightness(1)', duration: 2, ease: 'circ.out' }, '<')
 
     if (!isMobile) {
-      tl.from(
-        ".title-word",
-        { y: "110%", duration: 1.2, stagger: 0.1, ease: "circ.out" },
-        "<+0.15",
-      )
+      tl.from('.title-word', { y: '110%', duration: 1.2, stagger: 0.1, ease: 'circ.out' }, '<+0.15')
+        .from('.desc-wrap', { x: -10, stagger: 0.1, duration: 0.8, ease: 'circ.out' }, '<+0.1')
+        .from('.desc-wrap', { opacity: 0, stagger: 0.1, duration: 0.2, ease: 'power1.out' }, '<')
+        .from(split1!.chars, { opacity: 0, duration: 0.01, stagger: 0.025, ease: 'none' }, '<')
+        .from(split2!.chars, { opacity: 0, duration: 0.01, stagger: 0.025, ease: 'none' }, '<0.1')
+        .from(split3!.chars, { opacity: 0, duration: 0.01, stagger: 0.025, ease: 'none' }, '<0.1')
+        .from('.desc-separator', { opacity: 0, duration: 0.4, ease: 'power1.out' }, '<0.1')
+        .from('.hero-hud-data__monitor', { opacity: 0, x: 50, duration: 0.8, ease: 'circ.out' }, '<')
         .from(
-          ".desc-wrap",
-          { x: -10, stagger: 0.1, duration: 0.8, ease: "circ.out" },
-          "<+0.1",
-        )
-        .from(
-          ".desc-wrap",
-          { opacity: 0, stagger: 0.1, duration: 0.2, ease: "power1.out" },
-          "<",
-        )
-        .from(
-          split1!.chars,
-          { opacity: 0, duration: 0.01, stagger: 0.025, ease: "none" },
-          "<",
-        )
-        .from(
-          split2!.chars,
-          { opacity: 0, duration: 0.01, stagger: 0.025, ease: "none" },
-          "<0.1",
-        )
-        .from(
-          split3!.chars,
-          { opacity: 0, duration: 0.01, stagger: 0.025, ease: "none" },
-          "<0.1",
-        )
-        .from(
-          ".desc-separator",
-          { opacity: 0, duration: 0.4, ease: "power1.out" },
-          "<0.1",
-        )
-        .from(
-          ".hero-hud-data__monitor",
-          { opacity: 0, x: 50, duration: 0.8, ease: "circ.out" },
-          "<",
-        )
-        .from(
-          ".hero-hint",
+          '.hero-hint',
           {
             opacity: 0,
             duration: 0.8,
-            ease: "linear",
+            ease: 'linear',
           },
-          "<",
+          '<',
         )
         .from(
-          ".hero-hint",
+          '.hero-hint',
           {
             y: -10,
             duration: 0.8,
-            ease: "circ.out",
+            ease: 'circ.out',
           },
-          "<",
+          '<',
         )
         .call(() => {
-          split1?.revert();
-          split2?.revert();
-          split3?.revert();
-        });
+          split1?.revert()
+          split2?.revert()
+          split3?.revert()
+        })
     }
 
     tl.fromTo(
-      ".hero-hint",
+      '.hero-hint',
       { y: 0 },
       {
         y: 8,
         repeat: -1,
         yoyo: true,
         duration: 1.0,
-        ease: "sine.inOut",
+        ease: 'sine.inOut',
       },
-      isMobile ? 0.5 : "+0.2",
-    );
+      isMobile ? 0.5 : '+0.2',
+    )
 
-    return tl;
-  };
+    return tl
+  }
 
   return (
-    <div className="app-container" ref={containerRef}>
+    <div
+      className="app-container"
+      ref={containerRef}
+    >
       <Seo />
-      <canvas className="webgl-canvas" ref={canvasRef} />
-      <canvas className="trail-canvas" ref={trailCanvasRef} />
+      <canvas
+        className="webgl-canvas"
+        ref={canvasRef}
+      />
+      <canvas
+        className="trail-canvas"
+        ref={trailCanvasRef}
+      />
 
       {/* ── IntroLog: mounts immediately, acts as loading screen + intro ── */}
       {/* Deep link (view !== hero): log acts as loading gate only — no line
@@ -403,23 +329,19 @@ function App() {
         <IntroLog
           loadProgress={loadProgress}
           isLoaded={isLoaded}
-          instant={view !== "hero"}
+          instant={view !== 'hero'}
           onComplete={() => {
-            setShowIntro(false);
+            setShowIntro(false)
             // Prefetch Works & About chunks in the background after intro
             // so they're ready before the user clicks a nav button
-            import("./components/Works");
-            import("./components/About");
-            if (view === "hero") {
-              heroIntroMotion();
+            import('./components/Works')
+            import('./components/About')
+            if (view === 'hero') {
+              heroIntroMotion()
             } else {
-              applyViewInstant(view === "about" ? "about" : "works");
-              gsap.set(".webgl-canvas", { filter: "brightness(1)" });
-              gsap.fromTo(
-                heroContentRef.current,
-                { opacity: 0 },
-                { opacity: 1, duration: 0.5, ease: "linear" },
-              );
+              applyViewInstant(view === 'about' ? 'about' : 'works')
+              gsap.set('.webgl-canvas', { filter: 'brightness(1)' })
+              gsap.fromTo(heroContentRef.current, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: 'linear' })
             }
           }}
         />
@@ -430,59 +352,37 @@ function App() {
         ref={heroContentRef}
         style={{
           opacity: showIntro ? 0 : 1,
-          pointerEvents: showIntro ? "none" : "auto",
+          pointerEvents: showIntro ? 'none' : 'auto',
         }}
       >
         <header className="header">
-          <div className="header-left" onClick={goHero}>
+          <div
+            className="header-left"
+            onClick={goHero}
+          >
             <div className="title">ImChaewon</div>
             <div
-              className={`header-sub-flip${view !== "hero" ? " is-sub" : ""}`}
-              aria-label={view !== "hero" ? "go main" : "Archive v1.0"}
+              className={`header-sub-flip${view !== 'hero' ? ' is-sub' : ''}`}
+              aria-label={view !== 'hero' ? 'go main' : 'Archive v1.0'}
             >
               <span className="header-sub-flip__front">Archive v1.0</span>
               <span className="header-sub-flip__back">← back</span>
             </div>
           </div>
 
-          {/* Section nav — visible in works/about only; hero keeps star buttons */}
-          <nav
-            className={`header-nav${sectionNavVisible ? " visible" : ""}`}
-            aria-label="Section navigation"
-          >
-            <span className="header-nav__label">&gt; NAV</span>
-            <div className="header-nav__menu">
-              <button
-                className={`btn-nav${urlView === "works" ? " on" : ""}`}
-                onClick={goWorks}
-                aria-current={urlView === "works" ? "page" : undefined}
-              >
-                WORKS
-              </button>
-              <span className="divider"></span>
-              <button
-                className={`btn-nav${urlView === "about" ? " on" : ""}`}
-                onClick={goAbout}
-                aria-current={urlView === "about" ? "page" : undefined}
-              >
-                ABOUT
-              </button>
-            </div>
-          </nav>
-
           <div className="header-right">
             <span className="menu-lang-label">&gt; LAN</span>
             <div className="menu-lang">
               <button
-                className={lang === "ko" ? "btn-lang on" : "btn-lang"}
-                onClick={() => switchLang("ko")}
+                className={lang === 'ko' ? 'btn-lang on' : 'btn-lang'}
+                onClick={() => switchLang('ko')}
               >
                 KO
               </button>
               <span className="divider"></span>
               <button
-                className={lang === "en" ? "btn-lang on" : "btn-lang"}
-                onClick={() => switchLang("en")}
+                className={lang === 'en' ? 'btn-lang on' : 'btn-lang'}
+                onClick={() => switchLang('en')}
               >
                 EN
               </button>
@@ -490,7 +390,31 @@ function App() {
           </div>
         </header>
 
-        <section className={`hero${view !== "hero" ? " hidden" : ""}`}>
+        {/* Section nav — fixed bottom center, visible only in works/about */}
+        <nav
+          className={`section-nav-fixed${sectionNavVisible ? ' visible' : ''}`}
+          aria-label="Section navigation"
+        >
+          <div className="section-nav-fixed__menu">
+            <button
+              className={`btn-nav${urlView === 'works' ? ' on' : ''}`}
+              onClick={goWorks}
+              aria-current={urlView === 'works' ? 'page' : undefined}
+            >
+              WORKS
+            </button>
+            <span className="divider"></span>
+            <button
+              className={`btn-nav${urlView === 'about' ? ' on' : ''}`}
+              onClick={goAbout}
+              aria-current={urlView === 'about' ? 'page' : undefined}
+            >
+              ABOUT
+            </button>
+          </div>
+        </nav>
+
+        <section className={`hero${view !== 'hero' ? ' hidden' : ''}`}>
           <div className="hero-main-text">
             <div className="hero-main-text__title">
               <span className="title-mask">
@@ -509,30 +433,22 @@ function App() {
               <p className="hero-sub-text__desc">
                 <span className="desc-wrap">
                   <span className="desc-prompt">&gt;</span>
-                  <span className="desc-text desc-text-1">
-                    designing interactive web experiences
-                  </span>
+                  <span className="desc-text desc-text-1">designing interactive web experiences</span>
                 </span>
                 <span className="desc-wrap">
                   <span className="desc-prompt">&gt;</span>
-                  <span className="desc-text desc-text-2">
-                    focusing on structure and motion
-                  </span>
+                  <span className="desc-text desc-text-2">focusing on structure and motion</span>
                 </span>
                 <span className="desc-wrap">
                   <span className="desc-prompt">&gt;</span>
-                  <span className="desc-text desc-text-3">
-                    optimizing workflows and systems
-                  </span>
+                  <span className="desc-text desc-text-3">optimizing workflows and systems</span>
                 </span>
                 {isMobile && (
                   <>
                     <span className="desc-separator">. . .</span>
                     <span className="desc-wrap desc-wrap-location">
                       <span className="desc-prompt">&gt;</span>
-                      <span className="desc-text desc-location">
-                        based in South_korea/Australia
-                      </span>
+                      <span className="desc-text desc-location">based in South_korea/Australia</span>
                     </span>
                   </>
                 )}
@@ -619,7 +535,7 @@ function App() {
               onClick={goWorks}
             >
               <span className="btn-text">
-                {!isMobile && ">"} <span className="btn-text__text">works</span>
+                {!isMobile && '>'} <span className="btn-text__text">works</span>
                 <span className="btn-text__cursor"></span>
               </span>
             </button>
@@ -629,7 +545,7 @@ function App() {
               onClick={goAbout}
             >
               <span className="btn-text">
-                {!isMobile && ">"} <span className="btn-text__text">about</span>
+                {!isMobile && '>'} <span className="btn-text__text">about</span>
                 <span className="btn-text__cursor"></span>
               </span>
             </button>
@@ -639,10 +555,8 @@ function App() {
         {/* Works — lazy-loaded on first visit, kept mounted after */}
         {hasShownWorks && (
           <Suspense fallback={null}>
-            <section
-              className={`page-sub works${view === "works" ? " visible" : ""}`}
-            >
-              <Works isActive={activeSection === "works"} />
+            <section className={`page-sub works${view === 'works' ? ' visible' : ''}`}>
+              <Works isActive={activeSection === 'works'} />
             </section>
           </Suspense>
         )}
@@ -650,10 +564,8 @@ function App() {
         {/* About — lazy-loaded on first visit, kept mounted after */}
         {hasShownAbout && (
           <Suspense fallback={null}>
-            <section
-              className={`page-sub about${view === "about" ? " visible" : ""}`}
-            >
-              <About isActive={activeSection === "about"} />
+            <section className={`page-sub about${view === 'about' ? ' visible' : ''}`}>
+              <About isActive={activeSection === 'about'} />
             </section>
           </Suspense>
         )}
@@ -662,7 +574,7 @@ function App() {
       {/* Child routes render nothing visible; the catch-all redirect lives here */}
       <Outlet />
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

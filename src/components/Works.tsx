@@ -14,13 +14,19 @@ interface WorksProps {
   isActive: boolean;
 }
 
+type WorkHighlight = {
+  title: string;
+  p: string[];
+};
+
 type WorkType = {
   id: number;
   category: number;
   game: string;
   title: string;
+  intro: string;
   date: string;
-  description: string;
+  description: WorkHighlight[];
   stack: string;
   thumbnail: string;
   img: string[];
@@ -1079,8 +1085,22 @@ function Works({ isActive }: WorksProps) {
                   </div>
 
                   <div className="panel-description text-body">
-                    {activeWork.description.split("\n").map((line, idx) => (
-                      <span key={idx}>{renderText(line)}</span>
+                    {activeWork.intro && (
+                      <p className="panel-intro">
+                        {renderText(activeWork.intro)}
+                      </p>
+                    )}
+                    {activeWork.description.map((highlight, hIdx) => (
+                      <div className="panel-highlight" key={hIdx}>
+                        <p className="panel-highlight__title">
+                          {renderText(highlight.title)}
+                        </p>
+                        {highlight.p.map((line, lIdx) => (
+                          <p className="panel-highlight__body" key={lIdx}>
+                            {renderText(line)}
+                          </p>
+                        ))}
+                      </div>
                     ))}
                   </div>
 

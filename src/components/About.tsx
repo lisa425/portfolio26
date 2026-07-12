@@ -202,8 +202,7 @@ function About({ isActive }: AboutProps) {
             gsap.fromTo(
               line,
               {
-                strokeDashoffset: () =>
-                  parseFloat(line.style.strokeDasharray || '0') || 0,
+                strokeDashoffset: () => parseFloat(line.style.strokeDasharray || '0') || 0,
               },
               {
                 strokeDashoffset: 0,
@@ -211,10 +210,8 @@ function About({ isActive }: AboutProps) {
                 scrollTrigger: {
                   trigger: targetSection,
                   scroller,
-                  start: () =>
-                    Math.max(sectionTopInContent() - scroller.clientHeight, 8),
-                  end: () =>
-                    sectionTopInContent() - scroller.clientHeight * 0.55,
+                  start: () => Math.max(sectionTopInContent() - scroller.clientHeight, 8),
+                  end: () => sectionTopInContent() - scroller.clientHeight * 0.55,
                   scrub: true,
                   invalidateOnRefresh: true,
                 },
@@ -556,13 +553,28 @@ function About({ isActive }: AboutProps) {
                         {contact.Blog}
                       </a>
                     </p>
+                    <p className="btn-contact">
+                      Github
+                      <a
+                        className="meta text-body"
+                        href={contact.GitHub}
+                        target="_blank"
+                      >
+                        {contact.GitHub}
+                      </a>
+                    </p>
                   </div>
                 </div>
               </div>
             </section>
-
-            <section className="about-section__footer">© 2026 ChaeWon Im. All rights reserved.</section>
           </div>
+
+          <button
+            className="btn-resume"
+            aria-label="resume-download"
+          >
+            DOWNLOAD RESUME
+          </button>
         </div>
       </div>
     </>
