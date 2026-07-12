@@ -25,3 +25,6 @@ dist-ssr
 
 document
 .gemini
+
+*storybook.log
+storybook-static
