@@ -1,86 +1,83 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import type { Swiper as SwiperInstance } from "swiper";
+import "swiper/css";
 import Corners from "./Corners";
 import Skeleton from "./Skeleton";
 import styles from "./WorkDetailImage.module.scss";
 
-/** 로드 전 플레이스홀더 높이(px) — 팝업이 이미지 로드 전에 쪼그라들지 않게 함 */
-export const PANEL_IMG_PLACEHOLDER_H = 240;
-
 interface WorkDetailImageProps {
-  src: string;
-  /** 목록 내 순번 — 앞쪽 2장은 eager 로드 */
-  index: number;
+  /** 프로젝트 이미지 경로 배열 — 컨테이너 하나 안에서 스와이프로 전환 */
+  src: string[];
 }
 
 /**
- * Works detail 모달의 프로젝트 이미지.
- * 로드 전에는 240px 플레이스홀더 + 스켈레톤 셔머를 보여주고,
- * 로드 후 자연 높이로 전환한다 (CSS는 height를 auto로 애니메이션 못 하므로
- * JS가 px 값을 계산해 넣는다). 스타일: WorkDetailImage.module.scss
+ * Works detail 모달의 프로젝트 이미지 갤러리.
+ * 컨테이너는 하나로 고정(16:9)이고, `src` 배열의 이미지들을 Swiper로
+ * 넘겨가며 본다. 각 슬라이드는 로드 전 스켈레톤 셔머를 보여준다.
+ * 스타일: WorkDetailImage.module.scss
  */
-function WorkDetailImage({ src, index }: WorkDetailImageProps) {
-  const [loaded, setLoaded] = useState(false);
-  const [heightPx, setHeightPx] = useState(PANEL_IMG_PLACEHOLDER_H);
-  const imgRef = useRef<HTMLImageElement>(null);
+function WorkDetailImage({ src }: WorkDetailImageProps) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [loadedSet, setLoadedSet] = useState<ReadonlySet<number>>(new Set());
+  const swiperRef = useRef<SwiperInstance | null>(null);
 
-  const settleNaturalHeight = useCallback(() => {
-    const img = imgRef.current;
-    if (!img?.naturalWidth) {
-      setHeightPx(PANEL_IMG_PLACEHOLDER_H);
-      return;
-    }
-    setHeightPx(img.offsetHeight);
-  }, []);
-
-  useEffect(() => {
-    setLoaded(false);
-    setHeightPx(PANEL_IMG_PLACEHOLDER_H);
-    const el = imgRef.current;
-    if (el?.complete && el.naturalWidth > 0) {
-      setLoaded(true);
-      // Two rAFs so the browser paints placeholder height first; then `height` can transition.
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          settleNaturalHeight();
-        });
-      });
-    }
-  }, [src, settleNaturalHeight]);
-
-  const handleLoad = () => {
-    setLoaded(true);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        settleNaturalHeight();
-      });
-    });
-  };
-
-  const handleError = () => {
-    setLoaded(true);
-    setHeightPx(PANEL_IMG_PLACEHOLDER_H);
+  const markLoaded = (i: number) => {
+    setLoadedSet((prev) => (prev.has(i) ? prev : new Set(prev).add(i)));
   };
 
   return (
     <div className={styles["panel-image-container"]}>
       <Corners />
-      <div
-        className={styles["image-wrapper"]}
-        style={{ height: heightPx }}
-        aria-busy={!loaded}
-      >
-        <Skeleton hidden={loaded} />
-        <img
-          ref={imgRef}
-          src={src}
-          alt=""
-          loading={index < 2 ? "eager" : "lazy"}
-          decoding="async"
-          onLoad={handleLoad}
-          onError={handleError}
-          className={loaded ? "is-loaded" : ""}
-        />
+      <div className={styles["image-wrapper"]}>
+        <Swiper
+          className={styles["image-swiper"]}
+          onSwiper={(s) => {
+            swiperRef.current = s;
+          }}
+          onSlideChange={(s) => setActiveIndex(s.activeIndex)}
+        >
+          {src.map((url, i) => (
+            <SwiperSlide key={url} className={styles["image-slide"]}>
+              <Skeleton hidden={loadedSet.has(i)} />
+              <img
+                src={url}
+                alt=""
+                loading={i === 0 ? "eager" : "lazy"}
+                decoding="async"
+                onLoad={() => markLoaded(i)}
+                onError={() => markLoaded(i)}
+                className={loadedSet.has(i) ? "is-loaded" : ""}
+              />
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </div>
+
+      {src.length > 1 && (
+        <div className={styles["swiper-controls"]}>
+          <button
+            type="button"
+            className={styles["swiper-btn"]}
+            onClick={() => swiperRef.current?.slidePrev()}
+            aria-label="previous image"
+          >
+            [ &lt; ]
+          </button>
+          <span className={styles["swiper-count"]}>
+            {String(activeIndex + 1).padStart(2, "0")}/
+            {String(src.length).padStart(2, "0")}
+          </span>
+          <button
+            type="button"
+            className={styles["swiper-btn"]}
+            onClick={() => swiperRef.current?.slideNext()}
+            aria-label="next image"
+          >
+            [ &gt; ]
+          </button>
+        </div>
+      )}
     </div>
   );
 }

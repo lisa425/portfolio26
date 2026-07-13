@@ -12,6 +12,9 @@ module.exports = {
   // 누락 시 "Unexpected token 'export'" 에러가 난다.
   transformIgnorePatterns: ['/node_modules/(?!three)'],
   moduleNameMapper: {
+    // 'swiper/css'는 확장자 없는 subpath export라 아래 .scss/.css 패턴에
+    // 안 걸림 — 별도 매핑 필요 (없으면 ts-jest가 실제 CSS 파일을 파싱 시도)
+    '^swiper/css$': 'identity-obj-proxy',
     '\\.(scss|css)$': 'identity-obj-proxy',
     '\\.(jpg|jpeg|png|gif|webp|avif|svg|woff2?)$': '<rootDir>/src/test/fileMock.cjs',
   },
