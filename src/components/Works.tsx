@@ -131,7 +131,6 @@ function Works({ isActive }: WorksProps) {
   const scene3dRef = useRef<HTMLDivElement>(null)
   const ringEls = useRef<(HTMLDivElement | null)[]>([])
   const ringHighlightEls = useRef<(HTMLDivElement | null)[]>([])
-  const telemetryRef = useRef<HTMLDivElement>(null)
   // One ref per work panel — show/hide managed via direct DOM (no React re-render)
   const panelRefs = useRef<(HTMLDivElement | null)[]>([])
   const activePanelIdxRef = useRef<number | null>(null)
@@ -158,7 +157,6 @@ function Works({ isActive }: WorksProps) {
   // Line animation states
   const ringHighlightSweeps = useRef<number[]>([])
   const rafRef = useRef(0)
-  const telemetryIntervalRef = useRef(0)
 
   // ─── Lenis (mobile only) ───
   useEffect(() => {
@@ -301,27 +299,6 @@ function Works({ isActive }: WorksProps) {
       running = false
       cancelAnimationFrame(rafRef.current)
     }
-  }, [])
-
-  // ─── Telemetry update (500ms interval) ───
-  useEffect(() => {
-    const update = () => {
-      if (!telemetryRef.current) return
-      if (viewModeRef.current === 'list') return // 씬 숨김 중엔 갱신 불필요
-      const rx = rotRef.current.x
-      const ry = ((rotRef.current.y % 360) + 360) % 360
-      const rz = (velRef.current.x + velRef.current.y) * 8
-      const vel = Math.sqrt(velRef.current.x ** 2 + velRef.current.y ** 2)
-      telemetryRef.current.innerHTML =
-        `<span class="telemetry__title">&gt; ORBITAL TELEMETRY</span>` +
-        `<span class="telemetry__row"><span class="telemetry__label">RX</span> <span class="telemetry__val">${rx.toFixed(2).padStart(8)}\u00B0</span></span>` +
-        `<span class="telemetry__row"><span class="telemetry__label">RY</span> <span class="telemetry__val">${ry.toFixed(2).padStart(8)}\u00B0</span></span>` +
-        `<span class="telemetry__row"><span class="telemetry__label">RZ</span> <span class="telemetry__val">${rz.toFixed(2).padStart(8)}\u00B0</span></span>` +
-        `<span class="telemetry__row telemetry__row--vel"><span class="telemetry__label">VEL</span> <span class="telemetry__val">${vel.toFixed(4)}</span></span>`
-    }
-    update()
-    telemetryIntervalRef.current = window.setInterval(update, 500)
-    return () => clearInterval(telemetryIntervalRef.current)
   }, [])
 
   // ─── Hover states ───
@@ -645,9 +622,6 @@ function Works({ isActive }: WorksProps) {
           )
         })
       })
-
-      tl.fromTo('.works-telemetry', { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.5 }, 0.6)
-      tl.fromTo('.works-progress', { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.75)
     } else {
       entryTlRef.current?.kill()
       entryTlRef.current = null
@@ -667,8 +641,6 @@ function Works({ isActive }: WorksProps) {
       })
       indexSplitRef.current?.revert()
       indexSplitRef.current = null
-      gsap.set('.works-progress', { opacity: 0 })
-      gsap.set('.works-telemetry', { opacity: 0 })
 
       // Reset ring sweep to 0 (invisible) — no scale reset needed
       ringsRef.current.forEach((_, i) => {
@@ -685,27 +657,6 @@ function Works({ isActive }: WorksProps) {
 
   return (
     <div className={`inner works__inner ${isMobileDevice ? 'is-mobile-device' : ''}`}>
-      {/* Terminal Progress Bar */}
-      <div className="terminal-bar works-progress">
-        <span className="terminal-bar__label">&gt; WORKS</span>
-
-        {isMobileDevice || viewMode === 'list' ? null : (
-          <>
-            <span> ─── </span>
-            <span className="terminal-bar__bar">
-              [{works.map((_, i) => (i === previewIndex ? '█' : '░')).join('')}]
-            </span>
-          </>
-        )}
-        <span className="works-progress__info">
-          <span>
-            {isMobileDevice || viewMode === 'list'
-              ? ` ─── ${String(works.length + subProjects.length).padStart(3, '0')} PROJECTS DETECTED`
-              : `${String(previewIndex + 1).padStart(3, '0')}/${String(works.length).padStart(3, '0')} ─── ${`${works[previewIndex]?.game ?? ''}`}`}
-          </span>
-        </span>
-      </div>
-
       {/* PC 뷰 토글: Selected Project(궤도) / View All(리스트) */}
       {!isMobileDevice && (
         <div className={worksStyles['view-toggle']}>
@@ -795,13 +746,6 @@ function Works({ isActive }: WorksProps) {
           />
         ))}
 
-      {/* Telemetry Panel */}
-      <div
-        className="works-telemetry"
-        ref={telemetryRef}
-        style={!isMobileDevice && viewMode === 'list' ? { display: 'none' } : undefined}
-      />
-
       {/* 3D Scene Container — list 모드에선 숨김(언마운트 X, 재진입 비용 회피) */}
       <div
         className="constellation-scene"
@@ -886,7 +830,13 @@ function Works({ isActive }: WorksProps) {
                     }}
                   >
                     <span className="constellation-node__index">{String(idx + 1).padStart(3, '0')}</span>
-                    <div className="constellation-node__point" />
+                    <div className="constellation-node__point">
+                      <img
+                        src={work.thumbnail}
+                        alt=""
+                        loading="eager"
+                      />
+                    </div>
                   </div>
                 </div>
               )
