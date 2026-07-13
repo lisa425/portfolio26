@@ -2,6 +2,7 @@ import type { Ref } from "react";
 import type { WorkType } from "../../types";
 import { renderText } from "../../utils/renderText";
 import WorksPreviewThumb from "./WorksPreviewThumb";
+import styles from "./WorksPreviewCard.module.scss";
 
 interface WorksPreviewCardProps {
   work: WorkType;
@@ -32,41 +33,43 @@ function WorksPreviewCard({
   ref,
 }: WorksPreviewCardProps) {
   return (
+    // literal `works-preview`는 외부 계약용 훅 클래스 — Works.tsx의 GSAP 셀렉터,
+    // App.scss의 모바일 리스트 오버라이드, PC 호버 classList('active') 토글이 참조한다
     <div
-      className={`works-preview${active ? " active" : ""}`}
+      className={`${styles["works-preview"]} works-preview${active ? " active" : ""}`}
       onClick={onClick}
       ref={ref}
     >
-      <div className="works-preview__header">
-        <span className="works-preview__panel-id">◼︎ TARGET NODE</span>
-        <span className="works-preview__index">
+      <div className={styles["works-preview__header"]}>
+        <span className={styles["works-preview__panel-id"]}>◼︎ TARGET NODE</span>
+        <span className={styles["works-preview__index"]}>
           {String(index + 1).padStart(3, "0")}/
           {String(total).padStart(3, "0")}
         </span>
       </div>
       <WorksPreviewThumb src={work.thumbnail} alt={work.title} />
-      <div className="works-preview__data">
-        <div className="works-preview__row">
-          <span className="works-preview__key">GAME</span>
-          <span className="works-preview__val">{work.game}</span>
+      <div className={styles["works-preview__data"]}>
+        <div className={styles["works-preview__row"]}>
+          <span className={styles["works-preview__key"]}>GAME</span>
+          <span className={styles["works-preview__val"]}>{work.game}</span>
         </div>
-        <div className="works-preview__row">
-          <span className="works-preview__key">NAME</span>
-          <span className="works-preview__val works-preview__val--title">
+        <div className={styles["works-preview__row"]}>
+          <span className={styles["works-preview__key"]}>NAME</span>
+          <span className={styles["works-preview__val"]}>
             {renderText(work.title)}
           </span>
         </div>
-        <div className="works-preview__row">
-          <span className="works-preview__key">TECH</span>
-          <span className="works-preview__val">{work.stack}</span>
+        <div className={styles["works-preview__row"]}>
+          <span className={styles["works-preview__key"]}>TECH</span>
+          <span className={styles["works-preview__val"]}>{work.stack}</span>
         </div>
       </div>
-      <div className="works-preview__footer">
-        <span className="works-preview__status">
-          <span className="works-preview__dot" />
+      <div className={styles["works-preview__footer"]}>
+        <span className={styles["works-preview__status"]}>
+          <span className={styles["works-preview__dot"]} />
           ONLINE
         </span>
-        <span className="works-preview__action">[ ENTER ]</span>
+        <span className={styles["works-preview__action"]}>[ ENTER ]</span>
       </div>
     </div>
   );

@@ -1,0 +1,59 @@
+@use '../../styles/tokens' as *;
+
+// Works 프리뷰 카드의 4:3 썸네일 + 스캔라인 오버레이
+// (기존 App.scss .works .works-preview 스코프에서 분리)
+.works-preview__thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(40%) brightness(0.8);
+    display: block;
+    opacity: 0;
+    transition: opacity 0.45s ease;
+
+    // is-loaded는 컴포넌트가 literal 클래스로 토글 (기존 계약 유지)
+    &:global(.is-loaded) {
+      opacity: 1;
+    }
+  }
+}
+
+// Scanline overlay on thumbnail
+.works-preview__thumb-scan {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.18) 3px,
+    rgba(0, 0, 0, 0.18) 4px
+  );
+  pointer-events: none;
+
+  // Top-left coord marker
+  &::before {
+    content: '+ + +';
+    position: absolute;
+    top: vw(6, 1920);
+    left: vw(8, 1920);
+    font-size: 8px;
+    color: rgba($text-primary, 0.35);
+  }
+  // Bottom-right coord marker
+  &::after {
+    content: attr(data-coords);
+    position: absolute;
+    bottom: vw(6, 1920);
+    right: vw(8, 1920);
+    font-size: 8px;
+    color: rgba($text-primary, 0.25);
+  }
+}

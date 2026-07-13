@@ -11,6 +11,7 @@ import WorksPreviewCard from './WorksPreviewCard'
 const sampleWork: WorkType = {
   id: 1,
   category: 1,
+  dept: '',
   game: 'Azure Promilia',
   title: 'Official Website & 1st Pre-registration',
   intro: '',

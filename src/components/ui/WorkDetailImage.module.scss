@@ -1,0 +1,42 @@
+// Works detail 모달의 프로젝트 이미지 프레임
+// (기존 App.scss .works__detail 스코프에서 분리 — 부모 의존 없는 자기완결 스타일)
+.panel-image-container {
+  position: relative;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 10px;
+
+  // Height is set in px from JS on ALL devices so we can transition
+  // (CSS cannot animate to `auto`) and the popup keeps its size while
+  // the skeleton shows. img stays width:100% / height:auto.
+  .image-wrapper {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.02);
+    transition: height 0.7s ease;
+    aspect-ratio: 16/9 !important;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  img {
+    position: relative;
+    z-index: 0;
+    width: 100%;
+    height: auto;
+    min-height: 100%;
+    display: block;
+    filter: grayscale(10%);
+    opacity: 0;
+    transition: opacity 0.45s ease;
+    object-fit: cover;
+
+    // is-loaded는 컴포넌트가 literal 클래스로 토글 (기존 계약 유지)
+    &:global(.is-loaded) {
+      opacity: 1;
+    }
+  }
+}
