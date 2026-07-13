@@ -1,0 +1,89 @@
+@use '../styles/tokens' as *;
+
+// ─── Works PC 뷰 토글 + View All(리스트) 레이아웃 ───
+// 3D 씬/터미널바 등 기존 works 스타일은 App.scss 소유 — 여기는 신규 조각만.
+
+// [ SELECTED PROJECT ] / [ VIEW ALL ] — 터미널바 아래 중앙 (PC 전용)
+.view-toggle {
+  position: absolute;
+  top: 4.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: max(vw(11, 1920), 11px);
+  pointer-events: auto;
+
+  &__btn {
+    background: none;
+    border: none;
+    padding: 0.2rem 0.3rem;
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: 0.05em;
+    color: rgba($text-primary, 0.35);
+    cursor: pointer;
+
+    &:hover {
+      color: rgba($text-primary, 0.7);
+    }
+
+    &--active {
+      color: $text-primary;
+    }
+  }
+
+  &__divider {
+    color: rgba($text-primary, 0.25);
+  }
+}
+
+// View All 컨테이너 — 씬 자리를 통째로 대체하는 스크롤 영역
+.pc-list {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow-y: auto;
+  padding: 8rem 3rem 5rem;
+}
+
+.pc-list__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+}
+
+.pc-list__heading {
+  font-size: max(vw(12, 1920), 11px);
+  font-weight: 400;
+  color: rgba($text-primary, 0.65);
+  letter-spacing: 0.08em;
+  margin-bottom: 1.2rem;
+}
+
+// Selected Project — 카드 그리드 (5개, 스크롤 없는 단순 그리드)
+.pc-list__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+// WorksPreviewCard 기본 스타일(fixed HUD 패널)을 그리드 아이템으로 무력화
+// — 3클래스로 카드 모듈의 :global(.active) 룰(2클래스)보다 우선순위 확보
+.pc-list__grid :global(.works-preview.active) {
+  position: static;
+  width: 100%;
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+
+  &:hover {
+    border-color: rgba($text-primary, 0.45);
+  }
+}
