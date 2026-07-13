@@ -4,6 +4,9 @@
 // 3D 씬/터미널바 등 기존 works 스타일은 App.scss 소유 — 여기는 신규 조각만.
 
 // [ SELECTED PROJECT ] / [ VIEW ALL ] — 터미널바 아래 중앙 (PC 전용)
+// pointer-events는 기본 none — .page-sub(.works)가 .visible을 잃고 opacity 0으로
+// 페이드아웃된 뒤에도 이 토글이 유령처럼 클릭되는 걸 막는다 (.works.visible에서만 auto).
+// 참고: App.scss:1084의 모바일 카드 재활성화와 동일한 패턴.
 .view-toggle {
   position: absolute;
   top: 4.6rem;
@@ -14,7 +17,7 @@
   align-items: center;
   gap: 0.6rem;
   font-size: max(vw(11, 1920), 11px);
-  pointer-events: auto;
+  pointer-events: none;
 
   &__btn {
     background: none;
@@ -74,16 +77,31 @@
 
 // WorksPreviewCard 기본 스타일(fixed HUD 패널)을 그리드 아이템으로 무력화
 // — 3클래스로 카드 모듈의 :global(.active) 룰(2클래스)보다 우선순위 확보
+// pointer-events는 기본 none — 아래 .works.visible 게이트에서만 auto로 재활성화
+// (섹션이 opacity 0으로 사라진 뒤에도 카드가 클릭되어 detail 모달이 열리던 버그 수정)
 .pc-list__grid :global(.works-preview.active) {
   position: static;
   width: 100%;
   transform: none;
   opacity: 1;
-  pointer-events: auto;
+  pointer-events: none;
   cursor: pointer;
   transition: border-color 0.2s ease;
 
   &:hover {
     border-color: rgba($text-primary, 0.45);
+  }
+}
+
+// ─── 섹션이 실제로 보일 때만 인터랙션 재활성화 ───
+// .page-sub(.works)가 .visible을 잃으면(뒤로가기 등) opacity만 페이드아웃되고
+// pointer-events:none은 즉시 적용되는데, 위 두 규칙이 auto를 강제해뒀던 게
+// 그 상속을 끊고 있었음 — App.scss:1084 모바일 카드 패턴과 동일하게 게이트.
+:global(.works.visible) {
+  .view-toggle {
+    pointer-events: auto;
+  }
+  .pc-list__grid :global(.works-preview.active) {
+    pointer-events: auto;
   }
 }
