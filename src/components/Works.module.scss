@@ -3,13 +3,13 @@
 // ─── Works PC 뷰 토글 + View All(리스트) 레이아웃 ───
 // 3D 씬/터미널바 등 기존 works 스타일은 App.scss 소유 — 여기는 신규 조각만.
 
-// [ SELECTED PROJECT ] / [ VIEW ALL ] — 터미널바 아래 중앙 (PC 전용)
+// [ VIEW MORE ] — 터미널바 아래 중앙 (PC 전용), 열리면 [ CLOSE ]로 바뀜
 // pointer-events는 기본 none — .page-sub(.works)가 .visible을 잃고 opacity 0으로
-// 페이드아웃된 뒤에도 이 토글이 유령처럼 클릭되는 걸 막는다 (.works.visible에서만 auto).
+// 페이드아웃된 뒤에도 이 버튼이 유령처럼 클릭되는 걸 막는다 (.works.visible에서만 auto).
 // 참고: App.scss:1084의 모바일 카드 재활성화와 동일한 패턴.
 .view-toggle {
   position: absolute;
-  top: 4.6rem;
+  top: 2rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 20;
@@ -37,30 +37,56 @@
       color: $text-primary;
     }
   }
+}
 
-  &__divider {
-    color: rgba($text-primary, 0.25);
+// ─── 드로어 백드롭 ───
+// 씬 전체를 덮어 궤도 드래그/호버가 자연히 안 먹게 만드는 역할(별도 JS 가드
+// 불필요 — 커서가 드로어보다 낮은 z-index인 백드롭에 막혀 씬까지 안 닿음).
+// 바깥 클릭 시 닫기. pointer-events는 열려 있을 때만, 그리고 섹션이 실제로
+// 보일 때만 (.works.visible 게이트 — 아래 참고).
+.drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+
+  &--open {
+    opacity: 1;
   }
 }
 
-// View All 컨테이너 — 씬 자리를 통째로 대체하는 스크롤 영역
-.pc-list {
+// ─── View All 드로어 (우측 슬라이드 패널) ───
+// Selected Project 궤도는 안 건드리고 그 위에 얹히는 사이드 패널.
+// 항상 렌더 + transform으로 슬라이드 — 트랜지션을 위해 언마운트하지 않는다.
+.drawer {
   position: absolute;
-  inset: 0;
-  z-index: 5;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 15;
+  width: min(420px, 32vw);
   overflow-y: auto;
-  padding: 8rem 3rem 5rem;
+  background: rgba($bg-color, 0.97);
+  border-left: 1px solid rgba($text-primary, 0.15);
+  padding: 6rem 2rem 3rem;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+
+  &--open {
+    transform: translateX(0);
+  }
 }
 
-.pc-list__inner {
-  max-width: 1200px;
-  margin: 0 auto;
+.drawer__inner {
   display: flex;
   flex-direction: column;
-  gap: 4rem;
+  gap: 3rem;
 }
 
-.pc-list__heading {
+.drawer__heading {
   font-size: max(vw(12, 1920), 11px);
   font-weight: 400;
   color: rgba($text-primary, 0.65);
@@ -68,18 +94,18 @@
   margin-bottom: 1.2rem;
 }
 
-// Selected Project — 카드 그리드 (5개, 스크롤 없는 단순 그리드)
-.pc-list__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+// Selected Project — 드로어 폭이 좁아 그리드가 아니라 단일 열
+.drawer__list {
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
 }
 
-// WorksPreviewCard 기본 스타일(fixed HUD 패널)을 그리드 아이템으로 무력화
+// WorksPreviewCard 기본 스타일(fixed HUD 패널)을 단일 열 아이템으로 무력화
 // — 3클래스로 카드 모듈의 :global(.active) 룰(2클래스)보다 우선순위 확보
 // pointer-events는 기본 none — 아래 .works.visible 게이트에서만 auto로 재활성화
 // (섹션이 opacity 0으로 사라진 뒤에도 카드가 클릭되어 detail 모달이 열리던 버그 수정)
-.pc-list__grid :global(.works-preview.active) {
+.drawer__list :global(.works-preview.active) {
   position: static;
   width: 100%;
   transform: none;
@@ -95,13 +121,17 @@
 
 // ─── 섹션이 실제로 보일 때만 인터랙션 재활성화 ───
 // .page-sub(.works)가 .visible을 잃으면(뒤로가기 등) opacity만 페이드아웃되고
-// pointer-events:none은 즉시 적용되는데, 위 두 규칙이 auto를 강제해뒀던 게
-// 그 상속을 끊고 있었음 — App.scss:1084 모바일 카드 패턴과 동일하게 게이트.
+// pointer-events:none은 즉시 적용되는데, 아래 규칙들이 auto를 강제해두면
+// 그 상속을 끊어버린다 — App.scss:1084 모바일 카드 패턴과 동일하게 게이트.
+// (드로어/백드롭도 열림(--open) 상태와 별개로 이 게이트를 항상 통과해야 함)
 :global(.works.visible) {
   .view-toggle {
     pointer-events: auto;
   }
-  .pc-list__grid :global(.works-preview.active) {
+  .drawer-backdrop--open {
+    pointer-events: auto;
+  }
+  .drawer--open .drawer__list :global(.works-preview.active) {
     pointer-events: auto;
   }
 }

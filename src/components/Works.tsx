@@ -111,20 +111,17 @@ function Works({ isActive }: WorksProps) {
   const [previewIndex, setPreviewIndex] = useState<number>(0) // progress bar display
   const [isOpen, setIsOpen] = useState(false)
 
-  // ─── PC 뷰 모드: node(Selected Project 궤도) / list(View All) ───
-  // 모바일은 토글 없이 항상 리스트가 디폴트 (viewMode 미사용)
-  const [viewMode, setViewMode] = useState<'node' | 'list'>(() => {
-    try {
-      return localStorage.getItem('worksViewMode') === 'list' ? 'list' : 'node'
-    } catch {
-      return 'node'
-    }
-  })
-  // rAF 루프/인터벌 콜백에서 최신 모드를 읽기 위한 ref (effect로 동기화)
-  const viewModeRef = useRef(viewMode)
+  // ─── PC 우측 드로어: Selected Project 궤도는 항상 그대로, VIEW MORE로
+  // View All(카드 리스트 + Other Projects)을 사이드 패널로 열고 닫는다.
+  // 모바일은 드로어 없이 항상 리스트가 디폴트.
+  // 세션마다 닫힌 상태로 시작 — "선호 모드"가 아니라 "잠깐 펼쳐보는 패널"이라
+  // localStorage에 굳이 기억 안 함.
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  // rAF 루프에서 최신 open 여부를 읽기 위한 ref (effect로 동기화)
+  const drawerOpenRef = useRef(drawerOpen)
   useEffect(() => {
-    viewModeRef.current = viewMode
-  }, [viewMode])
+    drawerOpenRef.current = drawerOpen
+  }, [drawerOpen])
 
   // DOM refs
   const sceneRef = useRef<HTMLDivElement>(null)
@@ -257,7 +254,7 @@ function Works({ isActive }: WorksProps) {
     const loop = () => {
       if (!running) return
 
-      if (isActiveRef.current && entryDoneRef.current && viewModeRef.current === 'node') {
+      if (isActiveRef.current && entryDoneRef.current && !drawerOpenRef.current) {
         // Momentum / auto-rotate
         if (!isDragRef.current) {
           if (Math.abs(velRef.current.x) > 0.001 || Math.abs(velRef.current.y) > 0.001) {
@@ -322,24 +319,21 @@ function Works({ isActive }: WorksProps) {
     setIsOpen(true)
   }, [])
 
-  // ─── 뷰 모드 전환 (PC 토글) ───
-  const switchViewMode = useCallback(
-    (mode: 'node' | 'list') => {
-      setViewMode(mode)
-      try {
-        localStorage.setItem('worksViewMode', mode)
-      } catch {
-        // localStorage 불가(프라이버시 모드 등) — 세션 내 상태만 유지
-      }
-      // 리스트로 전환하는 순간 떠 있던 호버 패널 정리 (fixed라 리스트 위에 떠버림)
-      if (mode === 'list' && activePanelIdxRef.current !== null) {
+  // ─── 드로어 열기/닫기 (PC 단일 버튼) ───
+  const toggleDrawer = useCallback(() => {
+    setDrawerOpen((prev) => {
+      const next = !prev
+      // 여는 순간 떠 있던 호버 패널 정리 — 드로어 위로 fixed 패널이 떠버리는 걸 방지.
+      // (드로어가 열리면 백드롭이 씬 위를 덮어 새 호버 판정 자체가 안 들어오지만,
+      // 열기 직전까지 활성이던 패널은 그대로 남아있으므로 명시적으로 지운다.)
+      if (next && activePanelIdxRef.current !== null) {
         panelRefs.current[activePanelIdxRef.current]?.classList.remove('active')
         activePanelIdxRef.current = null
         handleNodeHover(null)
       }
-    },
-    [handleNodeHover],
-  )
+      return next
+    })
+  }, [handleNodeHover])
 
   // ─── Projected hover detection ───
   // Uses 3D→2D projection to find the hovered node, then directly manipulates
@@ -657,39 +651,43 @@ function Works({ isActive }: WorksProps) {
 
   return (
     <div className={`inner works__inner ${isMobileDevice ? 'is-mobile-device' : ''}`}>
-      {/* PC 뷰 토글: Selected Project(궤도) / View All(리스트) */}
+      {/* PC 드로어 열기 버튼 — Selected Project 궤도는 항상 그대로 두고,
+          View All(카드 리스트 + Other Projects)만 우측 드로어로 열고 닫는다 */}
       {!isMobileDevice && (
         <div className={worksStyles['view-toggle']}>
           <button
             type="button"
-            className={`${worksStyles['view-toggle__btn']}${viewMode === 'node' ? ` ${worksStyles['view-toggle__btn--active']}` : ''}`}
-            onClick={() => switchViewMode('node')}
-            aria-pressed={viewMode === 'node'}
+            className={`${worksStyles['view-toggle__btn']}${drawerOpen ? ` ${worksStyles['view-toggle__btn--active']}` : ''}`}
+            onClick={toggleDrawer}
+            aria-pressed={drawerOpen}
+            aria-expanded={drawerOpen}
           >
-            [ SELECTED PROJECT ]
-          </button>
-          <span className={worksStyles['view-toggle__divider']}>/</span>
-          <button
-            type="button"
-            className={`${worksStyles['view-toggle__btn']}${viewMode === 'list' ? ` ${worksStyles['view-toggle__btn--active']}` : ''}`}
-            onClick={() => switchViewMode('list')}
-            aria-pressed={viewMode === 'list'}
-          >
-            [ VIEW ALL ]
+            {drawerOpen ? '[ CLOSE ]' : '[ VIEW MORE ]'}
           </button>
         </div>
       )}
 
-      {/* PC View All: Selected Project 카드 그리드 + Other Projects 단순 리스트 */}
-      {!isMobileDevice && viewMode === 'list' && (
-        <div className={worksStyles['pc-list']}>
-          <div className={worksStyles['pc-list__inner']}>
+      {/* 드로어 백드롭 — 씬 위를 덮어 궤도 인터랙션을 자연히 차단(z-index로),
+          바깥 클릭 시 드로어를 닫는다. 항상 렌더하고 --open으로 페이드 */}
+      {!isMobileDevice && (
+        <div
+          className={`${worksStyles['drawer-backdrop']}${drawerOpen ? ` ${worksStyles['drawer-backdrop--open']}` : ''}`}
+          onClick={() => setDrawerOpen(false)}
+          aria-hidden
+        />
+      )}
+
+      {/* PC View All 드로어: Selected Project 단일 열 리스트 + Other Projects.
+          항상 렌더하고 --open으로 슬라이드 — 트랜지션을 위해 언마운트하지 않는다 */}
+      {!isMobileDevice && (
+        <aside className={`${worksStyles['drawer']}${drawerOpen ? ` ${worksStyles['drawer--open']}` : ''}`}>
+          <div className={worksStyles['drawer__inner']}>
             <section>
-              <h3 className={worksStyles['pc-list__heading']}>◼︎ SELECTED PROJECT</h3>
-              <div className={worksStyles['pc-list__grid']}>
+              <h3 className={worksStyles['drawer__heading']}>◼︎ SELECTED PROJECT</h3>
+              <div className={worksStyles['drawer__list']}>
                 {works.map((work, idx) => (
                   <WorksPreviewCard
-                    key={`grid-${work.id}`}
+                    key={`drawer-${work.id}`}
                     work={work}
                     index={idx}
                     total={works.length}
@@ -701,7 +699,7 @@ function Works({ isActive }: WorksProps) {
             </section>
             <WorksSubList items={subProjects} />
           </div>
-        </div>
+        </aside>
       )}
 
       {/* Mobile list: panels rendered inside scrollable container */}
@@ -746,10 +744,10 @@ function Works({ isActive }: WorksProps) {
           />
         ))}
 
-      {/* 3D Scene Container — list 모드에선 숨김(언마운트 X, 재진입 비용 회피) */}
+      {/* 3D Scene Container — 드로어가 열려도 항상 보임(백드롭이 위를 덮어
+          인터랙션만 자연히 차단), rAF 루프는 drawerOpenRef로 회전만 정지 */}
       <div
         className="constellation-scene"
-        style={!isMobileDevice && viewMode === 'list' ? { display: 'none' } : undefined}
         ref={sceneRef}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
