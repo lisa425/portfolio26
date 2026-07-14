@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react'
+import { fireEvent, render } from '@testing-library/react'
 import type { SubProjectType } from '../../../types'
 import WorksSubList from '../WorksSubList'
 
@@ -61,5 +61,50 @@ describe('WorksSubList', () => {
       />,
     )
     expect(getByText(/SUB PROJECTS/)).toBeInTheDocument()
+  })
+
+  describe('onItemClick이 주어진 경우 (Selected Project 용도)', () => {
+    it('행이 role=button/tabIndex를 갖고 LINK 칸은 [ ENTER ]로 대체된다', () => {
+      const onItemClick = jest.fn()
+      const { getAllByRole, queryAllByRole, getAllByText } = render(
+        <WorksSubList
+          items={items}
+          onItemClick={onItemClick}
+        />,
+      )
+      const rows = getAllByRole('button')
+      expect(rows).toHaveLength(2)
+      expect(rows[0]).toHaveAttribute('tabIndex', '0')
+      expect(queryAllByRole('link')).toHaveLength(0)
+      expect(getAllByText('[ ENTER ]')).toHaveLength(2)
+    })
+
+    it('클릭하면 해당 행의 인덱스와 함께 콜백이 호출된다', () => {
+      const onItemClick = jest.fn()
+      const { getAllByRole } = render(
+        <WorksSubList
+          items={items}
+          onItemClick={onItemClick}
+        />,
+      )
+      fireEvent.click(getAllByRole('button')[1])
+      expect(onItemClick).toHaveBeenCalledWith(1)
+    })
+
+    it('Enter/Space 키로도 콜백이 호출된다', () => {
+      const onItemClick = jest.fn()
+      const { getAllByRole } = render(
+        <WorksSubList
+          items={items}
+          onItemClick={onItemClick}
+        />,
+      )
+      const [row] = getAllByRole('button')
+      fireEvent.keyDown(row, { key: 'Enter' })
+      fireEvent.keyDown(row, { key: ' ' })
+      expect(onItemClick).toHaveBeenCalledTimes(2)
+      expect(onItemClick).toHaveBeenNthCalledWith(1, 0)
+      expect(onItemClick).toHaveBeenNthCalledWith(2, 0)
+    })
   })
 })

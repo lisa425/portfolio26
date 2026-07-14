@@ -42,6 +42,33 @@
     border-bottom: 1px solid rgba($text-primary, 0.08);
   }
 
+  // Selected Project 전용 — 같은 텍스트 행 포맷이지만 "누를 수 있다"는
+  // 인상을 주기 위해 은은한 배경 + 좌측 강조선(box-shadow inset이라
+  // 그리드 컬럼 폭에는 영향 없음). hover/focus 시 강조를 키운다.
+  &__row--clickable {
+    cursor: pointer;
+    background: rgba($text-primary, 0.03);
+    box-shadow: inset 2px 0 0 0 rgba($text-primary, 0.2);
+    transition:
+      background-color 0.2s ease,
+      box-shadow 0.2s ease;
+
+    .sub-list__name {
+      color: $text-primary;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: rgba($text-primary, 0.07);
+      box-shadow: inset 2px 0 0 0 rgba($text-primary, 0.5);
+    }
+
+    &:focus-visible {
+      outline: 1px solid rgba($text-primary, 0.4);
+      outline-offset: -1px;
+    }
+  }
+
   &__year {
     font-size: max(vw(11, 1920), 11px);
     color: rgba($text-primary, 0.4);
@@ -85,6 +112,17 @@
       &:hover {
         color: $text-primary;
       }
+    }
+  }
+
+  &__enter {
+    color: rgba($text-primary, 0.4);
+    white-space: nowrap;
+    transition: color 0.2s ease;
+
+    .sub-list__row--clickable:hover &,
+    .sub-list__row--clickable:focus-visible & {
+      color: $text-primary;
     }
   }
 

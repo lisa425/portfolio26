@@ -7,7 +7,7 @@ import { createPortal } from 'react-dom'
 import { useMobile } from '../hooks/useMobile'
 import { renderText } from '../utils/renderText'
 import Lenis from 'lenis'
-import type { SubProjectType, WorkType } from '../types'
+import type { SubProjectType, WorksListRowItem, WorkType } from '../types'
 import { WorkDetailImage, WorksPreviewCard, WorksSubList } from './ui'
 import worksStyles from './Works.module.scss'
 
@@ -26,6 +26,11 @@ const CATEGORY_MAP: Record<number, string> = {
 // ─── 3D Configuration ───
 const DEG = Math.PI / 180
 const INITIAL_ROT = { x: -50, y: 43 }
+// 드래그/관성으로 틀 수 있는 틸트(rotateX) 범위 — 실제 화면에서 구도가 좋았던
+// 텔레메트리 샘플(RX -50.00 ~ -75.45)을 기준으로 확정. RY(세로축)는 자동 회전
+// 축이고 어느 각도든 구도가 안 깨져서(샘플 RY 80~220 넓게 분포) 제한하지 않는다.
+const ROT_X_MIN = -76
+const ROT_X_MAX = -50
 const AUTO_ROTATE_SPEED = 0.06
 const DRAG_SENSITIVITY = 0.35
 const MOMENTUM_DECAY = 0.94
@@ -98,13 +103,28 @@ function projectToScreen(
 // ─── Component ───
 function Works({ isActive }: WorksProps) {
   const { t } = useTranslation()
-  const { isMobileDevice } = useMobile()
+  // 두 기준을 분리해서 사용:
+  //  - isMobileDevice(디바이스, 불변): 3D 씬을 아예 마운트할지 결정 — 진짜 모바일
+  //    기기는 씬 자체를 안 만들고, PC는 뷰포트와 무관하게 항상 마운트 유지(킵얼라이브)
+  //  - isMobileView(디바이스 OR 뷰포트≤$tablet, 리액티브): 어떤 UI를 보여줄지 결정 —
+  //    PC에서도 창이 좁아지면 모바일 리스트 UI로 전환되고, 씬은 CSS(display:none)로만
+  //    숨겨져 재초기화 비용 없이 다시 넓히면 즉시 복귀한다
+  const { isMobile: isMobileView, isMobileDevice } = useMobile()
   // 키 리네이밍: works.items → works.selectedProject, works.subproject → works.subProject
   // (i18next는 키가 없으면 키 문자열을 돌려주므로 Array.isArray로 가드)
   const selectedRaw = t('works.selectedProject', { returnObjects: true })
   const works = (Array.isArray(selectedRaw) ? selectedRaw : []) as WorkType[]
   const subRaw = t('works.subProject', { returnObjects: true })
   const subProjects = (Array.isArray(subRaw) ? subRaw : []) as SubProjectType[]
+  // 드로어의 Selected Project도 Other Projects와 같은 텍스트 리스트로 통일 —
+  // WorksSubList가 기대하는 공용 행 모양으로 매핑 (game을 title 앞에 붙여 구분)
+  const selectedRows: WorksListRowItem[] = works.map((w) => ({
+    title: `${w.game} — ${w.title}`,
+    dept: w.dept,
+    intro: w.intro,
+    date: w.date,
+    stack: w.stack,
+  }))
 
   const [activeWork, setActiveWork] = useState<WorkType | null>(null)
   const hoveredIndexRef = useRef<number | null>(null) // no state — direct DOM for zero re-renders
@@ -122,6 +142,11 @@ function Works({ isActive }: WorksProps) {
   useEffect(() => {
     drawerOpenRef.current = drawerOpen
   }, [drawerOpen])
+  // rAF 루프에서 최신 뷰포트 모드를 읽기 위한 ref — 모바일 뷰 동안 프레임 작업 정지
+  const isMobileViewRef = useRef(isMobileView)
+  useEffect(() => {
+    isMobileViewRef.current = isMobileView
+  }, [isMobileView])
 
   // DOM refs
   const sceneRef = useRef<HTMLDivElement>(null)
@@ -155,9 +180,9 @@ function Works({ isActive }: WorksProps) {
   const ringHighlightSweeps = useRef<number[]>([])
   const rafRef = useRef(0)
 
-  // ─── Lenis (mobile only) ───
+  // ─── Lenis (모바일 뷰 전용 — 뷰포트 전환 시 init/destroy) ───
   useEffect(() => {
-    if (!isMobileDevice) return
+    if (!isMobileView) return
     if (!mobileListRef.current || !mobileListContentRef.current) return
 
     // 1. Lenis Init
@@ -181,7 +206,7 @@ function Works({ isActive }: WorksProps) {
       mobileLenisRef.current = null
       gsap.ticker.remove(rafCb)
     }
-  }, [isMobileDevice])
+  }, [isMobileView])
 
   // ─── Dynamic Layout State ───
   const [ringScale, setRingScale] = useState(1)
@@ -200,8 +225,12 @@ function Works({ isActive }: WorksProps) {
   const rings = useMemo(() => {
     const result = []
     const count = works.length
-    const START_W = 300
-    const MAX_NODE_W = 950 // Reduced from 1300 to keep nodes within viewport
+    // 노드 링(1~5)만 축소 — 장식 링은 그대로 둬서 화면이 차 보이게 유지.
+    // 노드 화면 투영 거리는 링 폭에 정비례(계수 ≈0.512, RX[-76,-50] 전 구간 스윕):
+    // MAX 800 → 최악 |sy| ≈ 408px + 칩 반경 24px = 432 < 900높이 뷰포트 반높이 450
+    // (기존 950은 최악 489px로 5번 노드가 화면 밖으로 나갔음)
+    const START_W = 280
+    const MAX_NODE_W = 800
     const step = count > 1 ? (MAX_NODE_W - START_W) / (count - 1) : 0
 
     for (let i = 0; i < count; i++) {
@@ -235,7 +264,7 @@ function Works({ isActive }: WorksProps) {
     if (isActive) {
       setPreviewIndex(0)
       // Reset mobile list scroll to top on re-entry
-      if (isMobileDevice) {
+      if (isMobileView) {
         if (mobileLenisRef.current) {
           mobileLenisRef.current.scrollTo(0, { immediate: true })
         } else if (mobileListRef.current) {
@@ -243,9 +272,11 @@ function Works({ isActive }: WorksProps) {
         }
       }
     }
-  }, [isActive, isMobileDevice])
+  }, [isActive, isMobileView])
 
   // ─── Main animation loop ───
+  // 진짜 모바일 기기는 루프 자체를 안 돌리고(씬 미마운트), PC에서는 루프를 유지하되
+  // 모바일 뷰 동안(씬 display:none) isMobileViewRef 게이트로 프레임당 작업을 0으로.
   useEffect(() => {
     if (isMobileDevice) return
 
@@ -254,12 +285,12 @@ function Works({ isActive }: WorksProps) {
     const loop = () => {
       if (!running) return
 
-      if (isActiveRef.current && entryDoneRef.current && !drawerOpenRef.current) {
+      if (isActiveRef.current && entryDoneRef.current && !drawerOpenRef.current && !isMobileViewRef.current) {
         // Momentum / auto-rotate
         if (!isDragRef.current) {
           if (Math.abs(velRef.current.x) > 0.001 || Math.abs(velRef.current.y) > 0.001) {
             const nextRx = rotRef.current.x + velRef.current.x
-            rotRef.current.x = Math.max(-90, Math.min(-50, nextRx))
+            rotRef.current.x = Math.max(ROT_X_MIN, Math.min(ROT_X_MAX, nextRx))
             rotRef.current.y += velRef.current.y
             velRef.current.x *= MOMENTUM_DECAY
             velRef.current.y *= MOMENTUM_DECAY
@@ -334,6 +365,19 @@ function Works({ isActive }: WorksProps) {
       return next
     })
   }, [handleNodeHover])
+
+  // ─── 뷰포트가 모바일 폭으로 좁아지는 순간 PC 전용 오버레이 정리 ───
+  // 드로어/호버 패널은 !isMobileView 조건으로 언마운트되지만, 열림 state와
+  // activePanelIdxRef가 남아 있으면 다시 넓혔을 때 유령처럼 복귀한다.
+  useEffect(() => {
+    if (!isMobileView) return
+    setDrawerOpen(false)
+    if (activePanelIdxRef.current !== null) {
+      panelRefs.current[activePanelIdxRef.current]?.classList.remove('active')
+      activePanelIdxRef.current = null
+    }
+    handleNodeHover(null)
+  }, [isMobileView, handleNodeHover])
 
   // ─── Projected hover detection ───
   // Uses 3D→2D projection to find the hovered node, then directly manipulates
@@ -454,7 +498,7 @@ function Works({ isActive }: WorksProps) {
           handleNodeHover(null)
         }
         const newRx = dragStartRef.current.rx + dy * DRAG_SENSITIVITY
-        const clampedRx = Math.max(-90, Math.min(-50, newRx))
+        const clampedRx = Math.max(ROT_X_MIN, Math.min(ROT_X_MAX, newRx))
         const newRy = dragStartRef.current.ry + dx * DRAG_SENSITIVITY
         velRef.current = {
           x: (clampedRx - rotRef.current.x) * 0.6,
@@ -650,10 +694,13 @@ function Works({ isActive }: WorksProps) {
   }
 
   return (
-    <div className={`inner works__inner ${isMobileDevice ? 'is-mobile-device' : ''}`}>
+    // is-mobile-device 클래스는 이제 "모바일 뷰"(디바이스 OR 뷰포트) 기준으로 부착 —
+    // App.scss의 works 모바일 스타일 전체(리스트 표시, constellation-scene display:none 등)가
+    // 이 클래스 하나로 게이트되므로 CSS 변경 없이 반응형 전환이 따라온다
+    <div className={`inner works__inner ${isMobileView ? 'is-mobile-device' : ''}`}>
       {/* PC 드로어 열기 버튼 — Selected Project 궤도는 항상 그대로 두고,
-          View All(카드 리스트 + Other Projects)만 우측 드로어로 열고 닫는다 */}
-      {!isMobileDevice && (
+          View All(텍스트 리스트)만 하단 바텀시트로 열고 닫는다 */}
+      {!isMobileView && (
         <div className={worksStyles['view-toggle']}>
           <button
             type="button"
@@ -669,7 +716,7 @@ function Works({ isActive }: WorksProps) {
 
       {/* 드로어 백드롭 — 씬 위를 덮어 궤도 인터랙션을 자연히 차단(z-index로),
           바깥 클릭 시 드로어를 닫는다. 항상 렌더하고 --open으로 페이드 */}
-      {!isMobileDevice && (
+      {!isMobileView && (
         <div
           className={`${worksStyles['drawer-backdrop']}${drawerOpen ? ` ${worksStyles['drawer-backdrop--open']}` : ''}`}
           onClick={() => setDrawerOpen(false)}
@@ -679,31 +726,23 @@ function Works({ isActive }: WorksProps) {
 
       {/* PC View All 드로어: Selected Project 단일 열 리스트 + Other Projects.
           항상 렌더하고 --open으로 슬라이드 — 트랜지션을 위해 언마운트하지 않는다 */}
-      {!isMobileDevice && (
+      {!isMobileView && (
         <aside className={`${worksStyles['drawer']}${drawerOpen ? ` ${worksStyles['drawer--open']}` : ''}`}>
           <div className={worksStyles['drawer__inner']}>
-            <section>
-              <h3 className={worksStyles['drawer__heading']}>◼︎ SELECTED PROJECT</h3>
-              <div className={worksStyles['drawer__list']}>
-                {works.map((work, idx) => (
-                  <WorksPreviewCard
-                    key={`drawer-${work.id}`}
-                    work={work}
-                    index={idx}
-                    total={works.length}
-                    active
-                    onClick={() => handleWorkClick(work)}
-                  />
-                ))}
-              </div>
-            </section>
+            <WorksSubList
+              items={selectedRows}
+              title="SELECTED PROJECT"
+              onItemClick={(idx) => handleWorkClick(works[idx])}
+            />
             <WorksSubList items={subProjects} />
           </div>
         </aside>
       )}
 
-      {/* Mobile list: panels rendered inside scrollable container */}
-      {isMobileDevice && (
+      {/* Mobile list: panels rendered inside scrollable container.
+          PC 호버 패널과 같은 panelRefs를 쓰므로 반드시 상호배타로 렌더할 것
+          (isMobileView ↔ !isMobileView — 동시에 마운트되면 ref가 충돌한다) */}
+      {isMobileView && (
         <div
           className="works-list-container"
           ref={mobileListRef}
@@ -731,7 +770,7 @@ function Works({ isActive }: WorksProps) {
       )}
 
       {/* PC hover panels: fixed-positioned, shown on node hover via direct DOM */}
-      {!isMobileDevice &&
+      {!isMobileView &&
         works.map((work, idx) => (
           <WorksPreviewCard
             key={`preview-pc-${work.id}`}
@@ -758,7 +797,10 @@ function Works({ isActive }: WorksProps) {
         <div className="works-bloom pulsing" />
         <div className="scene-center" />
 
-        {/* 3D world */}
+        {/* 3D world — 의도적으로 isMobileView가 아니라 isMobileDevice 기준(킵얼라이브):
+            PC에서는 뷰포트가 좁아져도 언마운트하지 않고 CSS(display:none)로만 숨겨서,
+            다시 넓혔을 때 진입 애니메이션 재생/썸네일 재로드 없이 즉시 복귀한다.
+            진짜 모바일 기기만 아예 마운트하지 않는다. */}
         {!isMobileDevice && (
           <div
             className="scene-3d"

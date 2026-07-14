@@ -64,3 +64,14 @@ export const CustomTitle: Story = {
 export const Empty: Story = {
   args: { items: [] },
 }
+
+/**
+ * Selected Project 용도 — onItemClick이 주어지면 행 전체가 클릭 가능해지고
+ * (배경 강조 + 좌측 강조선), LINK 칸이 외부 링크 대신 `[ ENTER ]`로 바뀐다.
+ */
+export const Clickable: Story = {
+  args: {
+    title: 'SELECTED PROJECT',
+    onItemClick: (index) => alert(`clicked row ${index}`),
+  },
+}

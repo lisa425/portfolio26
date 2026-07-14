@@ -58,25 +58,27 @@
   }
 }
 
-// ─── View All 드로어 (우측 슬라이드 패널) ───
-// Selected Project 궤도는 안 건드리고 그 위에 얹히는 사이드 패널.
-// 항상 렌더 + transform으로 슬라이드 — 트랜지션을 위해 언마운트하지 않는다.
+// ─── View All 드로어 (하단 바텀시트) ───
+// Selected Project 궤도는 안 건드리고 그 위에 얹히는 바텀시트 패널.
+// 가로 100%(최대 900px, 중앙 정렬)로 아래에서 위로 슬라이드 — 항상 렌더 +
+// transform으로 슬라이드, 트랜지션을 위해 언마운트하지 않는다.
 .drawer {
   position: absolute;
-  top: 0;
-  right: 0;
+  left: 50%;
   bottom: 0;
   z-index: 15;
-  width: min(420px, 32vw);
+  width: 100%;
+  max-width: 900px;
+  max-height: min(600px, 75vh);
   overflow-y: auto;
   background: rgba($bg-color, 0.97);
-  border-left: 1px solid rgba($text-primary, 0.15);
-  padding: 6rem 2rem 3rem;
-  transform: translateX(100%);
+  border-top: 1px solid rgba($text-primary, 0.15);
+  padding: 3rem 2rem;
+  transform: translate(-50%, 100%);
   transition: transform 0.3s ease;
 
   &--open {
-    transform: translateX(0);
+    transform: translate(-50%, 0);
   }
 }
 
@@ -84,39 +86,6 @@
   display: flex;
   flex-direction: column;
   gap: 3rem;
-}
-
-.drawer__heading {
-  font-size: max(vw(12, 1920), 11px);
-  font-weight: 400;
-  color: rgba($text-primary, 0.65);
-  letter-spacing: 0.08em;
-  margin-bottom: 1.2rem;
-}
-
-// Selected Project — 드로어 폭이 좁아 그리드가 아니라 단일 열
-.drawer__list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-// WorksPreviewCard 기본 스타일(fixed HUD 패널)을 단일 열 아이템으로 무력화
-// — 3클래스로 카드 모듈의 :global(.active) 룰(2클래스)보다 우선순위 확보
-// pointer-events는 기본 none — 아래 .works.visible 게이트에서만 auto로 재활성화
-// (섹션이 opacity 0으로 사라진 뒤에도 카드가 클릭되어 detail 모달이 열리던 버그 수정)
-.drawer__list :global(.works-preview.active) {
-  position: static;
-  width: 100%;
-  transform: none;
-  opacity: 1;
-  pointer-events: none;
-  cursor: pointer;
-  transition: border-color 0.2s ease;
-
-  &:hover {
-    border-color: rgba($text-primary, 0.45);
-  }
 }
 
 // ─── 섹션이 실제로 보일 때만 인터랙션 재활성화 ───
@@ -129,9 +98,6 @@
     pointer-events: auto;
   }
   .drawer-backdrop--open {
-    pointer-events: auto;
-  }
-  .drawer--open .drawer__list :global(.works-preview.active) {
     pointer-events: auto;
   }
 }
