@@ -40,9 +40,9 @@
       },
       {
         "id": 2,
-        "projectKey": "vindictus-dev-environment",
+        "projectKey": "mabinogi-heroes-dev-environment",
         "category": 1,
-        "game": "Vindictus",
+        "game": "Mabinogi Heroes",
         "title": "Shared Frontend Development Environment",
         "date": "2026.01 - 2026.03",
         "description": "Replaced separate Webpack + JavaScript setups with a shared React + Vite development environment\nSystematised recurring work through event templates, a development CLI, and shared components → reduced project setup time by 85%, from roughly one hour to under ten minutes\nConnected deployment pipelines spread across five channels to the development environment → reduced deployment time by about 80%, from over 30 minutes to under five minutes\nAdded an optional build-time image compression process that removes duplicate pixels → reduced resource size by up to 80% while preventing unnecessary quality loss\nStandardised a custom image-load detection hook → improved page-loading UX across projects\nDocumented project conventions for a Claude-assisted development environment → improved consistency while preserving developer autonomy",
@@ -53,9 +53,9 @@
       },
       {
         "id": 3,
-        "projectKey": "vindictus-operations-automation",
+        "projectKey": "mabinogi-heroes-operations-automation",
         "category": 1,
-        "game": "Vindictus",
+        "game": "Mabinogi Heroes",
         "title": "Operations Workflow Automation",
         "date": "2026.03 - 2026.04",
         "description": "Proposed and developed a content-generation tool to remove bottlenecks from repetitive live-operations work\nIdentified the design rules required for implementation, presented them to designers, and refined the rules collaboratively\nIntegrated the Figma API to scan components and layers created under the agreed design rules and automatically generate HTML content\nBuilt a single tool to scan and classify source files, create content URLs, deploy by rule, and share Jira tickets across the complete workflow\nReduced operations turnaround time by approximately 92%, from an average of one hour per task to under five minutes",

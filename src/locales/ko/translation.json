@@ -40,7 +40,7 @@
       },
       {
         "id": 2,
-        "projectKey": "vindictus-dev-environment",
+        "projectKey": "mabinogi-heroes-dev-environment",
         "category": 1,
         "game": "마비노기 영웅전",
         "title": "신규 개발 환경 구축",
@@ -53,7 +53,7 @@
       },
       {
         "id": 3,
-        "projectKey": "vindictus-operations-automation",
+        "projectKey": "mabinogi-heroes-operations-automation",
         "category": 1,
         "game": "마비노기 영웅전",
         "title": "운영 업무 자동화 설계",

@@ -30,8 +30,8 @@ type WorkType = {
 
 type ProjectKey =
   | 'azure-promilia'
-  | 'vindictus-dev-environment'
-  | 'vindictus-operations-automation'
+  | 'mabinogi-heroes-dev-environment'
+  | 'mabinogi-heroes-operations-automation'
   | 'mabinogi-mobile-preregistration'
   | 'baram-gallery'
 
@@ -44,7 +44,7 @@ type ProcessVisualConfig = {
 }
 
 const PROCESS_VISUALS: Partial<Record<ProjectKey, ProcessVisualConfig>> = {
-  'vindictus-dev-environment': {
+  'mabinogi-heroes-dev-environment': {
     variant: 'linear',
     stages: [
       {
@@ -67,7 +67,7 @@ const PROCESS_VISUALS: Partial<Record<ProjectKey, ProcessVisualConfig>> = {
     ariaLabel:
       'Development pipeline starting from a shared template and reusable common components, followed by build and deploy, with setup, deploy, and asset improvements.',
   },
-  'vindictus-operations-automation': {
+  'mabinogi-heroes-operations-automation': {
     variant: 'linear',
     stages: [
       { label: 'FIGMA API', detail: 'SCAN RULE-BASED COMPONENTS + LAYERS' },
