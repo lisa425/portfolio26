@@ -19,7 +19,7 @@
     "body": "This page is designed for desktop browsers.\nFor the intended layout and interactions,\nplease open it on a screen at least 1000px wide."
   },
   "works": {
-    "items": [
+    "selectedProject": [
       {
         "id": 1,
         "category": 1,

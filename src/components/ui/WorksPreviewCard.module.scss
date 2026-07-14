@@ -65,7 +65,7 @@
   &__row {
     display: flex;
     align-items: baseline;
-    gap: vw(16, 1920);
+    gap: max(vw(16, 1920), 16px);
     padding: vw(1, 1920) vw(10, 1920);
     @media (max-width: $tablet) {
       gap: 0.5rem;

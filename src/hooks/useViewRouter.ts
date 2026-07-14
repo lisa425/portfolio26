@@ -33,11 +33,73 @@ interface UseViewRouterParams {
   isReady: boolean;
 }
 
-/** works ↔ about direct-switch motion (cut + directional fade) */
-const SWITCH_OUT = { y: -24, duration: 0.25, ease: "power2.in" };
+/** works ↔ about direct-switch reveal motion */
 const SWITCH_IN = { y: 24, duration: 0.3, ease: "power2.out" };
 /** Give up waiting for the target section's chunk and commit without motion */
 const SWITCH_MOUNT_TIMEOUT_MS = 3000;
+
+function animateSectionExit(
+  section: SectionView,
+  inner: HTMLElement | null,
+  onComplete: () => void,
+) {
+  if (!inner) {
+    onComplete();
+    return;
+  }
+
+  const timeline = gsap.timeline({ onComplete });
+  if (section !== "works") {
+    timeline.to(inner, {
+      autoAlpha: 0,
+      duration: 0.42,
+      ease: "power2.in",
+    });
+    return;
+  }
+
+  const rings = Array.from(inner.querySelectorAll<HTMLElement>(".orbital-ring"));
+  const ringHighlights = Array.from(
+    inner.querySelectorAll<HTMLElement>(".orbital-ring-highlight"),
+  );
+  const nodes = Array.from(
+    inner.querySelectorAll<HTMLElement>(".constellation-node"),
+  );
+  const center = inner.querySelector<HTMLElement>(".scene-center");
+
+  if (rings.length > 0) {
+    timeline.to(
+      rings,
+      {
+        "--ring-scale": 0,
+        duration: 0.62,
+        stagger: { each: 0.025, from: "end" },
+        ease: "power3.in",
+      },
+      0,
+    );
+  }
+  if (ringHighlights.length > 0) {
+    timeline.to(ringHighlights, { opacity: 0, duration: 0.25, ease: "power2.in" }, 0);
+  }
+  if (nodes.length > 0) {
+    timeline.to(
+      nodes,
+      {
+        scale: 0,
+        opacity: 0,
+        duration: 0.42,
+        stagger: 0.018,
+        ease: "power3.in",
+      },
+      0.08,
+    );
+  }
+  if (center) {
+    timeline.to(center, { scale: 0, opacity: 0, duration: 0.56, ease: "power3.in" }, 0);
+  }
+  timeline.to(inner, { autoAlpha: 0, duration: 0.24, ease: "power2.in" }, 0.45);
+}
 
 /**
  * URL-first view orchestration.
@@ -72,7 +134,6 @@ export function useViewRouter({
     () => viewFromPath(location.pathname) ?? "hero",
   );
   const viewRef = useRef<ViewType>(view);
-  const heroAnimTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keep-alive: mount Works/About on first visit, stay mounted to preserve state
   // Set at transition START (not on view change) to avoid Suspense flash
@@ -104,10 +165,6 @@ export function useViewRouter({
   }, [blocker]);
 
   const killHeroTweens = useCallback(() => {
-    if (heroAnimTimerRef.current) {
-      clearTimeout(heroAnimTimerRef.current);
-      heroAnimTimerRef.current = null;
-    }
     gsap.killTweensOf(".hero");
   }, []);
 
@@ -117,7 +174,6 @@ export function useViewRouter({
       else setHasShownAbout(true);
       setView("transitioning");
       killHeroTweens();
-      gsap.set(".hero", { opacity: 0 });
       const trigger =
         target === "works" ? triggerWorksTransition : triggerAboutTransition;
       trigger(() => setView(target));
@@ -219,15 +275,7 @@ export function useViewRouter({
         });
       };
 
-      if (outInner) {
-        gsap.fromTo(
-          outInner,
-          { y: 0, autoAlpha: 1 },
-          { ...SWITCH_OUT, autoAlpha: 0, onComplete: finishHandoff },
-        );
-      } else {
-        finishHandoff();
-      }
+      animateSectionExit(from, outInner, finishHandoff);
 
       // The incoming section may still be mounting (lazy chunk + Suspense) —
       // poll for its DOM, hide its inner, then wait for the handoff.
@@ -258,18 +306,44 @@ export function useViewRouter({
   );
 
   const startHeroTransition = useCallback(() => {
+    const from = viewRef.current as SectionView;
+    const outPage = document.querySelector<HTMLElement>(`.page-sub.${from}`);
+    const outInner = outPage?.querySelector<HTMLElement>(".inner") ?? null;
+
+    outPage?.classList.add("page-sub--switching");
+    if (outPage) gsap.set(outPage, { opacity: 1 });
+    if (outInner) gsap.set(outInner, { y: 0, autoAlpha: 1 });
+
+    setDirectActive(from);
     setView("transitioning");
     killHeroTweens();
-    // .hero fades back in partway through the zoom-out
-    heroAnimTimerRef.current = setTimeout(() => {
-      gsap.to(".hero", { opacity: 1, duration: 0.5, ease: "power2.out" });
-    }, 1000);
-    triggerHeroTransition(() => setView("hero"));
+    gsap.set(".hero", { opacity: 0 });
+
+    animateSectionExit(from, outInner, () => {
+      setDirectActive(null);
+      if (outPage) {
+        gsap.to(outPage, { opacity: 0, duration: 0.5, ease: "power2.inOut" });
+      }
+      gsap.to(".hero", { opacity: 1, duration: 0.6, delay: 0.28, ease: "power2.out" });
+      triggerHeroTransition(() => {
+        setView("hero");
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (outPage) {
+              gsap.set(outPage, { clearProps: "opacity" });
+              outPage.classList.remove("page-sub--switching");
+            }
+            if (outInner) gsap.set(outInner, { clearProps: "all" });
+          });
+        });
+      });
+    });
   }, [killHeroTweens, triggerHeroTransition]);
 
   // The orchestrator: reacts to every location change with the same pipeline.
   // setState here is intentional — the URL is the external system we subscribe
   // to (via useLocation) and `view` must sync to it exactly once per change.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!isReady) return;
     const target = viewFromPath(location.pathname);
@@ -278,7 +352,6 @@ export function useViewRouter({
     if (current === "transitioning" || target === current) return;
 
     if (target === "hero") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       startHeroTransition();
     } else if (current === "hero") {
       startSectionTransition(target);
@@ -294,9 +367,10 @@ export function useViewRouter({
     startSectionTransition,
     startDirectSwitch,
   ]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
-  // Section navigation is allowed from hero (star buttons → zoom) AND from
-  // the other section (header nav → direct switch); only mid-transition
+  // Section navigation is allowed from hero and from the other section;
+  // only mid-transition
   // clicks and no-op clicks are ignored.
   const goWorks = useCallback(() => {
     const v = viewRef.current;

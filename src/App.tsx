@@ -2,11 +2,8 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { Outlet } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import gsap from 'gsap'
-import { SplitText } from 'gsap/SplitText'
-import { useMobile } from './hooks/useMobile'
 import { savePreferredLang } from './utils/routing'
 
-gsap.registerPlugin(SplitText)
 import './App.scss'
 import { useHeroScene } from './hooks/useHeroScene'
 import { useViewRouter } from './hooks/useViewRouter'
@@ -18,34 +15,20 @@ import Seo from './components/Seo'
 const Works = lazy(() => import('./components/Works'))
 const About = lazy(() => import('./components/About'))
 
-// ---------------------------------------------------------------------------
-// Static timezone info — computed once at module load, never on re-render
-// (setCurrentTime fires every second; keeping these here prevents repeated
-//  Intl / Date API calls on each React re-render)
-// ---------------------------------------------------------------------------
-const _tzName = Intl.DateTimeFormat().resolvedOptions().timeZone
-const _tzShort = new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').at(-1) ?? _tzName
-const _utcOffsetH = -new Date().getTimezoneOffset() / 60
-const _utcLabel = `UTC${_utcOffsetH >= 0 ? '+' : ''}${String(_utcOffsetH).padStart(2, '0')}:00`
-
 /** Max wait for `document.fonts.ready` before continuing intro (avoids hanging on slow/broken fonts). */
 const FONTS_READY_MAX_WAIT_MS = 2500
 
 function App() {
   const { i18n } = useTranslation()
-  const { isMobile } = useMobile()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const buttonWorksRef = useRef<HTMLButtonElement>(null)
-  const buttonAboutRef = useRef<HTMLButtonElement>(null)
+  const heroStatementRef = useRef<HTMLDivElement>(null)
   const trailCanvasRef = useRef<HTMLCanvasElement>(null)
 
   const [loadProgress, setLoadProgress] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
-  const [locationStr, setLocationStr] = useState("37° 33' N ■ 126° 58' E")
-  const [currentTime, setCurrentTime] = useState('')
-  const [currentDate, setCurrentDate] = useState('')
+  const [headerClock, setHeaderClock] = useState('')
   const isHeroActiveRef = useRef(true)
 
   // Intro log: plays every page load; false after first run so hero-return skips it
@@ -74,51 +57,18 @@ function App() {
     })
   }, [])
 
-  // Geolocation
-  useEffect(() => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude
-          const lng = position.coords.longitude
-
-          const dLat = Math.floor(Math.abs(lat))
-          const mLat = Math.floor((Math.abs(lat) - dLat) * 60)
-          const dLng = Math.floor(Math.abs(lng))
-          const mLng = Math.floor((Math.abs(lng) - dLng) * 60)
-
-          const dirLat = lat >= 0 ? 'N' : 'S'
-          const dirLng = lng >= 0 ? 'E' : 'W'
-
-          setLocationStr(`${dLat}° ${mLat}' ${dirLat} ■ ${dLng}° ${mLng}' ${dirLng}`)
-        },
-        (error) => {
-          console.error('Geolocation error:', error)
-          setLocationStr("37° 33' N ■ 126° 58' E")
-        },
-      )
-    } else {
-      setLocationStr("37° 33' N ■ 126° 58' E")
-    }
-  }, [])
-
   // Live Clock
   useEffect(() => {
     const DAY = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
     const tick = () => {
       const now = new Date()
-      setCurrentTime(
-        now.toLocaleTimeString('en-US', {
-          hour12: true,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        }),
-      )
-      const y = now.getFullYear()
-      const m = String(now.getMonth() + 1).padStart(2, '0')
-      const d = String(now.getDate()).padStart(2, '0')
-      setCurrentDate(`${y}.${m}.${d}  ${DAY[now.getDay()]}`)
+      const yyyy = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const date = String(now.getDate()).padStart(2, '0')
+      const hh = String(now.getHours()).padStart(2, '0')
+      const mm = String(now.getMinutes()).padStart(2, '0')
+      const ss = String(now.getSeconds()).padStart(2, '0')
+      setHeaderClock(`${yyyy}-${month}-${date}(${DAY[now.getDay()]})${hh}:${mm}:${ss}`)
     }
     tick()
     const timer = setInterval(tick, 1000)
@@ -127,7 +77,7 @@ function App() {
 
   // Three.js Scene
   const { triggerWorksTransition, triggerAboutTransition, triggerHeroTransition, triggerAssembly, applyViewInstant } =
-    useHeroScene(canvasRef, containerRef, buttonWorksRef, buttonAboutRef, handleProgress, isHeroActiveRef)
+    useHeroScene(canvasRef, containerRef, heroStatementRef, handleProgress, isHeroActiveRef)
 
   useCursorTrail(trailCanvasRef)
 
@@ -143,10 +93,6 @@ function App() {
       isReady: !showIntro,
     })
 
-  // Header section nav: visible only while a section (works/about) is the
-  // URL target — hidden on hero, where the star buttons are the navigation
-  const sectionNavVisible = urlView === 'works' || urlView === 'about'
-
   // URL lang → i18next / <html> lang / <body> class / persisted preference
   // (one-way sync; the reverse direction is switchLang, which navigates)
   useEffect(() => {
@@ -157,151 +103,12 @@ function App() {
     document.body.classList.add(lang)
   }, [lang, i18n])
 
-  // Btn hover — terminal typewriter effect via GSAP
-  useEffect(() => {
-    if (!isLoaded) return
-
-    const btnRefs = [buttonWorksRef.current, buttonAboutRef.current]
-    const cleanups: (() => void)[] = []
-
-    btnRefs.forEach((btn) => {
-      if (!btn) return
-
-      const textEl = btn.querySelector<HTMLElement>('.btn-text')
-      const textContent = btn.querySelector<HTMLElement>('.btn-text__text')
-      const cursorEl = btn.querySelector<HTMLElement>('.btn-text__cursor')
-      if (!textEl || !textContent) return
-
-      if (isMobile) {
-        // Mobile uses CSS blinking animations; skip all GSAP text interventions to prevent inline style overrides
-        // Clear any GSAP inline styles that might hide the text
-        gsap.set(textEl, { clearProps: 'all' })
-        return
-      }
-
-      gsap.set(textEl, { opacity: 0, x: 10 })
-      cursorEl?.classList.remove('active')
-
-      const split = new SplitText(textContent, { type: 'chars' })
-      gsap.set(split.chars, { opacity: 0, display: 'inline-block' })
-      gsap.set(textContent, { clearProps: 'opacity' })
-
-      const CHAR_DELAY = 0.07 // gap between each char
-      const HOLD = 0.05 // how long the active highlight stays
-
-      const tl = gsap.timeline({
-        paused: true,
-        // cursor CSS animation starts only after all chars are done
-        onComplete: () => cursorEl?.classList.add('active'),
-      })
-
-      // Slide wrapper in
-      tl.to(textEl, { opacity: 1, x: 0, duration: 0.15, ease: 'power2.out' })
-
-      // Per-char: active highlight (white bg + black text) → settled (transparent + white)
-      split.chars.forEach((char, i) => {
-        const t = 0.15 + i * CHAR_DELAY
-        tl.set(char, { opacity: 1, backgroundColor: '#ffffff', color: '#000000' }, t)
-        tl.to(char, { backgroundColor: 'transparent', color: '#ffffff', duration: HOLD }, t + HOLD)
-      })
-
-      const reset = () => {
-        tl.pause(0)
-        gsap.set(textEl, { opacity: 0, x: 10 })
-        gsap.set(split.chars, {
-          opacity: 0,
-          backgroundColor: 'transparent',
-          color: '#ffffff',
-        })
-        cursorEl?.classList.remove('active')
-      }
-
-      const onEnter = () => {
-        cursorEl?.classList.remove('active')
-        tl.restart()
-      }
-      const onLeave = () => reset()
-
-      btn.addEventListener('mouseenter', onEnter)
-      btn.addEventListener('mouseleave', onLeave)
-
-      cleanups.push(() => {
-        btn.removeEventListener('mouseenter', onEnter)
-        btn.removeEventListener('mouseleave', onLeave)
-        tl.kill()
-        split.revert()
-      })
-    })
-
-    return () => cleanups.forEach((fn) => fn())
-  }, [isLoaded, isMobile])
-
   const heroIntroMotion = () => {
-    let split1: SplitText | undefined
-    let split2: SplitText | undefined
-    let split3: SplitText | undefined
-
-    if (!isMobile) {
-      split1 = new SplitText('.desc-text-1', { type: 'chars' })
-      split2 = new SplitText('.desc-text-2', { type: 'chars' })
-      split3 = new SplitText('.desc-text-3', { type: 'chars' })
-    }
-
     const tl = gsap
       .timeline()
-      // 0. particles converge from scatter → star shape
       .call(() => triggerAssembly())
-      // 1. fade in hero content
       .fromTo(heroContentRef.current, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: 'linear' })
-      // 2. canvas brightness reveal
-      .to('.webgl-canvas', { filter: 'brightness(1)', duration: 2, ease: 'circ.out' }, '<')
-
-    if (!isMobile) {
-      tl.from('.title-word', { y: '110%', duration: 1.2, stagger: 0.1, ease: 'circ.out' }, '<+0.15')
-        .from('.desc-wrap', { x: -10, stagger: 0.1, duration: 0.8, ease: 'circ.out' }, '<+0.1')
-        .from('.desc-wrap', { opacity: 0, stagger: 0.1, duration: 0.2, ease: 'power1.out' }, '<')
-        .from(split1!.chars, { opacity: 0, duration: 0.01, stagger: 0.025, ease: 'none' }, '<')
-        .from(split2!.chars, { opacity: 0, duration: 0.01, stagger: 0.025, ease: 'none' }, '<0.1')
-        .from(split3!.chars, { opacity: 0, duration: 0.01, stagger: 0.025, ease: 'none' }, '<0.1')
-        .from('.desc-separator', { opacity: 0, duration: 0.4, ease: 'power1.out' }, '<0.1')
-        .from('.hero-hud-data__monitor', { opacity: 0, x: 50, duration: 0.8, ease: 'circ.out' }, '<')
-        .from(
-          '.hero-hint',
-          {
-            opacity: 0,
-            duration: 0.8,
-            ease: 'linear',
-          },
-          '<',
-        )
-        .from(
-          '.hero-hint',
-          {
-            y: -10,
-            duration: 0.8,
-            ease: 'circ.out',
-          },
-          '<',
-        )
-        .call(() => {
-          split1?.revert()
-          split2?.revert()
-          split3?.revert()
-        })
-    }
-
-    tl.fromTo(
-      '.hero-hint',
-      { y: 0 },
-      {
-        y: 8,
-        repeat: -1,
-        yoyo: true,
-        duration: 1.0,
-        ease: 'sine.inOut',
-      },
-      isMobile ? 0.5 : '+0.2',
-    )
+      .to('.webgl-canvas', { filter: 'brightness(1)', duration: 1.8, ease: 'circ.out' }, '<')
 
     return tl
   }
@@ -363,59 +170,61 @@ function App() {
             <div className="title">ImChaewon</div>
             <div
               className={`header-sub-flip${view !== 'hero' ? ' is-sub' : ''}`}
-              aria-label={view !== 'hero' ? 'go main' : 'Archive v1.0'}
+              aria-label={view !== 'hero' ? 'go main' : 'frontend developer'}
             >
-              <span className="header-sub-flip__front">Archive v1.0</span>
+              <span className="header-sub-flip__front">frontend developer</span>
               <span className="header-sub-flip__back">← back</span>
             </div>
           </div>
 
+          <div
+            className="header-clock"
+            aria-label={`Recording ${headerClock}`}
+          >
+            <span className="header-clock__status">
+              REC<span className="header-clock__status__dot"></span>
+            </span>
+            <span className="header-clock__time">{headerClock}</span>
+          </div>
+
           <div className="header-right">
-            <span className="menu-lang-label">&gt; LAN</span>
-            <div className="menu-lang">
+            <div className="lang-container">
+              <span className="menu-lang-label">LAN</span>
               <button
-                className={lang === 'ko' ? 'btn-lang on' : 'btn-lang'}
-                onClick={() => switchLang('ko')}
+                className="menu-lang-flip"
+                onClick={() => switchLang(lang === 'ko' ? 'en' : 'ko')}
+                aria-label={`Switch language to ${lang === 'ko' ? 'English' : 'Korean'}`}
               >
-                KO
+                <span className="menu-lang-flip__front">{lang.toUpperCase()}</span>
+                <span className="menu-lang-flip__back">{lang === 'ko' ? 'EN' : 'KO'}</span>
               </button>
-              <span className="divider"></span>
-              <button
-                className={lang === 'en' ? 'btn-lang on' : 'btn-lang'}
-                onClick={() => switchLang('en')}
-              >
-                EN
-              </button>
+              <span className="arr">▾</span>
             </div>
+
+            <nav
+              className="section-nav-fixed"
+              aria-label="Section navigation"
+            >
+              <button
+                className={`btn-nav${urlView === 'works' ? ' on' : ''}`}
+                onClick={goWorks}
+                aria-current={urlView === 'works' ? 'page' : undefined}
+              >
+                WORKS
+              </button>
+              <button
+                className={`btn-nav${urlView === 'about' ? ' on' : ''}`}
+                onClick={goAbout}
+                aria-current={urlView === 'about' ? 'page' : undefined}
+              >
+                ABOUT
+              </button>
+            </nav>
           </div>
         </header>
 
-        {/* Section nav — fixed bottom center, visible only in works/about */}
-        <nav
-          className={`section-nav-fixed${sectionNavVisible ? ' visible' : ''}`}
-          aria-label="Section navigation"
-        >
-          <div className="section-nav-fixed__menu">
-            <button
-              className={`btn-nav${urlView === 'works' ? ' on' : ''}`}
-              onClick={goWorks}
-              aria-current={urlView === 'works' ? 'page' : undefined}
-            >
-              WORKS
-            </button>
-            <span className="divider"></span>
-            <button
-              className={`btn-nav${urlView === 'about' ? ' on' : ''}`}
-              onClick={goAbout}
-              aria-current={urlView === 'about' ? 'page' : undefined}
-            >
-              ABOUT
-            </button>
-          </div>
-        </nav>
-
-        <section className={`hero${view !== 'hero' ? ' hidden' : ''}`}>
-          <div className="hero-main-text">
+        <section className={`hero${view === 'works' || view === 'about' ? ' hidden' : ''}`}>
+          {/* <div className="hero-main-text">
             <div className="hero-main-text__title">
               <span className="title-mask">
                 <span className="title-word">INTERACTIVE</span>
@@ -468,8 +277,8 @@ function App() {
                 </span>
               </div>
             </div>
-          )}
-
+          )} */}
+          {/*
           <div className="hero-hud-data hero-hud-data__monitor">
             <div className="hero-panel">
               <div className="hero-panel__header">
@@ -501,54 +310,48 @@ function App() {
                 <span className="hero-panel__status">ONLINE</span>
               </div>
             </div>
-          </div>
+          </div> */}
 
-          <div className="hero-hint">
-            <span className="hero-hint__mouse">
-              <svg
-                className="hero-hint__hand"
-                xmlns="http://www.w3.org/2000/svg"
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="rgba(255,255,255,0.8)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+          <div className="hero-copy">
+            <div className="hero-copy__center">
+              <div
+                ref={heroStatementRef}
+                className="hero-statement"
               >
-                <path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
-                <path d="m13 13 6 6" />
-              </svg>
-            </span>
-            <span className="hero-hint__label">
-              TOUCH STARS
-              <br />
-              TO EXPLORE
-            </span>
-          </div>
+                <p className="hero-statement__base">
+                  Frontend developer crafting both sides of the screen — interactions users see, and environments
+                  developers feel. Having studied both design and engineering, I care about craft on screen and the
+                  systems behind it.
+                </p>
+                <p
+                  className="hero-statement__light"
+                  aria-hidden="true"
+                >
+                  Frontend developer crafting both sides of the screen — interactions users see, and environments
+                  developers feel. Having studied both design and engineering, I care about craft on screen and the
+                  systems behind it.
+                </p>
+              </div>
+              <button
+                className="hero-primary-cta"
+                type="button"
+                onClick={goWorks}
+              >
+                VIEW SELECTED WORK
+              </button>
+            </div>
 
-          <div className="hero-actions">
-            <button
-              ref={buttonWorksRef}
-              className="btn-hud btn-hud--works"
-              onClick={goWorks}
+            <footer className="hero-footer">
+              <p className="copy">© 2026 ChaeWon Im. All rights reserved.</p>
+            </footer>
+            {/* <div
+              className="hero-spectrum-axis"
+              aria-hidden="true"
             >
-              <span className="btn-text">
-                {!isMobile && '>'} <span className="btn-text__text">works</span>
-                <span className="btn-text__cursor"></span>
-              </span>
-            </button>
-            <button
-              ref={buttonAboutRef}
-              className="btn-hud btn-hud--about"
-              onClick={goAbout}
-            >
-              <span className="btn-text">
-                {!isMobile && '>'} <span className="btn-text__text">about</span>
-                <span className="btn-text__cursor"></span>
-              </span>
-            </button>
+              <span>SURFACE</span>
+              <span>BEHIND THE SCREEN</span>
+              <span>SYSTEM</span>
+            </div> */}
           </div>
         </section>
 

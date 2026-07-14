@@ -264,7 +264,7 @@ function About({ isActive }: AboutProps) {
     <>
       {/* Terminal-style progress nav */}
       <nav className={`terminal-bar about-nav ${isMobileDevice ? 'is-mobile-device' : ''}`}>
-        <span className="terminal-bar__label">&gt; ABOUT ───</span>
+        <span className="terminal-bar__label">&gt; INDEX ───</span>
         <span className="terminal-bar__bar">
           [
           {SECTIONS.map((s) =>
@@ -511,15 +511,6 @@ function About({ isActive }: AboutProps) {
                       </a>
                     </p>
                     <p className="btn-contact">
-                      Phone
-                      <a
-                        className="meta text-body"
-                        href={`tel:${contact.phone.replace(/\s/g, '')}`}
-                      >
-                        {contact.phone}
-                      </a>
-                    </p>
-                    <p className="btn-contact">
                       LinkedIn
                       <a
                         className="meta text-body"
@@ -554,13 +545,13 @@ function About({ isActive }: AboutProps) {
               </div>
             </section>
           </div>
-
+          {/* 
           <button
             className="btn-resume"
             aria-label="resume-download"
           >
             DOWNLOAD RESUME
-          </button>
+          </button> */}
         </div>
       </div>
     </>
