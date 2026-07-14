@@ -3,6 +3,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -26,18 +27,33 @@ const Works = lazy(() => import("./components/Works"));
 const Info = lazy(() => import("./components/Info"));
 
 // ---------------------------------------------------------------------------
-// Static timezone info — computed once at module load, never on re-render
-// (setCurrentTime fires every second; keeping these here prevents repeated
-//  Intl / Date API calls on each React re-render)
+// The monitor starts in Seoul so denied or pending location permission never
+// leaves GEO and TIME out of sync. A successful lookup switches to the
+// browser's resolved local timezone.
 // ---------------------------------------------------------------------------
-const _tzName = Intl.DateTimeFormat().resolvedOptions().timeZone;
-const _tzShort =
-  new Date()
-    .toLocaleTimeString("en-US", { timeZoneName: "short" })
-    .split(" ")
-    .at(-1) ?? _tzName;
-const _utcOffsetH = -new Date().getTimezoneOffset() / 60;
-const _utcLabel = `UTC${_utcOffsetH >= 0 ? "+" : ""}${String(_utcOffsetH).padStart(2, "0")}:00`;
+const LOCAL_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
+const DEFAULT_TIME_ZONE = "Asia/Seoul";
+const DEFAULT_LOCATION = "37° 33' N ■ 126° 58' E";
+
+function getTimeZoneMeta(timeZone: string) {
+  const now = new Date();
+  const short =
+    new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      timeZoneName: "short",
+    })
+      .formatToParts(now)
+      .find((part) => part.type === "timeZoneName")?.value ?? timeZone;
+  const offset =
+    new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      timeZoneName: "longOffset",
+    })
+      .formatToParts(now)
+      .find((part) => part.type === "timeZoneName")?.value.replace("GMT", "UTC") ?? "UTC+00:00";
+
+  return { short, offset };
+}
 
 /** Max wait for `document.fonts.ready` before continuing intro (avoids hanging on slow/broken fonts). */
 const FONTS_READY_MAX_WAIT_MS = 2500;
@@ -54,9 +70,14 @@ function App() {
 
   const [loadProgress, setLoadProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [locationStr, setLocationStr] = useState("37° 33' N ■ 126° 58' E");
+  const [locationStr, setLocationStr] = useState(DEFAULT_LOCATION);
+  const [displayTimeZone, setDisplayTimeZone] = useState(DEFAULT_TIME_ZONE);
   const [currentTime, setCurrentTime] = useState("");
   const [currentDate, setCurrentDate] = useState("");
+  const timeZoneMeta = useMemo(
+    () => getTimeZoneMeta(displayTimeZone),
+    [displayTimeZone],
+  );
   const isHeroActiveRef = useRef(true);
 
   // Intro log: plays every page load; false after first run so hero-return skips it
@@ -104,14 +125,17 @@ function App() {
           setLocationStr(
             `${dLat}° ${mLat}' ${dirLat} ■ ${dLng}° ${mLng}' ${dirLng}`,
           );
+          setDisplayTimeZone(LOCAL_TIME_ZONE);
         },
-        (error) => {
-          console.error("Geolocation error:", error);
-          setLocationStr("37° 33' N ■ 126° 58' E");
+        () => {
+          setLocationStr(DEFAULT_LOCATION);
+          setDisplayTimeZone(DEFAULT_TIME_ZONE);
         },
+        { timeout: 5000, maximumAge: 300000 },
       );
     } else {
-      setLocationStr("37° 33' N ■ 126° 58' E");
+      setLocationStr(DEFAULT_LOCATION);
+      setDisplayTimeZone(DEFAULT_TIME_ZONE);
     }
   }, []);
 
@@ -122,21 +146,30 @@ function App() {
       const now = new Date();
       setCurrentTime(
         now.toLocaleTimeString("en-US", {
+          timeZone: displayTimeZone,
           hour12: true,
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
         }),
       );
-      const y = now.getFullYear();
-      const m = String(now.getMonth() + 1).padStart(2, "0");
-      const d = String(now.getDate()).padStart(2, "0");
-      setCurrentDate(`${y}.${m}.${d}  ${DAY[now.getDay()]}`);
+      const dateParts = new Intl.DateTimeFormat("en-US", {
+        timeZone: displayTimeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        weekday: "short",
+      }).formatToParts(now);
+      const getPart = (type: Intl.DateTimeFormatPartTypes) =>
+        dateParts.find((part) => part.type === type)?.value ?? "";
+      setCurrentDate(
+        `${getPart("year")}.${getPart("month")}.${getPart("day")}  ${getPart("weekday").toUpperCase() || DAY[now.getDay()]}`,
+      );
     };
     tick();
     const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [displayTimeZone]);
 
   // Three.js Scene
   const {
@@ -540,7 +573,7 @@ function App() {
                 <div className="hero-panel__row">
                   <span className="hero-panel__key">ZONE</span>
                   <span className="hero-panel__val">
-                    {_tzShort} — {_utcLabel}
+                    {timeZoneMeta.short} — {timeZoneMeta.offset}
                   </span>
                 </div>
                 <div className="hero-panel__row">
