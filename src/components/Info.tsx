@@ -193,8 +193,7 @@ function Info({ isActive }: InfoProps) {
             gsap.fromTo(
               line,
               {
-                strokeDashoffset: () =>
-                  parseFloat(line.style.strokeDasharray || '0') || 0,
+                strokeDashoffset: () => parseFloat(line.style.strokeDasharray || '0') || 0,
               },
               {
                 strokeDashoffset: 0,
@@ -202,10 +201,8 @@ function Info({ isActive }: InfoProps) {
                 scrollTrigger: {
                   trigger: targetSection,
                   scroller,
-                  start: () =>
-                    Math.max(sectionTopInContent() - scroller.clientHeight, 8),
-                  end: () =>
-                    sectionTopInContent() - scroller.clientHeight * 0.55,
+                  start: () => Math.max(sectionTopInContent() - scroller.clientHeight, 8),
+                  end: () => sectionTopInContent() - scroller.clientHeight * 0.55,
                   scrub: true,
                   invalidateOnRefresh: true,
                 },
@@ -516,15 +513,6 @@ function Info({ isActive }: InfoProps) {
                         href={`mailto:${contact.email}`}
                       >
                         {contact.email}
-                      </a>
-                    </p>
-                    <p className="btn-contact">
-                      Phone
-                      <a
-                        className="meta text-body"
-                        href={`tel:${contact.phone.replace(/\s/g, '')}`}
-                      >
-                        {contact.phone}
                       </a>
                     </p>
                     <p className="btn-contact">
