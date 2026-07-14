@@ -24,5 +24,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  // 테스트 파일은 tsconfig.test.json(Jest 타입 포함) 담당 — 앱 빌드에서 제외
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/test"]
 }

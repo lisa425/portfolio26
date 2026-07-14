@@ -1,0 +1,103 @@
+@use '../styles/tokens' as *;
+
+// ─── Works PC 뷰 토글 + View All(리스트) 레이아웃 ───
+// 3D 씬/터미널바 등 기존 works 스타일은 App.scss 소유 — 여기는 신규 조각만.
+
+// [ VIEW MORE ] — 터미널바 아래 중앙 (PC 전용), 열리면 [ CLOSE ]로 바뀜
+// pointer-events는 기본 none — .page-sub(.works)가 .visible을 잃고 opacity 0으로
+// 페이드아웃된 뒤에도 이 버튼이 유령처럼 클릭되는 걸 막는다 (.works.visible에서만 auto).
+// 참고: App.scss:1084의 모바일 카드 재활성화와 동일한 패턴.
+.view-toggle {
+  position: absolute;
+  top: 4.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: max(vw(11, 1920), 11px);
+  pointer-events: none;
+
+  &__btn {
+    background: none;
+    border: none;
+    padding: 0.2rem 0.3rem;
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: 0.05em;
+    color: rgba($text-primary, 0.35);
+    cursor: pointer;
+
+    &:hover {
+      color: rgba($text-primary, 0.7);
+    }
+
+    &--active {
+      color: $text-primary;
+    }
+  }
+}
+
+// ─── 드로어 백드롭 ───
+// 씬 전체를 덮어 궤도 드래그/호버가 자연히 안 먹게 만드는 역할(별도 JS 가드
+// 불필요 — 커서가 드로어보다 낮은 z-index인 백드롭에 막혀 씬까지 안 닿음).
+// 바깥 클릭 시 닫기. pointer-events는 열려 있을 때만, 그리고 섹션이 실제로
+// 보일 때만 (.works.visible 게이트 — 아래 참고).
+.drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+
+  &--open {
+    opacity: 1;
+  }
+}
+
+// ─── View All 드로어 (하단 바텀시트) ───
+// Selected Project 궤도는 안 건드리고 그 위에 얹히는 바텀시트 패널.
+// 가로 100%(최대 900px, 중앙 정렬)로 아래에서 위로 슬라이드 — 항상 렌더 +
+// transform으로 슬라이드, 트랜지션을 위해 언마운트하지 않는다.
+.drawer {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  z-index: 15;
+  width: 100%;
+  max-width: 900px;
+  max-height: min(600px, 75vh);
+  overflow-y: auto;
+  background: rgba($bg-color, 0.97);
+  border-top: 1px solid rgba($text-primary, 0.15);
+  padding: 3rem 2rem;
+  transform: translate(-50%, 100%);
+  transition: transform 0.3s ease;
+
+  &--open {
+    transform: translate(-50%, 0);
+  }
+}
+
+.drawer__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+// ─── 섹션이 실제로 보일 때만 인터랙션 재활성화 ───
+// .page-sub(.works)가 .visible을 잃으면(뒤로가기 등) opacity만 페이드아웃되고
+// pointer-events:none은 즉시 적용되는데, 아래 규칙들이 auto를 강제해두면
+// 그 상속을 끊어버린다 — App.scss:1084 모바일 카드 패턴과 동일하게 게이트.
+// (드로어/백드롭도 열림(--open) 상태와 별개로 이 게이트를 항상 통과해야 함)
+:global(.works.visible) {
+  .view-toggle {
+    pointer-events: auto;
+  }
+  .drawer-backdrop--open {
+    pointer-events: auto;
+  }
+}

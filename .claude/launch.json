@@ -3,9 +3,17 @@
   "configurations": [
     {
       "name": "portfolio-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 5173
+      "runtimeExecutable": "/Users/imchaewon/.nvm/versions/node/v22.22.2/bin/node",
+      "runtimeArgs": ["node_modules/vite/bin/vite.js"],
+      "port": 5173,
+      "autoPort": true
+    },
+    {
+      "name": "storybook",
+      "runtimeExecutable": "/Users/imchaewon/.nvm/versions/node/v22.22.2/bin/node",
+      "runtimeArgs": ["node_modules/storybook/dist/bin/dispatcher.js", "dev", "-p", "6006", "--ci"],
+      "port": 6006,
+      "autoPort": true
     }
   ]
 }

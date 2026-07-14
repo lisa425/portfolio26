@@ -7,19 +7,19 @@
     },
     "works": {
       "title": "Works | 임채원",
-      "description": "게임 프로모션 사이트, 3D 갤러리 등 인터랙티브 웹 프로젝트 모음."
+      "description": "게임 프로모션 사이트, 3D 갤러리 등 인터랙티브 웹 프로젝트 모음"
     },
-    "info": {
-      "title": "Info | 임채원",
+    "about": {
+      "title": "About | 임채원",
       "description": "프론트엔드 개발자 임채원 소개 — 경력, 기술 스택, 연락처."
     }
   },
   "viewportGuard": {
     "title": "◼︎ VIEWPORT TOO SMALL ◼︎",
-    "body": "이 페이지는 데스크톱 브라우저에 맞춰 제작되었습니다.\n의도된 레이아웃과 인터랙션을 위해\n가로 1000px 이상의 화면에서 접속해 주세요."
+    "body": "이 페이지는 데스크톱 브라우저에 맞춰 제작되었습니다.\n의도된 레이아웃과 인터랙션을 위해\n가로 1024px 이상의 화면에서 접속해 주세요."
   },
   "works": {
-    "items": [
+    "selectedProject": [
       {
         "id": 1,
         "projectKey": "azure-promilia",
@@ -27,7 +27,32 @@
         "game": "아주르 프로밀리아",
         "title": "공식 홈페이지 구축 & 1차 사전등록 이벤트",
         "date": "2025.11 - 2025.12",
-        "description": "비즈니스 이슈로 인해 웹 개발 일정 50% 단축 → FE 시선에서 일정 이슈에 대응하기 위한 방향성을 PM 및 디자이너에게 제시하고, 개발 과정에서의 유연한 대응을 통해 일정 내 런칭\nNext.js Route Handler 기반 BFF 레이어 도입, 공통 API 연동과 응답 코드 해석을 프론트 서버 내부에서 통합 관리하도록 설계 → API 스펙 변경 대응, 유효성 검증 등 백엔드와 연관된 기능 관리 비용 감소, 이벤트 전용 공용 API를 쉽게 연결할 수 있는 환경 구축에 기여\n200MB 영상을 포함한 다수의 영상 삽입으로 인해 네트워크 부하 이슈 발생 → CDN 전송 타입 체크 및 모바일 기기에서의 HLS 기반 스트리밍 도입, 영상 딜레이 10초에서 3초로 단축하여 사용성 향상\nForm, 버튼 등 UI 컴포넌트에는 Mobile First, 이미지 오브제에는 max() 함수를 적용하여 반응형 리사이징 적용 등 컴포넌트의 목적에 따라 적합한 반응형 대응 방식을 판단하고 적용 → 여러 스크린 크기에서도 레이아웃 손상 없이 디자인 의도를 정확히 구현",
+        "description": [
+          {
+            "title": "비즈니스 이슈로 인해 웹 개발 일정 50% 단축",
+            "p": [
+              "FE 시선에서 일정 이슈에 대응하기 위한 방향성을 PM 및 디자이너에게 제시하고, 개발 과정에서의 유연한 대응을 통해 일정 내 런칭"
+            ]
+          },
+          {
+            "title": "Next.js Route Handler 기반 BFF 레이어 도입, 공통 API 연동과 응답 코드 해석을 프론트 서버 내부에서 통합 관리하도록 설계",
+            "p": [
+              "API 스펙 변경 대응, 유효성 검증 등 백엔드와 연관된 기능 관리 비용 감소, 이벤트 전용 공용 API를 쉽게 연결할 수 있는 환경 구축에 기여"
+            ]
+          },
+          {
+            "title": "200MB 영상을 포함한 다수의 영상 삽입으로 인해 네트워크 부하 이슈 발생",
+            "p": [
+              "CDN 전송 타입 체크 및 모바일 기기에서의 HLS 기반 스트리밍 도입, 영상 딜레이 10초에서 3초로 단축하여 사용성 향상"
+            ]
+          },
+          {
+            "title": "Form, 버튼 등 UI 컴포넌트에는 Mobile First, 이미지 오브제에는 max() 함수를 적용하여 반응형 리사이징 적용 등 컴포넌트의 목적에 따라 적합한 반응형 대응 방식을 판단하고 적용",
+            "p": [
+              "여러 스크린 크기에서도 레이아웃 손상 없이 디자인 의도를 정확히 구현"
+            ]
+          }
+        ],
         "stack": "Next.js",
         "thumbnail": "/assets/images/az_thumb1.jpg",
         "img": [
@@ -36,7 +61,9 @@
           "/assets/images/az_img3.jpg",
           "/assets/images/az_img4.jpg"
         ],
-        "url": "https://azurpromilia.nexon.com/events/2025/12/preregistration"
+        "url": "https://azurpromilia.nexon.com/events/2025/12/preregistration",
+        "dept": "NEXON",
+        "intro": "프론트엔드 개발 전체를 단독으로 리딩한 프로젝트로, 게임웹의 특성을 고려한 공식 홈페이지 소스를 구축했습니다."
       },
       {
         "id": 2,
@@ -45,11 +72,50 @@
         "game": "마비노기 영웅전",
         "title": "신규 개발 환경 구축",
         "date": "2026.01 - 2026.03",
-        "description": "개별 Webpack + JavaScript 환경 → React + Vite 기반의 공통 신규 개발 환경 구축\n반복되는 업무 패턴을 이벤트 전용 템플릿, 개발용 CLI 스크립트, 공통 컴포넌트 등으로 시스템화하여 프로젝트 내부 도입 → 개발 착수 시간 85% 단축(약 1시간 → 10분 내외)\n5개 채널에 분산된 배포 파이프라인을 개발 환경과 연결하여 배포 프로세스 통합 및 간소화 → 배포 소요 시간 약 80% 개선(약 30분 이상 → 5분 이내)\n이미지의 중복 픽셀 수를 제거해 용량을 줄이는 이미지 압축 프로세스를 빌드 옵션으로 도입 → 리소스 용량 최대 80% 절감 및 선택적 최적화를 통한 리소스 퀄리티 저하 방지\n이미지 로드 감지 처리 커스텀 훅을 표준 템플릿으로 도입 → 페이지 로드 UX 개선 적용\n주요 프로젝트 컨벤션을 문서화하여 Claude 기반 AI 개발 보조 환경 구축 → 이벤트 개발 일관성 및 자율성 동시 확보",
+        "description": [
+          {
+            "title": "개별 Webpack + JavaScript 환경",
+            "p": [
+              "React + Vite 기반의 공통 신규 개발 환경 구축"
+            ]
+          },
+          {
+            "title": "반복되는 업무 패턴을 이벤트 전용 템플릿, 개발용 CLI 스크립트, 공통 컴포넌트 등으로 시스템화하여 프로젝트 내부 도입",
+            "p": [
+              "개발 착수 시간 85% 단축(약 1시간 → 10분 내외)"
+            ]
+          },
+          {
+            "title": "5개 채널에 분산된 배포 파이프라인을 개발 환경과 연결하여 배포 프로세스 통합 및 간소화",
+            "p": [
+              "배포 소요 시간 약 80% 개선(약 30분 이상 → 5분 이내)"
+            ]
+          },
+          {
+            "title": "이미지의 중복 픽셀 수를 제거해 용량을 줄이는 이미지 압축 프로세스를 빌드 옵션으로 도입",
+            "p": [
+              "리소스 용량 최대 80% 절감 및 선택적 최적화를 통한 리소스 퀄리티 저하 방지"
+            ]
+          },
+          {
+            "title": "이미지 로드 감지 처리 커스텀 훅을 표준 템플릿으로 도입",
+            "p": [
+              "페이지 로드 UX 개선 적용"
+            ]
+          },
+          {
+            "title": "주요 프로젝트 컨벤션을 문서화하여 Claude 기반 AI 개발 보조 환경 구축",
+            "p": [
+              "이벤트 개발 일관성 및 자율성 동시 확보"
+            ]
+          }
+        ],
         "stack": "React · TypeScript · Vite · Zustand · GSAP · Claude Code",
         "thumbnail": "/assets/images/heroes_img1.jpg",
         "img": [],
-        "url": ""
+        "url": "",
+        "dept": "NEXON",
+        "intro": "개별 개발 환경으로 진행되던 이벤트 개발 워크플로우를 전용 프로젝트 구축을 통해 개선하였습니다."
       },
       {
         "id": 3,
@@ -58,11 +124,36 @@
         "game": "마비노기 영웅전",
         "title": "운영 업무 자동화 설계",
         "date": "2026.03 - 2026.04",
-        "description": "반복되는 운영 업무의 병목을 줄이기 위해 콘텐츠 자동 생성 툴 개발 및 도입 제안\n개발에 필요한 디자인 규칙을 파악해 디자이너에게 제시하고 함께 디벨롭하며 개발\nFigma API를 연동하여 합의된 디자인 규칙에 따라 제작된 컴포넌트와 레이어를 스캔하고, 이를 기반으로 HTML 콘텐츠를 자동 생성하는 콘텐츠 생성 툴 설계\n공유 저장소에서 업무 대상 파일 스캔 및 분류, 콘텐츠 URL 생성, 규칙에 따른 배포, Jira Ticket 공유까지 업무 전체 프로세스를 툴 내부에서 제어하도록 개발\n프로세스 제안 이후 운영 업무 소요 시간 약 92% 단축(건당 평균 1시간 → 5분 이하)",
+        "description": [
+          {
+            "title": "반복되는 운영 업무의 병목을 줄이기 위해 콘텐츠 자동 생성 툴 개발 및 도입 제안",
+            "p": []
+          },
+          {
+            "title": "개발에 필요한 디자인 규칙을 파악해 디자이너에게 제시하고 함께 디벨롭하며 개발",
+            "p": []
+          },
+          {
+            "title": "Figma API를 연동하여 합의된 디자인 규칙에 따라 제작된 컴포넌트와 레이어를 스캔하고, 이를 기반으로 HTML 콘텐츠를 자동 생성하는 콘텐츠 생성 툴 설계",
+            "p": []
+          },
+          {
+            "title": "공유 저장소에서 업무 대상 파일 스캔 및 분류, 콘텐츠 URL 생성, 규칙에 따른 배포, Jira Ticket 공유까지 업무 전체 프로세스를 툴 내부에서 제어하도록 개발",
+            "p": []
+          },
+          {
+            "title": "프로세스 제안 이후 운영 업무 소요 시간 약 92% 단축(건당 평균 1시간",
+            "p": [
+              "5분 이하)"
+            ]
+          }
+        ],
         "stack": "React · TypeScript · Vite · Claude Code · Figma API · Jira Ticket",
         "thumbnail": "/assets/images/heroes_img2.jpg",
         "img": [],
-        "url": ""
+        "url": "",
+        "dept": "NEXON",
+        "intro": "개별 개발 환경으로 진행되던 이벤트 개발 워크플로우를 전용 프로젝트 구축을 통해 개선하였습니다."
       },
       {
         "id": 4,
@@ -71,7 +162,28 @@
         "game": "마비노기 모바일",
         "title": "런칭 사전등록 이벤트",
         "date": "2024.12 - 2025.02",
-        "description": "고해상도 알파 채널 영상 다수를 삽입해야 했으나 APNG는 용량으로 인한 페이지 로드 성능 저하, Canvas 크로마키는 프레임 단위 연산으로 인한 스레드 부하 발생\nAPNG, Canvas 크로마키, Lottie, WebM Alpha, HEVC Alpha 등 5개 대안을 비교 검토해 브라우저별 이중 포맷(HEVC/WebM) 제공 방식 설계 → 크로스 브라우징 대응 및 리소스 용량 APNG 대비 70% 절감\n시멘틱 태그 기반 마크업, 콘텐츠 이미지 alt 명시, SEO용 이벤트 개요 텍스트 삽입 등 웹 접근성을 준수해 검색 노출 및 스크린리더 대응 확보\n마우스 외 키보드 기반 페이지 탐색 인터랙션 추가 적용 제안 → 웹 사용성 추가 개선",
+        "description": [
+          {
+            "title": "고해상도 알파 채널 영상 다수를 삽입해야 했으나 APNG는 용량으로 인한 페이지 로드 성능 저하, Canvas 크로마키는 프레임 단위 연산으로 인한 스레드 부하 발생",
+            "p": []
+          },
+          {
+            "title": "APNG, Canvas 크로마키, Lottie, WebM Alpha, HEVC Alpha 등 5개 대안을 비교 검토해 브라우저별 이중 포맷(HEVC/WebM) 제공 방식 설계",
+            "p": [
+              "크로스 브라우징 대응 및 리소스 용량 APNG 대비 70% 절감"
+            ]
+          },
+          {
+            "title": "시멘틱 태그 기반 마크업, 콘텐츠 이미지 alt 명시, SEO용 이벤트 개요 텍스트 삽입 등 웹 접근성을 준수해 검색 노출 및 스크린리더 대응 확보",
+            "p": []
+          },
+          {
+            "title": "마우스 외 키보드 기반 페이지 탐색 인터랙션 추가 적용 제안",
+            "p": [
+              "웹 사용성 추가 개선"
+            ]
+          }
+        ],
         "stack": "HTML · CSS · JavaScript",
         "thumbnail": "/assets/images/mm_pre_thumb.jpg",
         "img": [
@@ -80,7 +192,9 @@
           "/assets/images/mm_pre_img3.jpeg",
           "/assets/images/mm_pre_img4.jpeg"
         ],
-        "url": ""
+        "url": "",
+        "dept": "NEXON",
+        "intro": ""
       },
       {
         "id": 5,
@@ -89,23 +203,101 @@
         "game": "바람의나라",
         "title": "궁사 리마스터 티징 & 21주년 일러스트 갤러리",
         "date": "2022.11 - 2022.12",
-        "description": "Three.js 기반의 3D 웹 갤러리 전체 설계 및 구축, GSAP 기반의 스크롤 인터랙션 설계\n초기 개발 중 스크롤 이벤트 발생 시마다 갤러리의 회전값과 위치값을 계산하여 과도한 연산 발생 → Throttle을 적용해 불필요한 연속 계산을 제한하고 스크롤 처리 안정화\n162개의 Plane Mesh 개별 렌더링으로 인한 프레임 저하 발생 → GPU 인스턴싱이 가능한 InstancedMesh로 전환하여 Draw call을 162회에서 1회로 절감",
+        "description": [
+          {
+            "title": "Three.js 기반의 3D 웹 갤러리 전체 설계 및 구축, GSAP 기반의 스크롤 인터랙션 설계",
+            "p": []
+          },
+          {
+            "title": "초기 개발 중 스크롤 이벤트 발생 시마다 갤러리의 회전값과 위치값을 계산하여 과도한 연산 발생",
+            "p": [
+              "Throttle을 적용해 불필요한 연속 계산을 제한하고 스크롤 처리 안정화"
+            ]
+          },
+          {
+            "title": "162개의 Plane Mesh 개별 렌더링으로 인한 프레임 저하 발생",
+            "p": [
+              "GPU 인스턴싱이 가능한 InstancedMesh로 전환하여 Draw call을 162회에서 1회로 절감"
+            ]
+          }
+        ],
         "stack": "HTML, CSS, JavaScript, Three.js · GSAP",
         "thumbnail": "/assets/images/br_thumb1.jpg",
-        "img": ["/assets/images/br_img1.jpg", "/assets/images/br_img2.jpg", "/assets/images/br_img3.jpg"],
-        "url": "https://baram.nexon.com/E221215/Intro"
+        "img": [
+          "/assets/images/br_img1.jpg",
+          "/assets/images/br_img2.jpg",
+          "/assets/images/br_img3.jpg"
+        ],
+        "url": "https://baram.nexon.com/E221215/Intro",
+        "dept": "NEXON",
+        "intro": ""
+      }
+    ],
+    "subProject": [
+      {
+        "title": "[마비노기 영웅전(국내/북미)] 신규 캐릭터 'Neamhain' 업데이트",
+        "dept": "NEXON",
+        "intro": "신규 캐릭터의 정체성과 세계관을 비주얼적으로 표현하는 웹 애니메이션 연출 및 구현",
+        "date": "2025.01",
+        "stack": "React · TypeScript",
+        "url": "http://vindictus.nexon.net/event/2025/0121/neamhain"
+      },
+      {
+        "title": "[블루아카이브] Code:BOX - 밀레니엄에 다가오는 그림자",
+        "dept": "NEXON",
+        "intro": "이벤트 전용 모션 시퀀스 및 마이크로 인터랙션 설계 및 구현. 한국어/영어/태국어 3개 국어 대응",
+        "date": "2025.07",
+        "stack": "Vue.js, Nuxt3",
+        "url": "https://bluearchive.nexon.com/events/2025/07/update"
+      },
+      {
+        "title": "[마비노기 모바일] 1주년 페스티벌",
+        "dept": "NEXON",
+        "intro": "1주년 업데이트의 봄 테마에 맞춘 파티클 웹 그래픽 애니메이션을 연출한 인트로 페이지. 쿠폰 복사, 날짜별 콘텐츠 블락 등 UI 기능 개발",
+        "date": "2026.03",
+        "stack": "React · TypeScript"
+      },
+      {
+        "title": "[메이플스토리M] 쇼케이스 멤버십 번호 발급/조회 이벤트",
+        "dept": "NEXON",
+        "intro": "멤버십 유효성 검증 및 조회/번호 발급 기능 프론트엔드 개발, 검증 로직 개선을 통해 로드 개선",
+        "date": "2026.03",
+        "stack": "React · TypeScript"
+      },
+      {
+        "title": "퍼스널컬러 기반 의류 필터링 알고리즘",
+        "dept": "숙명여자대학교",
+        "intro": "신규 캐릭터의 정체성과 세계관을 비주얼적으로 표현하는 웹 애니메이션 연출 및 구현",
+        "date": "2025.01",
+        "stack": "Python · Django · OpenCV"
+      },
+      {
+        "title": "<a Little Bit!>",
+        "dept": "숙명여자대학교",
+        "description": "신규 캐릭터의 정체성과 세계관을 비주얼적으로 표현하는 웹 애니메이션 연출 및 구현",
+        "date": "2021.07 - 2021.10",
+        "stack": "React · Node.js · MongoDB · AWS S3"
+      },
+      {
+        "title": "2021년도 시각영상디자인과 온라인 졸업전시회",
+        "dept": "숙명여자대학교",
+        "description": "신규 캐릭터의 정체성과 세계관을 비주얼적으로 표현하는 웹 애니메이션 연출 및 구현",
+        "date": "2021.07 - 2021.10",
+        "stack": "HTML, CSS, JavaScript"
       }
     ]
   },
-  "info": {
+  "about": {
     "name": "임채원",
     "role": "Frontend Developer",
     "contact": {
       "email": "imchaewon.dev@gmail.com",
+      "phone": "010-9902-7913",
       "LinkedIn": "https://www.linkedin.com/in/chxxwn",
-      "Blog": "https://iamchaewon.tistory.com/"
+      "Blog": "https://iamchaewon.tistory.com/",
+      "GitHub": "https://github.com/lisa425"
     },
-    "about": "화면 앞과 뒤, 양면의 경험을 만드는 프론트엔드 개발자입니다. 디자인과 공학을 함께 공부한 배경을 바탕으로 사용자가 보는 인터랙션과 개발자가 다루는 구조, 두 가지 관점에서의 가치를 지향합니다. 눈에 보이는 시각적인 결과물뿐 아니라 내부적인 설계, 업무의 자동화, 팀의 개발 환경까지 함께 다듬어 나가는 일에 관심을 가지고 있습니다.",
+    "intro": "화면의 앞과 뒤, 양면의 경험을 만드는 프론트엔드 개발자입니다. 디자인과 공학을 함께 공부한 배경을 바탕으로 유저의 눈에 보이는 시각적인 결과물뿐 아니라 내부적인 설계, 업무의 자동화 등 팀의 업무 효율까지 함께 고려하는 개발을 지향합니다. 신규 개발 환경 도입 및 반복성 업무 자동화를 주도하여 업무 효율을 약 80% 이상 개선한 경험이 있으며, 다수의 미디어 삽입이 요구되는 환경에서 리소스를 요구사항에 맞게 최적화하고 페이지 로드 속도를 약 70% 향상시켜 비즈니스 목표를 달성했습니다. ",
     "workExperience": {
       "jobs": [
         {
@@ -116,15 +308,21 @@
           "projects": [
             {
               "name": "마비노기웹개발팀",
-              "bullets": ["대리 | 2026.01 - 2026.06"]
+              "bullets": [
+                "대리 | 2026.01 - 2026.06"
+              ]
             },
             {
               "name": "게임웹프론트개발팀",
-              "bullets": ["사원 | 2025.04 - 2025.12"]
+              "bullets": [
+                "사원 | 2025.04 - 2025.12"
+              ]
             },
             {
               "name": "라이브웹프론트엔드팀",
-              "bullets": ["사원 | 2022.05 - 2025.03"]
+              "bullets": [
+                "사원 | 2022.05 - 2025.03"
+              ]
             }
           ]
         }
@@ -142,22 +340,33 @@
         },
         {
           "name": "Backend",
-          "items": ["Node.js, NestJS, Python, Django", "Supabase, MongoDB, MySQL"]
+          "items": [
+            "Node.js, NestJS, Python, Django",
+            "Supabase, MongoDB, MySQL"
+          ]
         },
         {
           "name": "AI",
-          "items": ["Claude Code, Codex, Cursor, Antigravity"]
+          "items": [
+            "Claude Code, Codex, Cursor, Antigravity"
+          ]
         },
         {
           "name": "Collaboration",
-          "items": ["GitHub, GitLab, Figma, Adobe Photoshop", "Jira, Slack, Confluence, Notion"]
+          "items": [
+            "GitHub, GitLab, Figma, Adobe Photoshop",
+            "Jira, Slack, Confluence, Notion"
+          ]
         }
       ]
     },
     "education": {
       "school": "숙명여자대학교",
       "period": "2017.03 – 2022.08 | 대한민국, 서울",
-      "bullets": ["시각·영상디자인과", "IT 공학과"]
+      "bullets": [
+        "시각·영상디자인과",
+        "IT 공학과"
+      ]
     }
   }
 }

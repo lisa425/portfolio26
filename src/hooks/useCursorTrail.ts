@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react'
 
 // ── Tune these ───────────────────────────────────────
-const CHAIN_LENGTH = 10 // number of square particles in the trail
+const CHAIN_LENGTH = 12 // number of square particles in the trail
 const HEAD_LERP = 0.22 // how fast the head chases the cursor (0–1)
 const LINK_LERP = 0.15 // how fast each link chases the one in front
-const HEAD_SIZE = 15 // px — size of the closest particle
+const HEAD_SIZE = 10 // px — size of the closest particle
 const TAIL_SHRINK = 0.8 // how much smaller the tail gets (0 = same, 1 = vanishes)
 const MERGE_DIST = 10 // px — within this distance to cursor, particle fades out
 // ─────────────────────────────────────────────────────

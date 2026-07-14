@@ -22,13 +22,13 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://imchaewon.com/en/works"/>
   </url>
   <url>
-    <loc>https://imchaewon.com/en/info</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://imchaewon.com/ko/info"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://imchaewon.com/en/info"/>
+    <loc>https://imchaewon.com/en/about</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://imchaewon.com/ko/about"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://imchaewon.com/en/about"/>
   </url>
   <url>
-    <loc>https://imchaewon.com/ko/info</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://imchaewon.com/ko/info"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://imchaewon.com/en/info"/>
+    <loc>https://imchaewon.com/ko/about</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://imchaewon.com/ko/about"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://imchaewon.com/en/about"/>
   </url>
 </urlset>

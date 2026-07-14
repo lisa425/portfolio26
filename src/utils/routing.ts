@@ -1,9 +1,9 @@
 import type { LangType } from "../types";
 
 // Single source of truth for URL ↔ view/lang mapping.
-// URL scheme: /:lang(/:view)? — e.g. /en, /ko/works, /en/info
+// URL scheme: /:lang(/:view)? — e.g. /en, /ko/works, /en/about
 
-export type SectionView = "works" | "info";
+export type SectionView = "works" | "about";
 export type StableView = "hero" | SectionView;
 export type ViewType = StableView | "transitioning";
 
@@ -14,7 +14,7 @@ const LANG_STORAGE_KEY = "preferredLang";
 /** URL path segments for each section view (also used in the route config) */
 export const VIEW_SEGMENTS: Record<SectionView, string> = {
   works: "works",
-  info: "info",
+  about: "about",
 };
 
 export function isSupportedLang(
@@ -68,7 +68,7 @@ export function savePreferredLang(lang: LangType): void {
 function viewFromSegment(segment: string | undefined): StableView | null {
   if (!segment) return "hero";
   if (segment === VIEW_SEGMENTS.works) return "works";
-  if (segment === VIEW_SEGMENTS.info) return "info";
+  if (segment === VIEW_SEGMENTS.about) return "about";
   return null;
 }
 
@@ -77,7 +77,7 @@ function viewFromSegment(segment: string | undefined): StableView | null {
  * null fields mean the segment is missing or unknown:
  *   "/"          → { lang: null, view: "hero" }
  *   "/works"     → { lang: null, view: "works" }   (bare path, lang redirect needed)
- *   "/ko/info"   → { lang: "ko", view: "info" }
+ *   "/ko/about"  → { lang: "ko", view: "about" }
  *   "/jp/works"  → { lang: null, view: null }      (unknown lang)
  *   "/en/foo"    → { lang: "en", view: null }      (unknown view)
  */

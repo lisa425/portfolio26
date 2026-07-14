@@ -1,4 +1,5 @@
 @use 'sass:math';
+@use './styles/tokens' as *;
 @import url('https://fonts.googleapis.com/css2?family=Azeret+Mono:ital,wght@0,100..900;1,100..900&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@100..900&family=Space+Grotesk:wght@300..700&display=swap');
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 @import url('https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css');
@@ -34,9 +35,6 @@
   font-style: normal;
   font-weight: 700;
 }
-@function vw($px: 16, $base: 1920) {
-  @return math.div($px, $base) * 100vw;
-}
 // 1 동적 뷰포트 단위. 모던 브라우저는 1dvh, dvh 미지원 구형 Safari는
 // 1vh 폴백 후 JS(main.tsx)가 visualViewport 실측값으로 덮어씀 —
 // 상단 브라우저 UI 표시/숨김에 따라 실제 보이는 높이를 추적한다.
@@ -47,19 +45,7 @@
   }
 }
 
-@function vh($px: 16, $base: 1080) {
-  @return calc(#{math.div($px, $base) * 100} * var(--vhu));
-}
-
-$bg-color: #0d0d0d;
-$text-primary: #ffffff;
-$font-display: 'nbarchitekt', 'Azeret Mono', 'IBM Plex Mono', monospace;
-$font-body: 'Space Grotesk', 'IBM Plex Mono', 'Azeret Mono', 'Outfit', sans-serif;
-// 표준 브레이크포인트: 모바일 ≤767 / 태블릿 768~1023 / PC ≥1024
-// 터치(모바일+태블릿) 레이아웃 경계는 $tablet — JS의 useMobile(1023px)과 짝을 이룸
-$mobile-sm: 640px; // 소형 모바일
-$mobile: 767px; // 모바일 상한
-$tablet: 1023px; // 태블릿 상한
+// 색·폰트·브레이크포인트·vw()/vh() 토큰은 src/styles/_tokens.scss (컴포넌트 모듈과 공유)
 
 * {
   margin: 0;
@@ -98,7 +84,7 @@ body.ko {
   }
 }
 
-.info .info-section__content {
+.about .about-section__content {
   user-select: text;
   &::selection {
     background: #fff;
@@ -106,10 +92,13 @@ body.ko {
   }
 }
 
+// ─── Shared UI 스타일은 각 컴포넌트의 *.module.scss로 이동됨 (src/components/ui/) ───
+
 // ─── Shared Terminal Bar ───
 .terminal-bar {
   position: fixed;
   top: 0rem;
+  width: 100%;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -121,6 +110,7 @@ body.ko {
   color: $text-primary;
   white-space: nowrap;
   z-index: 100;
+  background: linear-gradient(to bottom, black 0%, $bg-color 10%, transparent 100%);
 
   .terminal-bar__label {
     opacity: 0.6;
@@ -137,7 +127,6 @@ body.ko {
     padding-top: calc(10 * var(--vhu));
     font-size: min(vw(10, 390), 12px);
     gap: 0.3em;
-    background: linear-gradient(to top, $bg-color 0%, $bg-color 10%, transparent 100%);
     width: 100vw;
     backdrop-filter: 10px;
     * {
@@ -300,12 +289,61 @@ body.ko {
         pointer-events: auto;
       }
 
+      .header-clock {
+        position: absolute;
+        // top: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+        font-size: min(vw(14, 370), 16px);
+
+        &__status {
+          color: $text-primary;
+          position: relative;
+          display: flex;
+          align-items: center;
+          &__dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            flex-shrink: 0;
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
+            animation: panel-dot-pulse 2s ease-in-out infinite;
+            position: absolute;
+            left: -0.8rem;
+          }
+        }
+
+        &__time {
+          color: rgba(255, 255, 255, 0.72);
+        }
+
+        @media (max-width: $tablet) {
+          gap: 0.45rem;
+          font-size: min(vw(15, 370), 15px);
+        }
+        @media (max-width: $tablet) and (max-height: 700px) {
+          font-size: min(vw(12, 370), 12px);
+        }
+        @media (max-width: $mobile-sm) {
+          display: none;
+        }
+      }
+
       .header-sub-flip {
         perspective: 400px;
         font-size: max(vw(11, 1920), 11px);
         opacity: 0.7;
         height: 1.2em;
         overflow: hidden;
+        @media (max-width: $tablet) {
+          font-size: min(vw(8, 370), 8px);
+        }
 
         &__front,
         &__back {
@@ -346,67 +384,121 @@ body.ko {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 0.8rem;
         position: relative;
         height: fit-content;
-
-        .divider {
-          width: 1px;
-          height: max(vw(12, 1920), 12px);
-          background-color: rgba(255, 255, 255, 0.4);
+        font-size: min(vw(14, 370), 16px);
+        @media (max-width: $tablet) {
+          font-size: min(vw(15, 370), 15px);
+        }
+        @media (max-width: $tablet) and (max-height: 700px) {
+          font-size: min(vw(12, 370), 12px);
         }
 
+        .lang-container {
+          display: flex;
+          align-items: center;
+          .arr {
+            position: relative;
+            left: -2px;
+          }
+        }
         .menu-lang-label {
-          font-size: max(vw(13, 1920), 15px);
           color: rgba(255, 255, 255, 0.7);
           height: fit-content;
-          @media (max-width: $tablet) {
-            font-size: max(vw(14, 1920), 16px);
-          }
-          @media (max-width: $tablet) and (max-height: 700px) {
-            font-size: min(vw(12, 370), 12px);
-          }
         }
-        .menu-lang {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          gap: 0.2rem;
-          position: relative;
-          font-size: max(vw(14, 1920), 16px);
-          height: fit-content;
 
-          .btn-lang {
-            padding: 0;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            pointer-events: auto;
-            font-family: inherit;
-            color: rgba(255, 255, 255, 0.7);
-            background-color: transparent;
-            padding: 0 0.2rem;
-            height: fit-content;
-            @media (max-width: $tablet) {
-              font-size: max(vw(14, 1920), 16px);
+        .menu-lang-flip {
+          width: 2.1em;
+          height: 1.2em;
+          overflow: hidden;
+          padding: 0;
+          border: 0;
+          background: transparent;
+          color: $text-primary;
+          cursor: pointer;
+          pointer-events: auto;
+          perspective: 400px;
+          font: inherit;
+          line-height: 1.2;
+
+          &__front,
+          &__back {
+            display: block;
+            width: 100%;
+            backface-visibility: hidden;
+            transform-origin: center center;
+            transition:
+              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.4s ease;
+          }
+
+          &__front {
+            transform: translateZ(0) rotateX(0deg);
+          }
+
+          &__back {
+            opacity: 0;
+            transform: translateZ(20px) rotateX(90deg);
+          }
+
+          &:hover,
+          &:focus-visible {
+            .menu-lang-flip__front {
+              opacity: 0;
+              transform: rotateX(90deg);
             }
-            @media (max-width: $tablet) and (max-height: 700px) {
-              font-size: min(vw(12, 370), 12px);
-            }
-            &.on {
-              color: $text-primary;
-            }
-            &:hover {
-              animation: textBlink 0.7s infinite;
-              @media (max-width: $tablet) {
-                animation: none;
-              }
+
+            .menu-lang-flip__back {
+              opacity: 1;
+              transform: rotateX(0deg) translateY(-100%);
             }
           }
         }
 
         @media (max-width: $tablet) {
-          gap: 0.5rem;
+          gap: 0.35rem;
+
+          .menu-lang-label {
+            display: none;
+          }
+        }
+      }
+    }
+
+    // ─── Persistent section navigation in the header ───
+    .section-nav-fixed {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      margin-left: 1.2rem;
+      font-size: inherit;
+      pointer-events: auto;
+
+      @media (max-width: $tablet) {
+        gap: 0.55rem;
+        margin-left: 0.25rem;
+      }
+
+      .btn-nav {
+        padding: 0;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        pointer-events: auto;
+        font-family: inherit;
+        font-size: inherit;
+        color: rgba(255, 255, 255, 0.7);
+        height: fit-content;
+
+        &.on {
+          color: $text-primary;
+        }
+        &:hover {
+          animation: textBlink 0.7s infinite;
+          @media (max-width: $tablet) {
+            animation: none;
+          }
         }
       }
     }
@@ -734,125 +826,166 @@ body.ko {
         }
       }
 
-      .hero-hint {
-        position: fixed;
-        bottom: 5rem;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
+      .hero-copy {
+        position: absolute;
+        inset: 0;
         pointer-events: none;
+        transform-origin: center;
 
-        @media (max-width: $tablet) {
-          bottom: 1.7rem;
-          transform: translateX(-50%) scale(0.9); // Make slightly smaller on mobile
-        }
-
-        &__mouse {
+        &__center {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: min(700px, calc(100vw - 6rem));
           display: flex;
+          flex-direction: column;
           align-items: center;
-          justify-content: center;
-          position: relative;
-          transform: translateX(-15%) rotate(10deg);
-        }
+          gap: 1.75rem;
+          transform: translate(-50%, calc(-50% - 1rem));
 
-        &__hand {
-          width: max(vw(20, 1920), 20px);
-          height: max(vw(20, 1920), 20px);
-        }
-
-        &__label {
-          font-size: max(vw(12, 1920), 12px);
-          color: rgba(255, 255, 255, 0.8);
-          white-space: nowrap;
-          letter-spacing: 0.15rem;
-          text-align: center;
           @media (max-width: $tablet) {
-            font-size: min(vw(11, 390), 12px);
+            width: calc(100vw - 3rem);
+            max-width: 500px;
+            gap: 1.4rem;
+            transform: translate(-50%, calc(-50% - 0.75rem));
+          }
+
+          @media (max-width: $tablet) and (max-height: 700px) {
+            width: calc(100vw - 2.5rem);
+            gap: 1rem;
+            transform: translate(-50%, calc(-50% - 0.5rem));
           }
         }
       }
 
-      .btn-hud {
-        position: fixed;
-        left: 0;
-        top: 0;
-        transform: translate(-50%, -50%); // JS controls left/top relative to center
-        background: transparent;
-        border: none;
-        font-size: max(vw(15, 1920), 16px);
-        cursor: pointer;
+      .hero-statement {
+        --light-x: 50%;
+        --light-y: 50%;
+        --light-strength: 0;
+        position: relative;
+        width: 100%;
+        isolation: isolate;
         pointer-events: auto;
-        letter-spacing: 0.03em;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 0.2rem;
-        width: max(vw(250, 1920), 250px);
-        height: max(vw(250, 1920), 250px);
-        color: $text-primary;
+        font-size: max(vw(12, 1920), 14px);
+        line-height: 1.55;
+        letter-spacing: 0;
+        text-align: center;
+
+        &__base,
+        &__light {
+          margin: 0;
+          font: inherit;
+        }
+
+        &__base {
+          color: rgba(255, 255, 255, 0.5);
+        }
+
+        &__light {
+          position: absolute;
+          inset: 0;
+          color: #fff;
+          opacity: var(--light-strength);
+          pointer-events: none;
+          text-shadow: 0 0 12px rgba(255, 255, 255, 0.26);
+          -webkit-mask-image: radial-gradient(
+            circle 120px at var(--light-x) var(--light-y),
+            #000 0%,
+            rgba(0, 0, 0, 0.95) 35%,
+            rgba(0, 0, 0, 0.35) 68%,
+            transparent 100%
+          );
+          mask-image: radial-gradient(
+            circle 120px at var(--light-x) var(--light-y),
+            #000 0%,
+            rgba(0, 0, 0, 0.95) 35%,
+            rgba(0, 0, 0, 0.35) 68%,
+            transparent 100%
+          );
+          transition: opacity 0.22s ease;
+        }
 
         @media (max-width: $tablet) {
-          width: 160px;
-          height: 160px;
-          font-size: min(vw(12, 390), 13px);
+          font-size: min(vw(13, 370), 13px);
+          line-height: 1.65;
         }
 
-        .btn-text {
-          white-space: nowrap;
-          display: flex;
-          align-items: center;
-          gap: 0.05rem;
+        @media (max-width: $tablet) and (max-height: 700px) {
+          font-size: min(vw(10, 370), 10px);
+        }
+      }
 
-          @media (max-width: $tablet) {
-            background-color: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(4px);
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
-          }
+      .hero-primary-cta {
+        width: clamp(220px, 15vw, 240px);
+        height: 48px;
+        flex: 0 0 auto;
+        padding: 0 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(0, 0, 0, 0.5);
+        color: rgba(255, 255, 255, 0.72);
+        font-family: inherit;
+        font-size: max(vw(16, 1920), 16px);
+        line-height: 1;
+        letter-spacing: 0;
+        cursor: pointer;
+        pointer-events: auto;
+        transition:
+          border-color 0.25s ease,
+          background-color 0.25s ease,
+          color 0.25s ease;
 
-          &__cursor {
-            display: inline-block;
-            width: max(vw(8, 1920), 9px);
-            height: max(vw(13, 1920), 15px);
-            // invisible by default; background-color driven by .active animation
-            &.active {
-              animation: textBlink 0.8s infinite;
-            }
-            @media (max-width: $tablet) {
-              animation: none;
-              display: none;
-            }
-          }
-          &__text {
-            margin-left: 0.5rem;
-            @media (max-width: $tablet) {
-              margin-left: 0em;
-            }
-          }
+        &:hover,
+        &:focus-visible {
+          border-color: rgba(255, 255, 255, 0.78);
+          background: rgba(255, 255, 255, 0.08);
+          color: #fff;
         }
 
-        &--works .btn-text {
-          margin-left: 7%;
-          @media (max-width: $tablet) {
-            margin-left: 0;
-          }
-        }
-        &--info .btn-text {
-          margin-left: -12%;
-          @media (max-width: $tablet) {
-            margin-left: 0;
-          }
+        &:focus-visible {
+          outline: 1px solid rgba(255, 255, 255, 0.9);
+          outline-offset: 4px;
         }
 
-        &:hover {
-          .btn-dot {
-            background: $text-primary;
-            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
-          }
+        @media (max-width: $tablet) {
+          width: 210px;
+          height: 44px;
+          font-size: 10px;
+        }
+
+        @media (max-width: $tablet) and (max-height: 700px) {
+          width: 196px;
+          height: 40px;
+          font-size: 9px;
+        }
+      }
+
+      .hero-spectrum-axis {
+        position: absolute;
+        bottom: 8.5%;
+        left: 7%;
+        width: 86%;
+        display: flex;
+        justify-content: space-between;
+        color: rgba(255, 255, 255, 0.28);
+        font-size: 0.62rem;
+        letter-spacing: 0;
+        pointer-events: none;
+
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: -0.8rem;
+          height: 1px;
+          background: rgba(255, 255, 255, 0.12);
+        }
+
+        @media (max-width: $tablet) {
+          bottom: 7.5%;
+          left: 1.5rem;
+          width: calc(100% - 3rem);
+          font-size: 0.5rem;
         }
       }
     }
@@ -862,7 +995,7 @@ body.ko {
 .page-sub {
   position: fixed;
   inset: 0;
-  background-color: rgba($bg-color, 0.92);
+  background-color: rgba($bg-color, 0.2);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.8s ease 0.2s;
@@ -870,6 +1003,12 @@ body.ko {
   &.visible {
     opacity: 1;
     pointer-events: auto;
+  }
+
+  // works ↔ about 직접 전환 동안 GSAP이 opacity 전권을 갖는다 —
+  // .visible 탈착에 따른 CSS transition이 끼어들지 않도록 차단
+  &--switching {
+    transition: none;
   }
   .inner {
     width: 100%;
@@ -929,218 +1068,14 @@ body.ko {
   &__inner.is-mobile-device .works-list-content {
     display: flex;
     flex-direction: column;
-    gap: calc(2 * var(--vhu));
+    gap: calc(5 * var(--vhu));
     padding: 6rem 1.5rem 4rem;
     width: 100%;
   }
 
-  // ─── HUD Preview Panel ───
-  .works-preview {
-    position: fixed;
-    z-index: 100;
-    width: max(vw(320, 1920), 320px);
-    background: rgba(0, 0, 0, 0.75);
-    box-shadow: 0 0 50px 20px rgba(0, 0, 0, 0.2);
-    opacity: 0;
-    // -50% centers panel on node vertically; 6px is slide-in offset
-    transform: translateY(calc(-50% + 6px));
-    transition:
-      opacity 0.15s ease,
-      transform 0.15s ease;
-    pointer-events: none;
-    border: 1px solid rgba($text-primary, 0.12);
-
-    &.active {
-      opacity: 1;
-      transform: translateY(-50%);
-    }
-
-    // ──  bar ──
-    &__header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: vw(6, 1920) vw(10, 1920);
-      border-bottom: 1px solid rgba($text-primary, 0.12);
-      background: rgba($text-primary, 0.04);
-      @media (max-width: $tablet) {
-        padding: 0.2rem 0.5rem;
-      }
-    }
-
-    &__panel-id {
-      font-size: max(vw(12, 1920), 11px);
-      color: $text-primary;
-    }
-
-    &__index {
-      font-size: max(vw(12, 1920), 11px);
-      color: rgba($text-primary, 0.45);
-    }
-
-    // ── thumbnail ──
-    &__thumb {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 4 / 3;
-      overflow: hidden;
-      background: rgba(255, 255, 255, 0.02);
-
-      img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        filter: grayscale(40%) brightness(0.8);
-        display: block;
-        opacity: 0;
-        transition: opacity 0.45s ease;
-
-        &.is-loaded {
-          opacity: 1;
-        }
-      }
-    }
-
-    &__thumb-skeleton {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-      background: linear-gradient(
-        105deg,
-        rgba(255, 255, 255, 0.03) 0%,
-        rgba(255, 255, 255, 0.08) 48%,
-        rgba(255, 255, 255, 0.03) 100%
-      );
-      background-size: 200% 100%;
-      animation: panel-image-skeleton-shimmer 1.4s ease-in-out infinite;
-      pointer-events: none;
-      transition:
-        opacity 0.4s ease,
-        visibility 0s linear 0.4s;
-
-      &--hidden {
-        opacity: 0;
-        visibility: hidden;
-        animation: none;
-      }
-    }
-
-    // Scanline overlay on thumbnail
-    &__thumb-scan {
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        to bottom,
-        transparent,
-        transparent 3px,
-        rgba(0, 0, 0, 0.18) 3px,
-        rgba(0, 0, 0, 0.18) 4px
-      );
-      pointer-events: none;
-      // Bottom-right coord marker
-      &::after {
-        content: attr(data-coords);
-        position: absolute;
-        bottom: vw(6, 1920);
-        right: vw(8, 1920);
-        font-size: 8px;
-        color: rgba($text-primary, 0.25);
-      }
-    }
-
-    // ── data rows ──
-    &__data {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      margin: vw(5, 1920) 0px;
-      @media (max-width: $tablet) {
-        padding: 0.2rem;
-      }
-    }
-
-    &__row {
-      display: flex;
-      align-items: baseline;
-      gap: vw(16, 1920);
-      padding: vw(1, 1920) vw(10, 1920);
-      @media (max-width: $tablet) {
-        gap: 0.5rem;
-      }
-    }
-
-    &__key {
-      font-size: max(vw(10, 1920), 10px);
-      color: rgba($text-primary, 0.3);
-      flex-shrink: 0;
-      width: vw(24, 1920);
-      @media (max-width: $tablet) {
-        width: auto;
-      }
-    }
-
-    &__val {
-      font-size: max(vw(10, 1920), 10px);
-      color: rgba($text-primary, 0.65);
-      line-height: 1.3;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    // ── footer status bar ──
-    &__footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: vw(6, 1920) vw(10, 1920);
-      border-top: 1px solid rgba($text-primary, 0.12);
-      background: rgba($text-primary, 0.03);
-      @media (max-width: $tablet) {
-        padding: 0.2rem 0.5rem;
-      }
-    }
-
-    &__status {
-      display: flex;
-      align-items: center;
-      gap: vw(6, 1920);
-      font-size: max(vw(10, 1920), 10px);
-      color: rgba($text-primary, 0.45);
-      @media (max-width: $tablet) {
-        gap: 0.5rem;
-      }
-    }
-
-    &__dot {
-      width: 5px;
-      height: 5px;
-      background: $text-primary;
-      border-radius: 50%;
-      box-shadow: 0 0 6px $text-primary;
-      animation: dotBlink 2s ease-in-out infinite;
-      margin-top: 1px;
-    }
-
-    &__action {
-      padding: 0;
-      border: 0;
-      background: none;
-      font-family: inherit;
-      font-size: max(vw(10, 1920), 10px);
-      color: rgba($text-primary, 0.25);
-      cursor: pointer;
-
-      &:hover,
-      &:focus-visible {
-        color: $text-primary;
-      }
-
-      &:focus-visible {
-        outline: none;
-      }
-    }
-  }
+  // ─── HUD Preview Panel: 카드/썸네일 스타일은 ui/WorksPreviewCard·Thumb.module.scss ───
+  // (아래 is-mobile-device 오버라이드는 Works 레이아웃 컨텍스트 스타일이라 여기 유지 —
+  //  카드 루트의 literal works-preview 훅 클래스를 통해 적용됨)
 
   &__inner.is-mobile-device .works-preview {
     position: relative;
@@ -1163,16 +1098,6 @@ body.ko {
 }
 
 .works {
-  @keyframes dotBlink {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.3;
-    }
-  }
-
   // ─── Terminal Progress Bar ───
   .works-progress {
     z-index: 10;
@@ -1191,6 +1116,11 @@ body.ko {
 
   &__inner.is-mobile-device .works-progress {
     gap: 0.7em;
+
+    * {
+      display: inline-flex;
+      opacity: 1;
+    }
   }
 
   // ─── Telemetry Panel ───
@@ -1333,7 +1263,6 @@ body.ko {
     width: 5px;
     height: 5px;
     transform: translate(-50%, -50%);
-    // border-radius: 50%;
     background: rgba(255, 255, 255, 1);
     box-shadow: 0 0 60px 40px rgba($text-primary, 0.5);
     z-index: 2;
@@ -1404,22 +1333,15 @@ body.ko {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 0;
-    background: none;
-    color: inherit;
-    font: inherit;
     transform-style: flat;
     will-change: transform, opacity;
-
-    &:focus-visible {
-      outline: none;
-    }
 
     &.hovered {
       z-index: 100;
       .constellation-node__point {
-        width: 20px;
-        height: 20px;
+        width: 48px;
+        height: 48px;
+        border-color: rgba($text-primary, 0.9);
         box-shadow:
           0 0 20px rgba($text-primary, 0.9),
           0 0 40px rgba($text-primary, 0.4);
@@ -1429,17 +1351,28 @@ body.ko {
       }
     }
 
+    // 사각형 점 → 프로젝트 썸네일 칩. 호버/클릭 판정은 calculateHover의
+    // 3D→2D 프로젝션으로 처리되므로(node-positioner가 pointer-events:none),
+    // 여기는 순수 시각 요소만 담당 — 크기가 바뀌어도 판정 로직엔 영향 없음.
     &__point {
-      display: block;
-      width: 14px;
-      height: 14px;
-      background: $text-primary;
+      width: 36px;
+      height: 36px;
+      overflow: hidden;
+      background: $bg-color; // 이미지 로드 전 폴백
       box-shadow: 0 0 10px rgba($text-primary, 0.5);
       transition:
         width 0.3s ease,
         height 0.3s ease,
+        border-color 0.3s ease,
         box-shadow 0.3s ease;
       animation: nodePulse 3s ease-in-out infinite;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
     }
 
     &__index {
@@ -2234,14 +2167,31 @@ body.ko {
         font-size: min(vw(13, 390), 14px);
         line-height: 1.5;
       }
-      span {
+      .panel-intro,
+      .panel-highlight__title,
+      .panel-highlight__body {
+        margin: 0;
+      }
+
+      .panel-intro,
+      .panel-highlight__body {
+        opacity: 0.85;
+      }
+
+      .panel-highlight {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .panel-highlight__title {
         position: relative;
         padding-left: 16px;
         @media (max-width: $mobile-sm) {
           padding-left: min(vw(11, 390), 11px);
         }
       }
-      span::before {
+      .panel-highlight__title::before {
         content: '▸';
         display: inline-block;
         font-size: 15px;
@@ -2302,14 +2252,14 @@ body.ko {
   }
 }
 
-// ─── Info Section ───
-.info {
+// ─── About Section ───
+.about {
   ::selection {
     background: #fff;
     color: #000;
   }
 }
-.info-inner {
+.about-inner {
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
@@ -2328,7 +2278,7 @@ body.ko {
 }
 
 // --- Terminal Progress Nav (bottom bar) ---
-.info-nav {
+.about-nav {
   &__sections {
     display: flex;
     gap: 1.2rem;
@@ -2358,7 +2308,7 @@ body.ko {
 }
 
 // --- SVG Lines ---
-.info-lines {
+.about-lines {
   position: absolute;
   top: 0;
   left: 0;
@@ -2371,7 +2321,18 @@ body.ko {
   }
 }
 
-.info-line {
+.btn-resume {
+  width: 400px;
+  height: 50px;
+  color: white;
+  border: 1px solid white;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 150px;
+}
+
+.about-line {
   stroke: rgba($text-primary, 0.35); // 0.15 → 0.35: 라인 가시성 개선
   stroke-width: 1;
   fill: none;
@@ -2380,7 +2341,7 @@ body.ko {
 // --- Constellation Layout Content ---
 // 중앙 정렬된 컬럼 컨테이너: 창이 줄어도 지그재그가 중앙 기준으로 유지되고
 // 양옆 여백만 줄어든다 (섹션은 --left/--right로 컨테이너 가장자리에 정렬)
-.info-content-scroll {
+.about-content-scroll {
   width: min(1240px, 92vw);
   margin: 0 auto;
   padding-top: calc(20 * var(--vhu));
@@ -2398,7 +2359,7 @@ body.ko {
     align-items: center;
   }
 }
-.info-section {
+.about-section {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
@@ -2428,7 +2389,7 @@ body.ko {
   }
 }
 
-.info-section__body {
+.about-section__body {
   width: max-content;
   max-width: 100%;
   position: relative;
@@ -2440,21 +2401,21 @@ body.ko {
   }
 }
 
-.info-section__header {
+.about-section__header {
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-bottom: none;
   padding: 0.6rem 1.2rem;
   background: rgba(255, 255, 255, 0.05);
   width: max-content;
 
-  .info-section__id {
+  .about-section__id {
     font-size: 10px;
     color: rgba(255, 255, 255, 0.6);
     letter-spacing: 0.1em;
   }
 }
 
-.info-section__content {
+.about-section__content {
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 3rem;
@@ -2486,42 +2447,12 @@ body.ko {
     z-index: 1;
   }
 
-  .corner {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    z-index: 2;
-
-    &.top-left {
-      top: -1px;
-      left: -1px;
-      border-right: none;
-      border-bottom: none;
-    }
-    &.top-right {
-      top: -1px;
-      right: -1px;
-      border-left: none;
-      border-bottom: none;
-    }
-    &.bottom-left {
-      bottom: -1px;
-      left: -1px;
-      border-right: none;
-      border-top: none;
-    }
-    &.bottom-right {
-      bottom: -1px;
-      right: -1px;
-      border-left: none;
-      border-top: none;
-    }
-  }
+  // corner 프레임은 전역 .corner(ui/Corners) 사용 — 색만 오버라이드
+  --corner-color: rgba(255, 255, 255, 0.8);
 }
 
 // --- Node Points ---
-.info-node {
+.about-node {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2554,7 +2485,7 @@ body.ko {
   }
 }
 
-.info-name {
+.about-name {
   font-size: max(vw(32, 1920), 28px);
   font-weight: 400;
   margin: 0 0 1rem 0;
@@ -2566,7 +2497,7 @@ body.ko {
   }
 }
 
-.info-role {
+.about-role {
   font-size: max(vw(12, 1920), 12px);
   color: rgba(255, 255, 255, 0.5);
   margin: 0 0 2rem 0;
@@ -2578,7 +2509,7 @@ body.ko {
   }
 }
 
-.info-about {
+.about-intro {
   font-size: max(vw(15, 1920), 15px);
   opacity: 0.75;
   line-height: 1.8;
@@ -2591,7 +2522,7 @@ body.ko {
   }
 }
 
-.info-contact {
+.about-contact {
   display: grid;
   gap: 1.5rem;
   font-size: max(vw(14, 1920), 14px);
@@ -2613,7 +2544,7 @@ body.ko {
   }
 }
 
-.info-block-title {
+.about-block-title {
   font-size: max(vw(16, 1920), 14px);
   color: rgba(255, 255, 255, 0.5);
   font-weight: 400;
@@ -2874,12 +2805,14 @@ body.ko {
   }
 }
 
-.info-section__footer {
+.hero-footer {
   width: 100%;
-  height: calc(10 * var(--vhu));
   text-align: center;
   font-size: max(vw(10, 1920), 10px);
   color: rgba(255, 255, 255, 0.5);
+  position: fixed;
+  bottom: 2rem;
+  z-index: 30;
 }
 /* 맥박이 뛰듯 크기와 투명도가 부드럽게 변하는 애니메이션 (시선 유도) */
 @keyframes pulse {

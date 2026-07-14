@@ -5,16 +5,17 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
 import { useMobile } from '../hooks/useMobile'
 import { renderText } from '../utils/renderText'
+import { Corners } from './ui'
 
 gsap.registerPlugin(ScrollTrigger)
 
-interface InfoProps {
+interface AboutProps {
   isActive?: boolean
 }
 
-// 지그재그 배치: 중앙 정렬된 컨테이너(.info-content-scroll) 안에서
+// 지그재그 배치: 중앙 정렬된 컨테이너(.about-content-scroll) 안에서
 // side에 따라 왼쪽/오른쪽 가장자리에 정렬 — 창 너비가 줄어도 지그재그가
-// 중앙 기준으로 유지되고 양옆 여백만 줄어든다 (SCSS .info-section--left/right)
+// 중앙 기준으로 유지되고 양옆 여백만 줄어든다 (SCSS .about-section--left/right)
 const SECTIONS = [
   { id: 'profile', label: 'Profile', side: 'left' },
   { id: 'experience', label: 'Career', side: 'right' },
@@ -23,7 +24,7 @@ const SECTIONS = [
   { id: 'contact', label: 'Contact', side: 'left' },
 ] as const
 
-function Info({ isActive }: InfoProps) {
+function About({ isActive }: AboutProps) {
   const { t, i18n } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -35,12 +36,12 @@ function Info({ isActive }: InfoProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const lineRefs = useRef<(SVGLineElement | null)[]>([])
 
-  const contact = t('info.contact', { returnObjects: true }) as any
-  const workExperience = t('info.workExperience', {
+  const contact = t('about.contact', { returnObjects: true }) as any
+  const workExperience = t('about.workExperience', {
     returnObjects: true,
   }) as any
-  const skills = t('info.skills', { returnObjects: true }) as any
-  const education = t('info.education', { returnObjects: true }) as any
+  const skills = t('about.skills', { returnObjects: true }) as any
+  const education = t('about.education', { returnObjects: true }) as any
 
   useEffect(() => {
     if (isActive && lenisRef.current) {
@@ -112,6 +113,15 @@ function Info({ isActive }: InfoProps) {
   // ScrollTrigger setup: section tracking + reveal animations + line drawing
   useEffect(() => {
     const ctx = gsap.context(() => {
+      // 마운트 직후 ~500ms(리빌 트윈 생성 전)에 콘텐츠가 원래 상태로 노출되지
+      // 않도록 미리 숨김 — works↔about 직접 전환의 페이드인이 이 창을 드러내면
+      // "노출 → 리셋 → 리빌 재생"으로 두 번 재생되는 것처럼 보인다.
+      // 아래 fromTo 리빌이 같은 from 값에서 그대로 이어받는다.
+      if (!isMobileDevice) {
+        gsap.set('.about-section__body', { opacity: 0, y: 50 })
+        gsap.set('.about-node', { scale: 0, opacity: 0 })
+      }
+
       const timer = setTimeout(() => {
         updateLines()
 
@@ -130,7 +140,7 @@ function Info({ isActive }: InfoProps) {
         // ─── Entry / Reveal Animations ───
         if (!isMobileDevice) {
           // PC: Standard ScrollTrigger reveal animations
-          const revealElements = gsap.utils.toArray('.info-section__body')
+          const revealElements = gsap.utils.toArray('.about-section__body')
           revealElements.forEach((el: any) => {
             gsap.fromTo(
               el,
@@ -152,7 +162,7 @@ function Info({ isActive }: InfoProps) {
           })
 
           // Node points reveal
-          gsap.utils.toArray('.info-node').forEach((el: any) => {
+          gsap.utils.toArray('.about-node').forEach((el: any) => {
             gsap.fromTo(
               el,
               { scale: 0, opacity: 0 },
@@ -253,8 +263,8 @@ function Info({ isActive }: InfoProps) {
   return (
     <>
       {/* Terminal-style progress nav */}
-      <nav className={`terminal-bar info-nav ${isMobileDevice ? 'is-mobile-device' : ''}`}>
-        <span className="terminal-bar__label">&gt; INFO ───</span>
+      <nav className={`terminal-bar about-nav ${isMobileDevice ? 'is-mobile-device' : ''}`}>
+        <span className="terminal-bar__label">&gt; INDEX ───</span>
         <span className="terminal-bar__bar">
           [
           {SECTIONS.map((s) =>
@@ -265,14 +275,14 @@ function Info({ isActive }: InfoProps) {
           ).join('')}
           ]
         </span>
-        <span className="info-nav__sections">
+        <span className="about-nav__sections">
           {SECTIONS.map((section, idx) => (
             <span
               key={section.id}
               ref={(el) => {
                 navRefs.current[idx] = el
               }}
-              className={`info-nav__item ${activeSection === section.id ? 'active' : ''}`}
+              className={`about-nav__item ${activeSection === section.id ? 'active' : ''}`}
               onClick={() => scrollToSection(section.id)}
             >
               {section.label}
@@ -281,7 +291,7 @@ function Info({ isActive }: InfoProps) {
         </span>
       </nav>
       <div
-        className={`inner info-inner ${isMobileDevice ? 'is-mobile-device' : ''}`}
+        className={`inner about-inner ${isMobileDevice ? 'is-mobile-device' : ''}`}
         ref={containerRef}
         style={{ overflowY: 'auto', overflowX: 'hidden' }}
       >
@@ -292,7 +302,7 @@ function Info({ isActive }: InfoProps) {
           {/* SVG Lines overlay */}
           <svg
             ref={svgRef}
-            className="info-lines"
+            className="about-lines"
             width="100%"
             height="100%"
           >
@@ -302,42 +312,39 @@ function Info({ isActive }: InfoProps) {
                 ref={(el) => {
                   lineRefs.current[i] = el
                 }}
-                className="info-line"
+                className="about-line"
               />
             ))}
           </svg>
 
           {/* Constellation-layout content */}
-          <div className="info-content-scroll">
+          <div className="about-content-scroll">
             {/* 1. Profile */}
             <section
               id="profile"
-              className={`info-section info-section--${SECTIONS[0].side}`}
+              className={`about-section about-section--${SECTIONS[0].side}`}
             >
               <div
-                className="info-node"
+                className="about-node"
                 ref={(el) => {
                   nodeRefs.current[0] = el
                 }}
               >
-                <div className="info-node__point">
+                <div className="about-node__point">
                   <span className="bracket">[</span> <span className="mark">+</span> <span className="bracket">]</span>
                 </div>
               </div>
-              <div className="info-section__body">
-                <div className="info-section__header">
-                  <span className="info-section__id">◼ 001.PROFILE</span>
+              <div className="about-section__body">
+                <div className="about-section__header">
+                  <span className="about-section__id">◼ 001.PROFILE</span>
                 </div>
-                <div className="info-section__content">
-                  <span className="corner top-left"></span>
-                  <span className="corner top-right"></span>
-                  <span className="corner bottom-left"></span>
-                  <span className="corner bottom-right"></span>
-                  <h2 className={`info-name ${i18n.language === 'ko' ? 'text-display' : 'text-body'}`}>
-                    {t('info.name')}
+                <div className="about-section__content">
+                  <Corners />
+                  <h2 className={`about-name ${i18n.language === 'ko' ? 'text-display' : 'text-body'}`}>
+                    {t('about.name')}
                   </h2>
-                  <p className="info-role">ROLE | {t('info.role')}</p>
-                  <p className="info-about text-body">{renderText(t('info.about'))}</p>
+                  <p className="about-role">ROLE | {t('about.role')}</p>
+                  <p className="about-intro text-body">{renderText(t('about.intro'))}</p>
                 </div>
               </div>
             </section>
@@ -345,27 +352,24 @@ function Info({ isActive }: InfoProps) {
             {/* 2. Experience */}
             <section
               id="experience"
-              className={`info-section info-section--${SECTIONS[1].side}`}
+              className={`about-section about-section--${SECTIONS[1].side}`}
             >
               <div
-                className="info-node"
+                className="about-node"
                 ref={(el) => {
                   nodeRefs.current[1] = el
                 }}
               >
-                <div className="info-node__point">
+                <div className="about-node__point">
                   <span className="bracket">[</span> <span className="mark">+</span> <span className="bracket">]</span>
                 </div>
               </div>
-              <div className="info-section__body">
-                <div className="info-section__header">
-                  <span className="info-section__id">◼ 002.CAREER</span>
+              <div className="about-section__body">
+                <div className="about-section__header">
+                  <span className="about-section__id">◼ 002.CAREER</span>
                 </div>
-                <div className="info-section__content">
-                  <span className="corner top-left"></span>
-                  <span className="corner top-right"></span>
-                  <span className="corner bottom-left"></span>
-                  <span className="corner bottom-right"></span>
+                <div className="about-section__content">
+                  <Corners />
                   {workExperience.jobs.map((job: any, jIdx: number) => (
                     <div
                       key={jIdx}
@@ -401,27 +405,24 @@ function Info({ isActive }: InfoProps) {
             {/* 3. Skills */}
             <section
               id="skills"
-              className={`info-section info-section--${SECTIONS[2].side}`}
+              className={`about-section about-section--${SECTIONS[2].side}`}
             >
               <div
-                className="info-node"
+                className="about-node"
                 ref={(el) => {
                   nodeRefs.current[2] = el
                 }}
               >
-                <div className="info-node__point">
+                <div className="about-node__point">
                   <span className="bracket">[</span> <span className="mark">+</span> <span className="bracket">]</span>
                 </div>
               </div>
-              <div className="info-section__body">
-                <div className="info-section__header">
-                  <span className="info-section__id">◼ 003.SKILLS</span>
+              <div className="about-section__body">
+                <div className="about-section__header">
+                  <span className="about-section__id">◼ 003.SKILLS</span>
                 </div>
-                <div className="info-section__content">
-                  <span className="corner top-left"></span>
-                  <span className="corner top-right"></span>
-                  <span className="corner bottom-left"></span>
-                  <span className="corner bottom-right"></span>
+                <div className="about-section__content">
+                  <Corners />
                   <div className="skills-list">
                     {skills.categories.map((cat: any, cIdx: number) => (
                       <div
@@ -430,7 +431,12 @@ function Info({ isActive }: InfoProps) {
                       >
                         <strong>{cat.name}</strong>
                         {cat.items.map((item: any) => (
-                          <span className="text-body">▪︎ {item}</span>
+                          <span
+                            className="text-body"
+                            key={`${cat.name}-${item}`}
+                          >
+                            ▪︎ {item}
+                          </span>
                         ))}
                       </div>
                     ))}
@@ -442,27 +448,24 @@ function Info({ isActive }: InfoProps) {
             {/* 4. Education */}
             <section
               id="education"
-              className={`info-section info-section--${SECTIONS[3].side}`}
+              className={`about-section about-section--${SECTIONS[3].side}`}
             >
               <div
-                className="info-node"
+                className="about-node"
                 ref={(el) => {
                   nodeRefs.current[3] = el
                 }}
               >
-                <div className="info-node__point">
+                <div className="about-node__point">
                   <span className="bracket">[</span> <span className="mark">+</span> <span className="bracket">]</span>
                 </div>
               </div>
-              <div className="info-section__body">
-                <div className="info-section__header">
-                  <span className="info-section__id">◼ 004.EDUCATION</span>
+              <div className="about-section__body">
+                <div className="about-section__header">
+                  <span className="about-section__id">◼ 004.EDUCATION</span>
                 </div>
-                <div className="info-section__content">
-                  <span className="corner top-left"></span>
-                  <span className="corner top-right"></span>
-                  <span className="corner bottom-left"></span>
-                  <span className="corner bottom-right"></span>
+                <div className="about-section__content">
+                  <Corners />
                   <div className="education-entry">
                     <h4 className="text-display">{education.school}</h4>
                     <p className="education-entry__meta">{education.period}</p>
@@ -484,28 +487,25 @@ function Info({ isActive }: InfoProps) {
             {/* 5. Contact */}
             <section
               id="contact"
-              className={`info-section info-section--${SECTIONS[4].side}`}
+              className={`about-section about-section--${SECTIONS[4].side}`}
             >
               <div
-                className="info-node"
+                className="about-node"
                 ref={(el) => {
                   nodeRefs.current[4] = el
                 }}
               >
-                <div className="info-node__point">
+                <div className="about-node__point">
                   <span className="bracket">[</span> <span className="mark">+</span> <span className="bracket">]</span>
                 </div>
               </div>
-              <div className="info-section__body">
-                <div className="info-section__header">
-                  <span className="info-section__id">◼ 005.CONTACT</span>
+              <div className="about-section__body">
+                <div className="about-section__header">
+                  <span className="about-section__id">◼ 005.CONTACT</span>
                 </div>
-                <div className="info-section__content">
-                  <span className="corner top-left"></span>
-                  <span className="corner top-right"></span>
-                  <span className="corner bottom-left"></span>
-                  <span className="corner bottom-right"></span>
-                  <div className="info-contact">
+                <div className="about-section__content">
+                  <Corners />
+                  <div className="about-contact">
                     <p className="btn-contact">
                       Email
                       <a
@@ -535,17 +535,32 @@ function Info({ isActive }: InfoProps) {
                         {contact.Blog}
                       </a>
                     </p>
+                    <p className="btn-contact">
+                      Github
+                      <a
+                        className="meta text-body"
+                        href={contact.GitHub}
+                        target="_blank"
+                      >
+                        {contact.GitHub}
+                      </a>
+                    </p>
                   </div>
                 </div>
               </div>
             </section>
-
-            <section className="info-section__footer">© 2026 ChaeWon Im. All rights reserved.</section>
           </div>
+          {/*
+          <button
+            className="btn-resume"
+            aria-label="resume-download"
+          >
+            DOWNLOAD RESUME
+          </button> */}
         </div>
       </div>
     </>
   )
 }
 
-export default Info
+export default About

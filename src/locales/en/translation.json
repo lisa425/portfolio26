@@ -9,8 +9,8 @@
       "title": "Works | Chaewon",
       "description": "Selected interactive web projects — game promotion sites, 3D galleries, and immersive brand experiences."
     },
-    "info": {
-      "title": "Info | Chaewon",
+    "about": {
+      "title": "About | Chaewon",
       "description": "About Chaewon — frontend developer focused on interactive experiences, structure and motion. Career, skills and contact."
     }
   },
@@ -19,7 +19,7 @@
     "body": "This page is designed for desktop browsers.\nFor the intended layout and interactions,\nplease open it on a screen at least 1000px wide."
   },
   "works": {
-    "items": [
+    "selectedProject": [
       {
         "id": 1,
         "projectKey": "azure-promilia",
@@ -27,7 +27,30 @@
         "game": "Azure Promilia",
         "title": "Official Website & 1st Pre-registration",
         "date": "2025.11 - 2025.12",
-        "description": "Delivered within a 50% shortened web-development schedule by proposing an FE-led response plan to PMs and designers and adapting implementation throughout the project\nIntroduced a BFF layer with Next.js Route Handlers, centralising shared API integration and response-code handling in the frontend server → reduced maintenance costs for API specification changes and validation while simplifying connections to event APIs\nResolved network load from multiple videos, including a 200MB asset, by validating CDN delivery types and introducing HLS streaming on mobile → reduced video delay from 10 seconds to 3 seconds\nApplied Mobile First sizing to UI components and CSS max() to image assets according to their purpose → preserved design intent without layout breakage across screen sizes",
+        "description": [
+          {
+            "title": "Delivered within a 50% shortened web-development schedule by proposing an FE-led response plan to PMs and designers and adapting implementation throughout the project",
+            "p": []
+          },
+          {
+            "title": "Introduced a BFF layer with Next.js Route Handlers, centralising shared API integration and response-code handling in the frontend server",
+            "p": [
+              "reduced maintenance costs for API specification changes and validation while simplifying connections to event APIs"
+            ]
+          },
+          {
+            "title": "Resolved network load from multiple videos, including a 200MB asset, by validating CDN delivery types and introducing HLS streaming on mobile",
+            "p": [
+              "reduced video delay from 10 seconds to 3 seconds"
+            ]
+          },
+          {
+            "title": "Applied Mobile First sizing to UI components and CSS max() to image assets according to their purpose",
+            "p": [
+              "preserved design intent without layout breakage across screen sizes"
+            ]
+          }
+        ],
         "stack": "Next.js",
         "thumbnail": "/assets/images/az_thumb1.jpg",
         "img": [
@@ -36,7 +59,9 @@
           "/assets/images/az_img3.jpg",
           "/assets/images/az_img4.jpg"
         ],
-        "url": "https://azurpromilia.nexon.com/events/2025/12/preregistration"
+        "url": "https://azurpromilia.nexon.com/events/2025/12/preregistration",
+        "dept": "NEXON",
+        "intro": ""
       },
       {
         "id": 2,
@@ -45,11 +70,48 @@
         "game": "Mabinogi Heroes",
         "title": "Shared Frontend Development Environment",
         "date": "2026.01 - 2026.03",
-        "description": "Replaced separate Webpack + JavaScript setups with a shared React + Vite development environment\nSystematised recurring work through event templates, a development CLI, and shared components → reduced project setup time by 85%, from roughly one hour to under ten minutes\nConnected deployment pipelines spread across five channels to the development environment → reduced deployment time by about 80%, from over 30 minutes to under five minutes\nAdded an optional build-time image compression process that removes duplicate pixels → reduced resource size by up to 80% while preventing unnecessary quality loss\nStandardised a custom image-load detection hook → improved page-loading UX across projects\nDocumented project conventions for a Claude-assisted development environment → improved consistency while preserving developer autonomy",
+        "description": [
+          {
+            "title": "Replaced separate Webpack + JavaScript setups with a shared React + Vite development environment",
+            "p": []
+          },
+          {
+            "title": "Systematised recurring work through event templates, a development CLI, and shared components",
+            "p": [
+              "reduced project setup time by 85%, from roughly one hour to under ten minutes"
+            ]
+          },
+          {
+            "title": "Connected deployment pipelines spread across five channels to the development environment",
+            "p": [
+              "reduced deployment time by about 80%, from over 30 minutes to under five minutes"
+            ]
+          },
+          {
+            "title": "Added an optional build-time image compression process that removes duplicate pixels",
+            "p": [
+              "reduced resource size by up to 80% while preventing unnecessary quality loss"
+            ]
+          },
+          {
+            "title": "Standardised a custom image-load detection hook",
+            "p": [
+              "improved page-loading UX across projects"
+            ]
+          },
+          {
+            "title": "Documented project conventions for a Claude-assisted development environment",
+            "p": [
+              "improved consistency while preserving developer autonomy"
+            ]
+          }
+        ],
         "stack": "React · TypeScript · Vite · Zustand · GSAP · Claude Code",
         "thumbnail": "/assets/images/heroes_img1.jpg",
         "img": [],
-        "url": ""
+        "url": "",
+        "dept": "NEXON",
+        "intro": ""
       },
       {
         "id": 3,
@@ -58,11 +120,34 @@
         "game": "Mabinogi Heroes",
         "title": "Operations Workflow Automation",
         "date": "2026.03 - 2026.04",
-        "description": "Proposed and developed a content-generation tool to remove bottlenecks from repetitive live-operations work\nIdentified the design rules required for implementation, presented them to designers, and refined the rules collaboratively\nIntegrated the Figma API to scan components and layers created under the agreed design rules and automatically generate HTML content\nBuilt a single tool to scan and classify source files, create content URLs, deploy by rule, and share Jira tickets across the complete workflow\nReduced operations turnaround time by approximately 92%, from an average of one hour per task to under five minutes",
+        "description": [
+          {
+            "title": "Proposed and developed a content-generation tool to remove bottlenecks from repetitive live-operations work",
+            "p": []
+          },
+          {
+            "title": "Identified the design rules required for implementation, presented them to designers, and refined the rules collaboratively",
+            "p": []
+          },
+          {
+            "title": "Integrated the Figma API to scan components and layers created under the agreed design rules and automatically generate HTML content",
+            "p": []
+          },
+          {
+            "title": "Built a single tool to scan and classify source files, create content URLs, deploy by rule, and share Jira tickets across the complete workflow",
+            "p": []
+          },
+          {
+            "title": "Reduced operations turnaround time by approximately 92%, from an average of one hour per task to under five minutes",
+            "p": []
+          }
+        ],
         "stack": "React · TypeScript · Vite · GSAP · Claude Code · Figma API · Jira Ticket",
         "thumbnail": "/assets/images/heroes_img2.jpg",
         "img": [],
-        "url": ""
+        "url": "",
+        "dept": "NEXON",
+        "intro": ""
       },
       {
         "id": 4,
@@ -71,7 +156,30 @@
         "game": "Mabinogi Mobile",
         "title": "Launch Pre-registration Event",
         "date": "2024.12 - 2025.02",
-        "description": "Needed to deliver multiple high-resolution alpha-channel videos, but APNG caused heavy page loads while Canvas chroma keying created frame-by-frame thread overhead\nEvaluated APNG, Canvas chroma keying, Lottie, WebM Alpha, and HEVC Alpha, then designed a browser-specific dual-format HEVC/WebM strategy → reduced resource size by 70% compared with APNG while maintaining cross-browser support\nImplemented semantic markup, descriptive image alt text, and SEO-oriented event summaries → improved search visibility and screen-reader support\nProposed keyboard-based page navigation in addition to mouse interaction → improved overall web usability",
+        "description": [
+          {
+            "title": "Needed to deliver multiple high-resolution alpha-channel videos, but APNG caused heavy page loads while Canvas chroma keying created frame-by-frame thread overhead",
+            "p": []
+          },
+          {
+            "title": "Evaluated APNG, Canvas chroma keying, Lottie, WebM Alpha, and HEVC Alpha, then designed a browser-specific dual-format HEVC/WebM strategy",
+            "p": [
+              "reduced resource size by 70% compared with APNG while maintaining cross-browser support"
+            ]
+          },
+          {
+            "title": "Implemented semantic markup, descriptive image alt text, and SEO-oriented event summaries",
+            "p": [
+              "improved search visibility and screen-reader support"
+            ]
+          },
+          {
+            "title": "Proposed keyboard-based page navigation in addition to mouse interaction",
+            "p": [
+              "improved overall web usability"
+            ]
+          }
+        ],
         "stack": "HTML · CSS · JavaScript",
         "thumbnail": "/assets/images/mm_pre_thumb.jpg",
         "img": [
@@ -80,7 +188,9 @@
           "/assets/images/mm_pre_img3.jpeg",
           "/assets/images/mm_pre_img4.jpeg"
         ],
-        "url": ""
+        "url": "",
+        "dept": "NEXON",
+        "intro": ""
       },
       {
         "id": 5,
@@ -89,23 +199,48 @@
         "game": "Baram",
         "title": "Archer Remaster Teaser:\n21st Anniversary Illustration Gallery",
         "date": "2022.11 - 2022.12",
-        "description": "Designed and built the complete Three.js 3D web gallery and its GSAP-powered scroll interactions\nThe initial implementation recalculated gallery rotation and position on every scroll event, causing excessive computation → applied throttling to suppress redundant consecutive calculations and stabilise scroll handling\nReplaced 162 individually rendered Plane meshes with InstancedMesh → reduced draw calls from 162 to 1 and improved frame stability",
+        "description": [
+          {
+            "title": "Designed and built the complete Three.js 3D web gallery and its GSAP-powered scroll interactions",
+            "p": []
+          },
+          {
+            "title": "The initial implementation recalculated gallery rotation and position on every scroll event, causing excessive computation",
+            "p": [
+              "applied throttling to suppress redundant consecutive calculations and stabilise scroll handling"
+            ]
+          },
+          {
+            "title": "Replaced 162 individually rendered Plane meshes with InstancedMesh",
+            "p": [
+              "reduced draw calls from 162 to 1 and improved frame stability"
+            ]
+          }
+        ],
         "stack": "HTML · CSS · JavaScript · Three.js · GSAP",
         "thumbnail": "/assets/images/br_thumb1.jpg",
-        "img": ["/assets/images/br_img1.jpg", "/assets/images/br_img2.jpg", "/assets/images/br_img3.jpg"],
-        "url": "https://baram.nexon.com/E221215/Intro"
+        "img": [
+          "/assets/images/br_img1.jpg",
+          "/assets/images/br_img2.jpg",
+          "/assets/images/br_img3.jpg"
+        ],
+        "url": "https://baram.nexon.com/E221215/Intro",
+        "dept": "NEXON",
+        "intro": ""
       }
     ]
   },
-  "info": {
+  "about": {
     "name": "Hello, I'm Chaewon!",
     "role": "Frontend Developer",
     "contact": {
       "email": "imchaewon.dev@gmail.com",
+      "phone": "+61 451 481 874",
       "LinkedIn": "https://www.linkedin.com/in/chxxwn",
-      "Blog": "https://iamchaewon.tistory.com/"
+      "Blog": "https://iamchaewon.tistory.com/",
+      "GitHub": "https://github.com/lisa425"
     },
-    "about": "Frontend developer crafting both sides of the screen — interactions users see, and environments developers feel. Having studied both design and engineering, I care about craft on screen and the systems behind it. I'm drawn to building not just polished interfaces, but better ways to build them: structure, automation, and the kind of tooling that makes a team's day-to-day a little less painful.",
+    "intro": "Frontend developer crafting both sides of the screen — interactions users see, and environments developers feel. Having studied both design and engineering, I care about craft on screen and the systems behind it. I'm drawn to building not just polished interfaces, but better ways to build them: structure, automation, and the kind of tooling that makes a team's day-to-day a little less painful.",
     "workExperience": {
       "title": "WORK EXPERIENCE",
       "jobs": [
@@ -117,15 +252,21 @@
           "projects": [
             {
               "name": "Mabinogi Web Development Team",
-              "bullets": ["Jan 2026 - Jun 2026"]
+              "bullets": [
+                "Jan 2026 - Jun 2026"
+              ]
             },
             {
               "name": "Game Web Frontend Development Team",
-              "bullets": ["Apr 2025 - Dec 2025"]
+              "bullets": [
+                "Apr 2025 - Dec 2025"
+              ]
             },
             {
               "name": "Live Web Frontend Development Team",
-              "bullets": ["May 2022 - Mar 2025"]
+              "bullets": [
+                "May 2022 - Mar 2025"
+              ]
             }
           ]
         }
@@ -144,22 +285,33 @@
         },
         {
           "name": "Backend",
-          "items": ["Node.js, NestJS, Python, Django", "Supabase, MongoDB, MySQL"]
+          "items": [
+            "Node.js, NestJS, Python, Django",
+            "Supabase, MongoDB, MySQL"
+          ]
         },
         {
           "name": "AI",
-          "items": ["Claude Code, Codex, Cursor, Antigravity"]
+          "items": [
+            "Claude Code, Codex, Cursor, Antigravity"
+          ]
         },
         {
           "name": "Collaboration",
-          "items": ["GitHub, GitLab, Figma, Adobe Photoshop", "Jira, Slack, Confluence, Notion"]
+          "items": [
+            "GitHub, GitLab, Figma, Adobe Photoshop",
+            "Jira, Slack, Confluence, Notion"
+          ]
         }
       ]
     },
     "education": {
       "school": "Sookmyung Women's University",
       "period": "Mar 2017 – Aug 2022 | Seoul, South Korea",
-      "bullets": ["Bachelor of Arts in Visual & Media Design", "Bachelor of Science in IT Engineering"]
+      "bullets": [
+        "Bachelor of Arts in Visual & Media Design",
+        "Bachelor of Science in IT Engineering"
+      ]
     }
   }
 }

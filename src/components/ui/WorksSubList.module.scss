@@ -1,0 +1,175 @@
+@use '../../styles/tokens' as *;
+
+// "Other Projects" 단순 텍스트 리스트 — 참조: 테이블형(YEAR/PROJECT/DEPT/STACK/LINK)
+// 레이아웃을 사이트의 터미널 톤(모노스페이스, 헤어라인, 태그 없이 텍스트)으로 변환
+.sub-list {
+  width: 100%;
+
+  &__title {
+    font-size: max(vw(12, 1920), 11px);
+    font-weight: 400;
+    color: rgba($text-primary, 0.65);
+    letter-spacing: 0.08em;
+    margin-bottom: 1.2rem;
+  }
+
+  // 헤더 행과 데이터 행이 같은 컬럼 트랙을 공유
+  &__head,
+  &__row {
+    display: grid;
+    grid-template-columns: 3.5rem minmax(0, 2.4fr) 0.8fr 1.4fr 1.1fr;
+    gap: 1.2rem;
+    align-items: baseline;
+    padding: 0.9rem 0.2rem;
+  }
+
+  &__head {
+    font-size: max(vw(10, 1920), 10px);
+    color: rgba($text-primary, 0.35);
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid rgba($text-primary, 0.15);
+    padding-top: 0;
+    padding-bottom: 0.6rem;
+  }
+
+  &__rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__row {
+    border-bottom: 1px solid rgba($text-primary, 0.08);
+  }
+
+  // Selected Project 전용 — 같은 텍스트 행 포맷이지만 "누를 수 있다"는
+  // 인상을 주기 위해 은은한 배경 + 좌측 강조선(box-shadow inset이라
+  // 그리드 컬럼 폭에는 영향 없음). hover/focus 시 강조를 키운다.
+  &__row--clickable {
+    cursor: pointer;
+    background: rgba($text-primary, 0.03);
+    box-shadow: inset 2px 0 0 0 rgba($text-primary, 0.2);
+    transition:
+      background-color 0.2s ease,
+      box-shadow 0.2s ease;
+
+    .sub-list__name {
+      color: $text-primary;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: rgba($text-primary, 0.07);
+      box-shadow: inset 2px 0 0 0 rgba($text-primary, 0.5);
+    }
+
+    &:focus-visible {
+      outline: 1px solid rgba($text-primary, 0.4);
+      outline-offset: -1px;
+    }
+  }
+
+  &__year {
+    font-size: max(vw(11, 1920), 11px);
+    color: rgba($text-primary, 0.4);
+  }
+
+  &__project {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: max(vw(12, 1920), 12px);
+    color: rgba($text-primary, 0.9);
+    line-height: 1.4;
+  }
+
+  &__intro {
+    font-size: max(vw(10, 1920), 10px);
+    color: rgba($text-primary, 0.4);
+    line-height: 1.5;
+  }
+
+  &__dept,
+  &__stack {
+    font-size: max(vw(10, 1920), 10px);
+    color: rgba($text-primary, 0.45);
+    line-height: 1.5;
+  }
+
+  &__link {
+    font-size: max(vw(10, 1920), 10px);
+    text-align: right;
+
+    a {
+      color: rgba($text-primary, 0.55);
+      text-decoration: none;
+      white-space: nowrap;
+
+      &:hover {
+        color: $text-primary;
+      }
+    }
+  }
+
+  &__enter {
+    color: rgba($text-primary, 0.4);
+    white-space: nowrap;
+    transition: color 0.2s ease;
+
+    .sub-list__row--clickable:hover &,
+    .sub-list__row--clickable:focus-visible & {
+      color: $text-primary;
+    }
+  }
+
+  // 모바일/태블릿: 5컬럼이 안 들어가므로 행을 블록형으로 재배치
+  @media (max-width: $tablet) {
+    &__head {
+      display: none;
+    }
+
+    &__row {
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        'name link'
+        'intro intro'
+        'meta meta';
+      gap: 0.4rem 1rem;
+      padding: 1rem 0;
+    }
+
+    &__project {
+      display: contents; // name/intro를 grid-area로 직접 배치
+    }
+
+    &__name {
+      grid-area: name;
+    }
+
+    &__intro {
+      grid-area: intro;
+    }
+
+    // dept·year·stack을 한 줄 메타로
+    &__year,
+    &__dept,
+    &__stack {
+      grid-area: meta;
+    }
+    &__year {
+      display: none; // date가 stack 옆 메타로 충분 — 모바일에선 연도만 따로 안 뺌
+    }
+    &__dept {
+      display: none;
+    }
+
+    &__link {
+      grid-area: link;
+      text-align: right;
+    }
+  }
+}

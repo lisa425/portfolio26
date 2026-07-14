@@ -1,0 +1,33 @@
+// 로딩 셔머 오버레이 — 부모가 position: relative + 크기를 가져야 한다
+.ui-skeleton {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0.08) 48%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  background-size: 200% 100%;
+  animation: ui-skeleton-shimmer 1.4s ease-in-out infinite;
+  pointer-events: none;
+  transition:
+    opacity 0.4s ease,
+    visibility 0s linear 0.4s;
+
+  &--hidden {
+    opacity: 0;
+    visibility: hidden;
+    animation: none;
+  }
+}
+
+@keyframes ui-skeleton-shimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
