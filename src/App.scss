@@ -121,6 +121,7 @@ body.ko {
   }
 
   @media (max-width: $tablet) {
+    display: none;
     bottom: 0rem;
     top: auto;
     padding-bottom: 1.5rem;
@@ -395,63 +396,74 @@ body.ko {
         }
 
         .lang-container {
+          position: relative;
           display: flex;
           align-items: center;
-          .arr {
-            position: relative;
-            left: -2px;
-          }
         }
         .menu-lang-label {
           color: rgba(255, 255, 255, 0.7);
           height: fit-content;
         }
 
-        .menu-lang-flip {
-          width: 2.1em;
-          height: 1.2em;
-          overflow: hidden;
-          padding: 0;
+        .menu-lang-trigger {
+          min-width: 3.2em;
+          padding: 0 0.15em 0 0.35em;
           border: 0;
           background: transparent;
           color: $text-primary;
           cursor: pointer;
           pointer-events: auto;
-          perspective: 400px;
           font: inherit;
           line-height: 1.2;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.25em;
 
-          &__front,
-          &__back {
-            display: block;
-            width: 100%;
-            backface-visibility: hidden;
-            transform-origin: center center;
-            transition:
-              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.4s ease;
+          .arr {
+            color: rgba(255, 255, 255, 0.6);
+            transform-origin: center;
+            transition: transform 0.2s ease;
           }
+        }
 
-          &__front {
-            transform: translateZ(0) rotateX(0deg);
-          }
+        .lang-container.is-open .menu-lang-trigger .arr {
+          transform: rotate(180deg);
+        }
 
-          &__back {
-            opacity: 0;
-            transform: translateZ(20px) rotateX(90deg);
+        .menu-lang-options {
+          position: absolute;
+          top: calc(100% + 0.55rem);
+          right: 0;
+          z-index: 30;
+          width: 5.2rem;
+          padding: 0.3rem;
+          border: 1px solid rgba(255, 255, 255, 0.22);
+          background: rgba($bg-color, 0.96);
+          backdrop-filter: blur(8px);
+          pointer-events: auto;
+
+          &[hidden] {
+            display: none;
           }
+        }
+
+        .menu-lang-option {
+          width: 100%;
+          padding: 0.45rem 0.5rem;
+          color: rgba(255, 255, 255, 0.5);
+          font: inherit;
+          font-size: 0.85em;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          text-align: left;
 
           &:hover,
-          &:focus-visible {
-            .menu-lang-flip__front {
-              opacity: 0;
-              transform: rotateX(90deg);
-            }
-
-            .menu-lang-flip__back {
-              opacity: 1;
-              transform: rotateX(0deg) translateY(-100%);
-            }
+          &:focus-visible,
+          &.is-selected {
+            color: $text-primary;
+            background: rgba(255, 255, 255, 0.07);
           }
         }
 
@@ -841,18 +853,28 @@ body.ko {
           flex-direction: column;
           align-items: center;
           gap: 1.75rem;
+          padding: 4.5rem 5rem;
+          background: radial-gradient(
+            ellipse at center,
+            rgba(0, 0, 0, 0.78) 0%,
+            rgba(0, 0, 0, 0.56) 28%,
+            rgba(0, 0, 0, 0.22) 58%,
+            transparent 76%
+          );
           transform: translate(-50%, calc(-50% - 1rem));
 
           @media (max-width: $tablet) {
             width: calc(100vw - 3rem);
             max-width: 500px;
             gap: 1.4rem;
+            padding: 3.6rem 2.25rem;
             transform: translate(-50%, calc(-50% - 0.75rem));
           }
 
           @media (max-width: $tablet) and (max-height: 700px) {
             width: calc(100vw - 2.5rem);
             gap: 1rem;
+            padding: 2.8rem 1.75rem;
             transform: translate(-50%, calc(-50% - 0.5rem));
           }
         }
@@ -1042,14 +1064,33 @@ body.ko {
   }
 }
 
+// ─── 섹션 배경 성운 파티클 캔버스 (useParticleBackdrop) ───
+// Works/About 공용 — 각 섹션 컨테이너의 "첫 자식"으로 마운트해 뒤 레이어 확보
+// (positioned 형제들이 DOM 순서상 뒤에 오므로 위에 그려짐). 크기는 훅이
+// parentElement rect 기준 JS로 설정하므로 여기선 위치/통과 속성만 담당.
+.particle-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .works {
   &__inner {
     position: relative;
     width: 100%;
     height: 100%;
+    // `.page-sub .inner { overflow-y: auto; }`보다 구체적으로 기본 Works 화면을
+    // 잠근다. 리스트는 오버레이가 열렸을 때 그 패널 안에서만 스크롤한다.
     overflow: hidden;
     display: flex;
     flex-direction: column;
+  }
+
+  // 공용 `.page-sub .inner` 규칙의 specificity를 확실히 이긴다.
+  &.page-sub &__inner {
+    overflow: hidden;
   }
 
   // ─── Works List Container (Mobile) ───
@@ -1201,14 +1242,7 @@ body.ko {
     display: none;
   }
 
-  // ─── Particle Canvas ───
-  .constellation-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    z-index: 5;
-  }
+  // 배경 성운 파티클 캔버스는 전역 .particle-backdrop 사용 (파일 상단 .works 위 정의)
 
   // ─── 3D World ───
   .scene-3d {
@@ -1359,7 +1393,7 @@ body.ko {
       height: 36px;
       overflow: hidden;
       background: $bg-color; // 이미지 로드 전 폴백
-      box-shadow: 0 0 10px rgba($text-primary, 0.5);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
       transition:
         width 0.3s ease,
         height 0.3s ease,
@@ -1377,10 +1411,9 @@ body.ko {
 
     &__index {
       position: absolute;
-      left: 72%;
+      left: 80%;
       font-size: max(vw(16, 1920), 14px);
       color: $text-primary;
-      // opacity: 0.5;
       white-space: nowrap;
       transition: opacity 0.3s ease;
       display: flex;
@@ -1389,9 +1422,7 @@ body.ko {
     // Hover: point glow boost
     &.hovered {
       .constellation-node__point {
-        box-shadow:
-          0 0 20px rgba($text-primary, 0.6),
-          0 0 50px rgba($text-primary, 0.15);
+        box-shadow: 0 0 20px rgba($text-primary, 0.2);
         animation: none;
       }
     }
@@ -1400,10 +1431,10 @@ body.ko {
   @keyframes nodePulse {
     0%,
     100% {
-      box-shadow: 0 0 8px rgba($text-primary, 0.4);
+      box-shadow: 0 0 8px rgba($text-primary, 0.05);
     }
     50% {
-      box-shadow: 0 0 18px rgba($text-primary, 0.7);
+      box-shadow: 0 0 18px rgba($text-primary, 0.2);
     }
   }
 
@@ -1877,21 +1908,20 @@ body.ko {
 
     .process-connector {
       position: relative;
-      width: 2px;
-      min-width: 2px;
+      width: 1px;
+      min-width: 1px;
       height: 28px;
       flex: 0 0 28px;
       background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.32) 0 4px, transparent 4px 8px);
       background-size: 2px 16px;
-      animation: process-evidence-flow-y 1.4s linear infinite;
 
       &::after {
         content: '';
         position: absolute;
         left: 50%;
         bottom: 1px;
-        width: 5px;
-        height: 5px;
+        width: 3px;
+        height: 3px;
         border-right: 1px solid rgba(255, 255, 255, 0.45);
         border-bottom: 1px solid rgba(255, 255, 255, 0.45);
         transform: translateX(-50%) rotate(45deg);

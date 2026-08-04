@@ -40,15 +40,11 @@
           },
           {
             "title": "Resolved network load from multiple videos, including a 200MB asset, by validating CDN delivery types and introducing HLS streaming on mobile",
-            "p": [
-              "reduced video delay from 10 seconds to 3 seconds"
-            ]
+            "p": ["reduced video delay from 10 seconds to 3 seconds"]
           },
           {
             "title": "Applied Mobile First sizing to UI components and CSS max() to image assets according to their purpose",
-            "p": [
-              "preserved design intent without layout breakage across screen sizes"
-            ]
+            "p": ["preserved design intent without layout breakage across screen sizes"]
           }
         ],
         "stack": "Next.js",
@@ -77,33 +73,23 @@
           },
           {
             "title": "Systematised recurring work through event templates, a development CLI, and shared components",
-            "p": [
-              "reduced project setup time by 85%, from roughly one hour to under ten minutes"
-            ]
+            "p": ["reduced project setup time by 85%, from roughly one hour to under ten minutes"]
           },
           {
             "title": "Connected deployment pipelines spread across five channels to the development environment",
-            "p": [
-              "reduced deployment time by about 80%, from over 30 minutes to under five minutes"
-            ]
+            "p": ["reduced deployment time by about 80%, from over 30 minutes to under five minutes"]
           },
           {
             "title": "Added an optional build-time image compression process that removes duplicate pixels",
-            "p": [
-              "reduced resource size by up to 80% while preventing unnecessary quality loss"
-            ]
+            "p": ["reduced resource size by up to 80% while preventing unnecessary quality loss"]
           },
           {
             "title": "Standardised a custom image-load detection hook",
-            "p": [
-              "improved page-loading UX across projects"
-            ]
+            "p": ["improved page-loading UX across projects"]
           },
           {
             "title": "Documented project conventions for a Claude-assisted development environment",
-            "p": [
-              "improved consistency while preserving developer autonomy"
-            ]
+            "p": ["improved consistency while preserving developer autonomy"]
           }
         ],
         "stack": "React · TypeScript · Vite · Zustand · GSAP · Claude Code",
@@ -163,21 +149,15 @@
           },
           {
             "title": "Evaluated APNG, Canvas chroma keying, Lottie, WebM Alpha, and HEVC Alpha, then designed a browser-specific dual-format HEVC/WebM strategy",
-            "p": [
-              "reduced resource size by 70% compared with APNG while maintaining cross-browser support"
-            ]
+            "p": ["reduced resource size by 70% compared with APNG while maintaining cross-browser support"]
           },
           {
             "title": "Implemented semantic markup, descriptive image alt text, and SEO-oriented event summaries",
-            "p": [
-              "improved search visibility and screen-reader support"
-            ]
+            "p": ["improved search visibility and screen-reader support"]
           },
           {
             "title": "Proposed keyboard-based page navigation in addition to mouse interaction",
-            "p": [
-              "improved overall web usability"
-            ]
+            "p": ["improved overall web usability"]
           }
         ],
         "stack": "HTML · CSS · JavaScript",
@@ -206,24 +186,16 @@
           },
           {
             "title": "The initial implementation recalculated gallery rotation and position on every scroll event, causing excessive computation",
-            "p": [
-              "applied throttling to suppress redundant consecutive calculations and stabilise scroll handling"
-            ]
+            "p": ["applied throttling to suppress redundant consecutive calculations and stabilise scroll handling"]
           },
           {
             "title": "Replaced 162 individually rendered Plane meshes with InstancedMesh",
-            "p": [
-              "reduced draw calls from 162 to 1 and improved frame stability"
-            ]
+            "p": ["reduced draw calls from 162 to 1 and improved frame stability"]
           }
         ],
         "stack": "HTML · CSS · JavaScript · Three.js · GSAP",
         "thumbnail": "/assets/images/br_thumb1.jpg",
-        "img": [
-          "/assets/images/br_img1.jpg",
-          "/assets/images/br_img2.jpg",
-          "/assets/images/br_img3.jpg"
-        ],
+        "img": ["/assets/images/br_img1.jpg", "/assets/images/br_img2.jpg", "/assets/images/br_img3.jpg"],
         "url": "https://baram.nexon.com/E221215/Intro",
         "dept": "NEXON",
         "intro": ""
@@ -252,21 +224,15 @@
           "projects": [
             {
               "name": "Mabinogi Web Development Team",
-              "bullets": [
-                "Jan 2026 - Jun 2026"
-              ]
+              "bullets": ["Jan 2026 - Jun 2026"]
             },
             {
               "name": "Game Web Frontend Development Team",
-              "bullets": [
-                "Apr 2025 - Dec 2025"
-              ]
+              "bullets": ["Apr 2025 - Dec 2025"]
             },
             {
               "name": "Live Web Frontend Development Team",
-              "bullets": [
-                "May 2022 - Mar 2025"
-              ]
+              "bullets": ["May 2022 - Mar 2025"]
             }
           ]
         }
@@ -285,33 +251,22 @@
         },
         {
           "name": "Backend",
-          "items": [
-            "Node.js, NestJS, Python, Django",
-            "Supabase, MongoDB, MySQL"
-          ]
+          "items": ["Node.js, NestJS, Python, Django", "Supabase, MongoDB, MySQL"]
         },
         {
           "name": "AI",
-          "items": [
-            "Claude Code, Codex, Cursor, Antigravity"
-          ]
+          "items": ["Claude Code, Codex, Cursor, Antigravity"]
         },
         {
           "name": "Collaboration",
-          "items": [
-            "GitHub, GitLab, Figma, Adobe Photoshop",
-            "Jira, Slack, Confluence, Notion"
-          ]
+          "items": ["GitHub, GitLab, Figma, Adobe Photoshop", "Jira, Slack, Confluence, Notion"]
         }
       ]
     },
     "education": {
       "school": "Sookmyung Women's University",
       "period": "Mar 2017 – Aug 2022 | Seoul, South Korea",
-      "bullets": [
-        "Bachelor of Arts in Visual & Media Design",
-        "Bachelor of Science in IT Engineering"
-      ]
+      "bullets": ["Bachelor of Arts in Visual & Media Design", "Bachelor of Science in IT Engineering"]
     }
   }
 }

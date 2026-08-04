@@ -48,12 +48,10 @@
           },
           {
             "title": "Form, 버튼 등 UI 컴포넌트에는 Mobile First, 이미지 오브제에는 max() 함수를 적용하여 반응형 리사이징 적용 등 컴포넌트의 목적에 따라 적합한 반응형 대응 방식을 판단하고 적용",
-            "p": [
-              "여러 스크린 크기에서도 레이아웃 손상 없이 디자인 의도를 정확히 구현"
-            ]
+            "p": ["여러 스크린 크기에서도 레이아웃 손상 없이 디자인 의도를 정확히 구현"]
           }
         ],
-        "stack": "Next.js",
+        "stack": "Next.js · Zustand · GSAP",
         "thumbnail": "/assets/images/az_thumb1.jpg",
         "img": [
           "/assets/images/az_img1.jpg",
@@ -75,39 +73,27 @@
         "description": [
           {
             "title": "개별 Webpack + JavaScript 환경",
-            "p": [
-              "React + Vite 기반의 공통 신규 개발 환경 구축"
-            ]
+            "p": ["React + Vite 기반의 공통 신규 개발 환경 구축"]
           },
           {
             "title": "반복되는 업무 패턴을 이벤트 전용 템플릿, 개발용 CLI 스크립트, 공통 컴포넌트 등으로 시스템화하여 프로젝트 내부 도입",
-            "p": [
-              "개발 착수 시간 85% 단축(약 1시간 → 10분 내외)"
-            ]
+            "p": ["개발 착수 시간 85% 단축(약 1시간 → 10분 내외)"]
           },
           {
             "title": "5개 채널에 분산된 배포 파이프라인을 개발 환경과 연결하여 배포 프로세스 통합 및 간소화",
-            "p": [
-              "배포 소요 시간 약 80% 개선(약 30분 이상 → 5분 이내)"
-            ]
+            "p": ["배포 소요 시간 약 80% 개선(약 30분 이상 → 5분 이내)"]
           },
           {
             "title": "이미지의 중복 픽셀 수를 제거해 용량을 줄이는 이미지 압축 프로세스를 빌드 옵션으로 도입",
-            "p": [
-              "리소스 용량 최대 80% 절감 및 선택적 최적화를 통한 리소스 퀄리티 저하 방지"
-            ]
+            "p": ["리소스 용량 최대 80% 절감 및 선택적 최적화를 통한 리소스 퀄리티 저하 방지"]
           },
           {
             "title": "이미지 로드 감지 처리 커스텀 훅을 표준 템플릿으로 도입",
-            "p": [
-              "페이지 로드 UX 개선 적용"
-            ]
+            "p": ["페이지 로드 UX 개선 적용"]
           },
           {
             "title": "주요 프로젝트 컨벤션을 문서화하여 Claude 기반 AI 개발 보조 환경 구축",
-            "p": [
-              "이벤트 개발 일관성 및 자율성 동시 확보"
-            ]
+            "p": ["이벤트 개발 일관성 및 자율성 동시 확보"]
           }
         ],
         "stack": "React · TypeScript · Vite · Zustand · GSAP · Claude Code",
@@ -143,12 +129,10 @@
           },
           {
             "title": "프로세스 제안 이후 운영 업무 소요 시간 약 92% 단축(건당 평균 1시간",
-            "p": [
-              "5분 이하)"
-            ]
+            "p": ["5분 이하)"]
           }
         ],
-        "stack": "React · TypeScript · Vite · Claude Code · Figma API · Jira Ticket",
+        "stack": "React · TypeScript · Vite · Claude Code · Figma API · Jira",
         "thumbnail": "/assets/images/heroes_img2.jpg",
         "img": [],
         "url": "",
@@ -169,9 +153,7 @@
           },
           {
             "title": "APNG, Canvas 크로마키, Lottie, WebM Alpha, HEVC Alpha 등 5개 대안을 비교 검토해 브라우저별 이중 포맷(HEVC/WebM) 제공 방식 설계",
-            "p": [
-              "크로스 브라우징 대응 및 리소스 용량 APNG 대비 70% 절감"
-            ]
+            "p": ["크로스 브라우징 대응 및 리소스 용량 APNG 대비 70% 절감"]
           },
           {
             "title": "시멘틱 태그 기반 마크업, 콘텐츠 이미지 alt 명시, SEO용 이벤트 개요 텍스트 삽입 등 웹 접근성을 준수해 검색 노출 및 스크린리더 대응 확보",
@@ -179,9 +161,7 @@
           },
           {
             "title": "마우스 외 키보드 기반 페이지 탐색 인터랙션 추가 적용 제안",
-            "p": [
-              "웹 사용성 추가 개선"
-            ]
+            "p": ["웹 사용성 추가 개선"]
           }
         ],
         "stack": "HTML · CSS · JavaScript",
@@ -210,24 +190,16 @@
           },
           {
             "title": "초기 개발 중 스크롤 이벤트 발생 시마다 갤러리의 회전값과 위치값을 계산하여 과도한 연산 발생",
-            "p": [
-              "Throttle을 적용해 불필요한 연속 계산을 제한하고 스크롤 처리 안정화"
-            ]
+            "p": ["Throttle을 적용해 불필요한 연속 계산을 제한하고 스크롤 처리 안정화"]
           },
           {
             "title": "162개의 Plane Mesh 개별 렌더링으로 인한 프레임 저하 발생",
-            "p": [
-              "GPU 인스턴싱이 가능한 InstancedMesh로 전환하여 Draw call을 162회에서 1회로 절감"
-            ]
+            "p": ["GPU 인스턴싱이 가능한 InstancedMesh로 전환하여 Draw call을 162회에서 1회로 절감"]
           }
         ],
-        "stack": "HTML, CSS, JavaScript, Three.js · GSAP",
+        "stack": "HTML, CSS, JavaScript, Three.js",
         "thumbnail": "/assets/images/br_thumb1.jpg",
-        "img": [
-          "/assets/images/br_img1.jpg",
-          "/assets/images/br_img2.jpg",
-          "/assets/images/br_img3.jpg"
-        ],
+        "img": ["/assets/images/br_img1.jpg", "/assets/images/br_img2.jpg", "/assets/images/br_img3.jpg"],
         "url": "https://baram.nexon.com/E221215/Intro",
         "dept": "NEXON",
         "intro": ""
@@ -235,55 +207,77 @@
     ],
     "subProject": [
       {
-        "title": "[마비노기 영웅전(국내/북미)] 신규 캐릭터 'Neamhain' 업데이트",
+        "title": "[마비노기 모바일] 1주년 페스티벌",
         "dept": "NEXON",
-        "intro": "신규 캐릭터의 정체성과 세계관을 비주얼적으로 표현하는 웹 애니메이션 연출 및 구현",
+        "intro": "쿠폰 번호 복사, 날짜별 콘텐츠 오픈 설계 등의 UI 개발\n봄 테마에 맞춘 파티클 웹 그래픽 애니메이션 연출\n ",
+        "date": "2026.03",
+        "stack": "React · TypeScript"
+      },
+      {
+        "title": "[Hit2] 캐릭터명 사전선점 이벤트",
+        "dept": "NEXON",
+        "intro": "신규 서버 오픈을 기념하는 이벤트 페이지 프론트엔드 개발\n 인증 상태 처리 및 연령, 계정, 닉네임 유효성 검증 처리",
+        "date": "2025.09",
+        "stack": "Vue.js · Nuxt2",
+        "url": "https://hit2.nexon.com/events/2025/09/preoccupancy"
+      },
+      {
+        "title": "[블루아카이브] Code:BOX - 밀레니엄에 다가오는 그림자",
+        "dept": "NEXON",
+        "intro": "이벤트 전용 모션 시퀀스 및 마이크로 인터랙션 설계 및 구현\ni18n 데이터를 통한 한국어/영어/태국어 3개 국어 대응 개발",
+        "date": "2025.07",
+        "stack": "Vue.js · Nuxt3",
+        "url": "https://bluearchive.nexon.com/events/2025/07/update"
+      },
+      {
+        "title": "[마비노기 영웅전(북미)] 신규 캐릭터 'Neamhain' 업데이트",
+        "dept": "NEXON",
+        "intro": "신규 캐릭터의 정체성과 세계관을 비주얼적으로 표현하는 애니메이션 구현",
         "date": "2025.01",
         "stack": "React · TypeScript",
         "url": "http://vindictus.nexon.net/event/2025/0121/neamhain"
       },
       {
-        "title": "[블루아카이브] Code:BOX - 밀레니엄에 다가오는 그림자",
+        "title": "[마비노기 영웅전(국내)] REAL 뀨렘린 레이스",
         "dept": "NEXON",
-        "intro": "이벤트 전용 모션 시퀀스 및 마이크로 인터랙션 설계 및 구현. 한국어/영어/태국어 3개 국어 대응",
-        "date": "2025.07",
-        "stack": "Vue.js, Nuxt3",
-        "url": "https://bluearchive.nexon.com/events/2025/07/update"
-      },
-      {
-        "title": "[마비노기 모바일] 1주년 페스티벌",
-        "dept": "NEXON",
-        "intro": "1주년 업데이트의 봄 테마에 맞춘 파티클 웹 그래픽 애니메이션을 연출한 인트로 페이지. 쿠폰 복사, 날짜별 콘텐츠 블락 등 UI 기능 개발",
-        "date": "2026.03",
-        "stack": "React · TypeScript"
+        "intro": "이벤트성 미니게임 참여 유도 프로모션 내 게임 데이터 연동 컨텐츠 UI 구현\n목표 참여인원인 30,000명 참여 달성에 기여",
+        "date": "2024.08",
+        "stack": "HTML · Sass · JavaScript"
       },
       {
         "title": "[메이플스토리M] 쇼케이스 멤버십 번호 발급/조회 이벤트",
         "dept": "NEXON",
-        "intro": "멤버십 유효성 검증 및 조회/번호 발급 기능 프론트엔드 개발, 검증 로직 개선을 통해 로드 개선",
-        "date": "2026.03",
+        "intro": "멤버십 유효성 검증 및 조회/번호 발급 기능 프론트엔드 개발\n검증 로직 개선을 통한 로드 속도 98% 개선",
+        "date": "2024.05",
         "stack": "React · TypeScript"
       },
       {
-        "title": "퍼스널컬러 기반 의류 필터링 알고리즘",
+        "title": "[크레이지아케이드] 크레이지아케이드X발란사 콜라보 프로모션",
+        "dept": "NEXON",
+        "intro": "프로모션 내 커스텀 프로필 생성 이벤트 UI 구현\n캐릭터 및 데코 선택 시 프로필 이미지 생성, 스크린샷 기능 제공",
+        "date": "2024.03",
+        "stack": "React · TypeScript"
+      },
+      {
+        "title": "퍼스널컬러 기반 의류 쇼핑 알고리즘 및 웹서비스 개발",
         "dept": "숙명여자대학교",
-        "intro": "신규 캐릭터의 정체성과 세계관을 비주얼적으로 표현하는 웹 애니메이션 연출 및 구현",
-        "date": "2025.01",
+        "intro": "의류 이미지 색상 추출을 통한 퍼스널 컬러 기반 쇼핑 서비스 구현\nHSV 색공간을 활용해 PCCS 색체계를 데이터화하고 퍼스널 컬러를 도출하는 알고리즘 구현\n무신사 스토어 상품 데이터 300건 기준 약 80%의 정확도 달성",
+        "date": "2021.12 - 2022.02",
         "stack": "Python · Django · OpenCV"
       },
       {
-        "title": "<a Little Bit!>",
+        "title": "a Little Bit!",
         "dept": "숙명여자대학교",
-        "description": "신규 캐릭터의 정체성과 세계관을 비주얼적으로 표현하는 웹 애니메이션 연출 및 구현",
+        "intro": "디지털 탄소 발자국의 개념을 알리기 위한 인터랙티브 웹 프로젝트\n유저의 디지털 탄소 발자국 배출량을 계산하는 테스트 알고리즘 설계\n방명록 CRUD, 카드뉴스 캐러셀 등 프로젝트 전체 풀스택 구현 및 배포",
         "date": "2021.07 - 2021.10",
         "stack": "React · Node.js · MongoDB · AWS S3"
       },
       {
         "title": "2021년도 시각영상디자인과 온라인 졸업전시회",
         "dept": "숙명여자대학교",
-        "description": "신규 캐릭터의 정체성과 세계관을 비주얼적으로 표현하는 웹 애니메이션 연출 및 구현",
+        "intro": "2021년도 시각영상디자인과 졸업전시회 공식 웹사이트 구축 리딩",
         "date": "2021.07 - 2021.10",
-        "stack": "HTML, CSS, JavaScript"
+        "stack": "HTML · CSS · JavaScript"
       }
     ]
   },
@@ -308,21 +302,15 @@
           "projects": [
             {
               "name": "마비노기웹개발팀",
-              "bullets": [
-                "대리 | 2026.01 - 2026.06"
-              ]
+              "bullets": ["대리 | 2026.01 - 2026.06"]
             },
             {
               "name": "게임웹프론트개발팀",
-              "bullets": [
-                "사원 | 2025.04 - 2025.12"
-              ]
+              "bullets": ["사원 | 2025.04 - 2025.12"]
             },
             {
               "name": "라이브웹프론트엔드팀",
-              "bullets": [
-                "사원 | 2022.05 - 2025.03"
-              ]
+              "bullets": ["사원 | 2022.05 - 2025.03"]
             }
           ]
         }
@@ -340,33 +328,22 @@
         },
         {
           "name": "Backend",
-          "items": [
-            "Node.js, NestJS, Python, Django",
-            "Supabase, MongoDB, MySQL"
-          ]
+          "items": ["Node.js, NestJS, Python, Django", "Supabase, MongoDB, MySQL"]
         },
         {
           "name": "AI",
-          "items": [
-            "Claude Code, Codex, Cursor, Antigravity"
-          ]
+          "items": ["Claude Code, Codex, Cursor, Antigravity"]
         },
         {
           "name": "Collaboration",
-          "items": [
-            "GitHub, GitLab, Figma, Adobe Photoshop",
-            "Jira, Slack, Confluence, Notion"
-          ]
+          "items": ["GitHub, GitLab, Figma, Adobe Photoshop", "Jira, Slack, Confluence, Notion"]
         }
       ]
     },
     "education": {
       "school": "숙명여자대학교",
       "period": "2017.03 – 2022.08 | 대한민국, 서울",
-      "bullets": [
-        "시각·영상디자인과",
-        "IT 공학과"
-      ]
+      "bullets": ["시각·영상디자인과", "IT 공학과"]
     }
   }
 }

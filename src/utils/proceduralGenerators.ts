@@ -25,6 +25,16 @@ export interface AccretionDiskOptions {
   warmCoreColor: string
 }
 
+export interface SignalFieldOptions {
+  count: number
+  width: number
+  height: number
+  depth: number
+  densityBias: number
+  irregularity: number
+  palette: string[]
+}
+
 export interface AmbientParticleOptions {
   count: number
   spreadX: number
@@ -34,16 +44,13 @@ export interface AmbientParticleOptions {
   palette: string[]
 }
 
-export interface SignalFieldOptions {
-  count: number
-  width: number
-  height: number
-  depth: number
-  bands: number
-  palette: string[]
-}
-
 const randomSigned = () => Math.random() * 2 - 1
+
+const randomNormal = () => {
+  const u = Math.random() || 1e-9
+  const v = Math.random() || 1e-9
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(Math.PI * 2 * v)
+}
 
 const writeColor = (target: Float32Array, index: number, color: THREE.Color) => {
   target[index * 3] = color.r
@@ -150,6 +157,39 @@ export function generateAccretionDiskParticles(options: AccretionDiskOptions) {
   return { positions, randoms, colors }
 }
 
+export function generateSignalFieldParticles(options: SignalFieldOptions) {
+  const positions = new Float32Array(options.count * 3)
+  const randoms = new Float32Array(options.count)
+  const colors = new Float32Array(options.count * 3)
+  const palette = options.palette.map((color) => new THREE.Color(color))
+
+  for (let i = 0; i < options.count; i++) {
+    const seed = Math.random()
+    const angle = Math.random() * Math.PI * 2
+    const radius = Math.pow(Math.random(), options.densityBias)
+    const boundaryWarp =
+      1 +
+      Math.sin(angle * 3 + 0.35) * options.irregularity * 0.7 +
+      Math.sin(angle * 5 - 0.8) * options.irregularity * 0.42 +
+      Math.cos(angle * 2 + 1.2) * options.irregularity * 0.3
+    const warpedRadius = Math.max(0, radius * boundaryWarp)
+    const innerTurbulence = (1 - radius) * options.irregularity * 0.09
+
+    const x = Math.cos(angle) * warpedRadius * options.width * 0.5 + randomNormal() * options.width * innerTurbulence
+    const y = Math.sin(angle) * warpedRadius * options.height * 0.5 + randomNormal() * options.height * innerTurbulence
+    positions[i * 3] = Math.max(-options.width * 0.545, Math.min(options.width * 0.545, x))
+    positions[i * 3 + 1] = Math.max(-options.height * 0.62, Math.min(options.height * 0.62, y))
+    positions[i * 3 + 2] = Math.max(
+      -options.depth,
+      Math.min(options.depth, randomNormal() * options.depth * (0.16 + (1 - radius) * 0.2)),
+    )
+    randoms[i] = seed
+    writeColor(colors, i, palette[Math.floor(seed * palette.length)] ?? new THREE.Color('#aeb4bc'))
+  }
+
+  return { positions, randoms, colors }
+}
+
 export function generateAmbientParticles(options: AmbientParticleOptions) {
   const positions = new Float32Array(options.count * 3)
   const randoms = new Float32Array(options.count)
@@ -163,36 +203,6 @@ export function generateAmbientParticles(options: AmbientParticleOptions) {
     positions[i * 3 + 2] = options.depthMin + Math.random() * depthRange
     randoms[i] = Math.random()
     writeColor(colors, i, palette[Math.floor(Math.random() * palette.length)] ?? new THREE.Color('#77808c'))
-  }
-
-  return { positions, randoms, colors }
-}
-
-export function generateSignalFieldParticles(options: SignalFieldOptions) {
-  const positions = new Float32Array(options.count * 3)
-  const randoms = new Float32Array(options.count)
-  const colors = new Float32Array(options.count * 3)
-  const palette = options.palette.map((color) => new THREE.Color(color))
-  const bandCount = Math.max(1, Math.floor(options.bands))
-
-  for (let i = 0; i < options.count; i++) {
-    const seed = Math.random()
-    const rawX = randomSigned()
-    const xProgress = rawX * (0.7 + Math.abs(rawX) * 0.3)
-    const x = xProgress * options.width * 0.5
-    const band = i % bandCount
-    const rawBand = band / Math.max(1, bandCount - 1) - 0.5
-    const centeredBand = Math.sign(rawBand) * Math.pow(Math.abs(rawBand) * 2, 1.25) * 0.5
-    const bandOffset = centeredBand * options.height * 0.62
-    const wave = Math.sin(xProgress * Math.PI * (1.25 + band * 0.18) + band * 1.7)
-    const envelope = Math.pow(1 - Math.abs(xProgress), 0.55)
-    const yNoise = randomSigned() * options.height * (0.075 + (1 - envelope) * 0.17)
-
-    positions[i * 3] = x + randomSigned() * options.width * 0.018
-    positions[i * 3 + 1] = bandOffset + wave * options.height * 0.12 + yNoise
-    positions[i * 3 + 2] = randomSigned() * options.depth * (0.35 + envelope * 0.65)
-    randoms[i] = seed
-    writeColor(colors, i, palette[Math.floor(seed * palette.length)] ?? new THREE.Color('#aeb4bc'))
   }
 
   return { positions, randoms, colors }

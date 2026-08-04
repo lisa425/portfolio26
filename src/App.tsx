@@ -28,11 +28,13 @@ function App() {
 
   const heroStatementRef = useRef<HTMLDivElement>(null)
   const trailCanvasRef = useRef<HTMLCanvasElement>(null)
+  const langMenuRef = useRef<HTMLDivElement>(null)
 
   const [loadProgress, setLoadProgress] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
   const [headerClock, setHeaderClock] = useState('')
   const [displayTimeZone, setDisplayTimeZone] = useState(DEFAULT_TIME_ZONE)
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false)
   const isHeroActiveRef = useRef(true)
 
   // Intro log: plays every page load; false after first run so hero-return skips it
@@ -126,6 +128,26 @@ function App() {
     document.body.classList.add(lang)
   }, [lang, i18n])
 
+  useEffect(() => {
+    if (!isLangMenuOpen) return
+
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!langMenuRef.current?.contains(event.target as Node)) {
+        setIsLangMenuOpen(false)
+      }
+    }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsLangMenuOpen(false)
+    }
+
+    document.addEventListener('pointerdown', closeOnOutsideClick)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [isLangMenuOpen])
+
   const heroIntroMotion = () => {
     const tl = gsap
       .timeline()
@@ -211,17 +233,50 @@ function App() {
           </div>
 
           <div className="header-right">
-            <div className="lang-container">
+            <div
+              className={`lang-container${isLangMenuOpen ? ' is-open' : ''}`}
+              ref={langMenuRef}
+            >
               <span className="menu-lang-label">LAN</span>
               <button
-                className="menu-lang-flip"
-                onClick={() => switchLang(lang === 'ko' ? 'en' : 'ko')}
-                aria-label={`Switch language to ${lang === 'ko' ? 'English' : 'Korean'}`}
+                type="button"
+                className="menu-lang-trigger"
+                onClick={() => setIsLangMenuOpen((open) => !open)}
+                aria-label="Select language"
+                aria-haspopup="listbox"
+                aria-expanded={isLangMenuOpen}
               >
-                <span className="menu-lang-flip__front">{lang.toUpperCase()}</span>
-                <span className="menu-lang-flip__back">{lang === 'ko' ? 'EN' : 'KO'}</span>
+                <span>{lang.toUpperCase()}</span>
+                <span
+                  className="arr"
+                  aria-hidden
+                >
+                  ▾
+                </span>
               </button>
-              <span className="arr">▾</span>
+              <div
+                className="menu-lang-options"
+                role="listbox"
+                aria-label="Language"
+                hidden={!isLangMenuOpen}
+              >
+                {(['ko', 'en'] as const).map((option) => (
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={lang === option}
+                    className={`menu-lang-option${lang === option ? ' is-selected' : ''}`}
+                    key={option}
+                    onClick={() => {
+                      switchLang(option)
+                      setIsLangMenuOpen(false)
+                    }}
+                  >
+                    <span>{option.toUpperCase()}</span>
+                    <span aria-hidden>{lang === option ? '▪︎' : ''}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <nav

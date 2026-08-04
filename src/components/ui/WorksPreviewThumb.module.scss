@@ -38,15 +38,6 @@
   );
   pointer-events: none;
 
-  // Top-left coord marker
-  &::before {
-    content: '+ + +';
-    position: absolute;
-    top: vw(6, 1920);
-    left: vw(8, 1920);
-    font-size: 8px;
-    color: rgba($text-primary, 0.35);
-  }
   // Bottom-right coord marker
   &::after {
     content: attr(data-coords);

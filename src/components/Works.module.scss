@@ -69,16 +69,22 @@
   z-index: 15;
   width: 100%;
   max-width: 900px;
-  max-height: min(600px, 75vh);
+  max-height: 90vh;
   overflow-y: auto;
   background: rgba($bg-color, 0.97);
   border-top: 1px solid rgba($text-primary, 0.15);
-  padding: 3rem 2rem;
+  padding: 3rem 0rem;
   transform: translate(-50%, 100%);
   transition: transform 0.3s ease;
+  pointer-events: none;
+  overscroll-behavior: contain;
 
   &--open {
     transform: translate(-50%, 0);
+    pointer-events: auto;
+  }
+  &::-webkit-scrollbar {
+    display: none;
   }
 }
 

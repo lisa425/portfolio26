@@ -19,17 +19,18 @@ const heroConfig = {
     mobileZ: 17.5,
   },
   signal: {
-    count: 9200,
-    width: 29,
-    height: 7.6,
-    depth: 1.8,
-    bands: 5,
+    count: 8500,
+    width: 18.5,
+    height: 9.5,
+    depth: 3.1,
+    densityBias: 0.65,
+    irregularity: 0.24,
     palette: ['#f1f3f5', '#c3c9d0', '#89929d', '#626b76'],
-    materialSize: 27,
-    noiseStrength: 0.15,
-    waveStrength: 0.42,
-    offsetY: 1.0,
-    mobileOffsetY: 0.25,
+    materialSize: 40,
+    noiseStrength: 0.2,
+    waveStrength: 0.44,
+    offsetY: 0.45,
+    mobileOffsetY: 0,
   },
   ambient: {
     count: 900,
@@ -131,6 +132,7 @@ export const useHeroScene = (
       noiseStrength: heroConfig.signal.noiseStrength,
       waveStrength: heroConfig.signal.waveStrength,
       fieldWidth: heroConfig.signal.width,
+      fieldHeight: heroConfig.signal.height,
       useVertexColors: true,
     })
     const signalPoints = new THREE.Points(signalGeometry, signalMaterial)
@@ -155,6 +157,7 @@ export const useHeroScene = (
 
     const setSignalVisible = (visible: boolean, opacity = 1) => {
       signalPoints.visible = visible
+      ambientPoints.visible = visible
       signalMaterial.uniforms.uOpacity.value = visible ? opacity : 0
     }
 
@@ -220,13 +223,12 @@ export const useHeroScene = (
     let animationFrameId = 0
     const update = () => {
       const elapsed = clock.getElapsedTime()
-      ambientMaterial.uniforms.uTime.value = elapsed
       signalMaterial.uniforms.uTime.value = elapsed
       pointerCurrent.lerp(pointerTarget, 0.09)
       signalMaterial.uniforms.uPointer.value.copy(pointerCurrent)
       const currentIntensity = signalMaterial.uniforms.uPointerIntensity.value as number
       signalMaterial.uniforms.uPointerIntensity.value += (pointerIntensityTarget - currentIntensity) * 0.085
-      bloomPass.strength = 0.16 + signalMaterial.uniforms.uPointerIntensity.value * 0.1
+      bloomPass.strength = 0.045
 
       if (isHeroActiveRef?.current === false && !isTransitioning) pointerIntensityTarget = 0
     }
@@ -242,12 +244,11 @@ export const useHeroScene = (
       statementRef?.current?.style.setProperty('--light-strength', '0')
     }
 
-    const runSectionTransition = (target: -1 | 1, onComplete: () => void) => {
+    const runSectionTransition = (onComplete: () => void) => {
       isTransitioning = true
       setSignalVisible(true)
-      pointerTarget.set(target * 4.2, 0)
-      pointerIntensityTarget = 1
-      const targetX = target * 2.4
+      pointerTarget.set(0, 0)
+      pointerIntensityTarget = 0
       const timeline = gsap.timeline({
         onComplete: () => {
           isTransitioning = false
@@ -259,12 +260,12 @@ export const useHeroScene = (
       timeline
         .to('.hero-copy', { opacity: 0, scale: 1.035, duration: 0.9, ease: 'power3.in' }, 0.1)
         .to('.header-clock', { opacity: 0, duration: 0.55, ease: 'power2.in' }, 0.1)
-        .to(signalMaterial.uniforms.uTransitionProgress, { value: 1, duration: 1.2, ease: 'power3.in' }, 0)
-        .to(camera.position, { x: targetX, z: 9.2, duration: 1.2, ease: 'power3.in' }, 0)
+        .to(signalMaterial.uniforms.uTransitionProgress, { value: 1, duration: 1.2, ease: 'power2.inOut' }, 0)
+        .to(camera.position, { x: 0, z: 9.2, duration: 1.2, ease: 'power3.in' }, 0)
     }
 
-    worksTransitionRef.current = (onComplete) => runSectionTransition(-1, onComplete)
-    aboutTransitionRef.current = (onComplete) => runSectionTransition(1, onComplete)
+    worksTransitionRef.current = runSectionTransition
+    aboutTransitionRef.current = runSectionTransition
 
     applyInstantRef.current = (view) => {
       ;(signalGeometry.attributes.position.array as Float32Array).set(originalPositions)
@@ -281,7 +282,7 @@ export const useHeroScene = (
       } else {
         signalMaterial.uniforms.uTransitionProgress.value = 1
         setSignalVisible(false)
-        camera.position.set(view === 'works' ? -2.4 : 2.4, isMobile ? -0.35 : 0, 9.2)
+        camera.position.set(0, isMobile ? -0.35 : 0, 9.2)
         resetHeroDom(false)
       }
       camera.updateProjectionMatrix()
@@ -317,7 +318,7 @@ export const useHeroScene = (
       ambientCamera.aspect = width / height
       ambientCamera.position.set(0, 0, homeZ)
       const visibleWorldHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5)) * homeZ
-      const targetFieldWidth = visibleWorldHeight * camera.aspect * 0.9
+      const targetFieldWidth = visibleWorldHeight * camera.aspect * (isMobile ? 0.9 : 0.66)
       const verticalScale = isMobile ? 0.76 : 1
       signalPoints.scale.set(targetFieldWidth / heroConfig.signal.width, verticalScale, verticalScale)
       signalPoints.position.y = isMobile ? heroConfig.signal.mobileOffsetY : heroConfig.signal.offsetY

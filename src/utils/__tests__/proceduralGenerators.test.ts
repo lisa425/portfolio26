@@ -59,7 +59,7 @@ describe('generateAmbientParticles', () => {
     spreadY: 22,
     depthMin: -14,
     depthMax: -3,
-    palette: ['#87909c', '#66707d', '#a3aab3'],
+    palette: ['#8f98a4', '#66707d', '#aeb4bc'],
   }
 
   it('creates finite buffers inside the configured volume', () => {
@@ -91,7 +91,8 @@ describe('generateSignalFieldParticles', () => {
     width: 24,
     height: 6.4,
     depth: 1.8,
-    bands: 5,
+    densityBias: 1.65,
+    irregularity: 0.24,
     palette: ['#f1f3f5', '#89929d', '#626b76'],
   }
 

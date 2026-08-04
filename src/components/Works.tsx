@@ -5,6 +5,7 @@ import { SplitText } from 'gsap/SplitText'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { createPortal } from 'react-dom'
 import { useMobile } from '../hooks/useMobile'
+import { useParticleBackdrop } from '../hooks/useParticleBackdrop'
 import { renderText } from '../utils/renderText'
 import Lenis from 'lenis'
 import type { ProjectKey, SubProjectType, WorksListRowItem, WorkType } from '../types'
@@ -369,6 +370,9 @@ function Works({ isActive }: WorksProps) {
   // DOM refs
   const sceneRef = useRef<HTMLDivElement>(null)
   const scene3dRef = useRef<HTMLDivElement>(null)
+  // Animated section particles converge as Works enters, then orbit slowly.
+  const backdropCanvasRef = useRef<HTMLCanvasElement>(null)
+  useParticleBackdrop(backdropCanvasRef, isActive && !isMobileView)
   const ringEls = useRef<(HTMLDivElement | null)[]>([])
   const ringHighlightEls = useRef<(HTMLDivElement | null)[]>([])
   // One ref per work panel — show/hide managed via direct DOM (no React re-render)
@@ -971,7 +975,7 @@ function Works({ isActive }: WorksProps) {
     // 이 클래스 하나로 게이트되므로 CSS 변경 없이 반응형 전환이 따라온다
     <div className={`inner works__inner ${isMobileView ? 'is-mobile-device' : ''}`}>
       <div className="terminal-bar works-progress">
-        <span className="terminal-bar__label">&gt; WORKS</span>
+        <span className="terminal-bar__label">&gt; SELECTED</span>
         {!isMobileView && (
           <>
             <span> ─── </span>
@@ -1000,7 +1004,7 @@ function Works({ isActive }: WorksProps) {
             aria-pressed={drawerOpen}
             aria-expanded={drawerOpen}
           >
-            {drawerOpen ? '[ CLOSE ]' : '[ VIEW MORE ]'}
+            {drawerOpen ? '[ CLOSE ]' : '[ VIEW ALL LIST ]'}
           </button>
         </div>
       )}
@@ -1018,7 +1022,14 @@ function Works({ isActive }: WorksProps) {
       {/* PC View All 드로어: Selected Project 단일 열 리스트 + Other Projects.
           항상 렌더하고 --open으로 슬라이드 — 트랜지션을 위해 언마운트하지 않는다 */}
       {!isMobileView && (
-        <aside className={`${worksStyles['drawer']}${drawerOpen ? ` ${worksStyles['drawer--open']}` : ''}`}>
+        <aside
+          className={`${worksStyles['drawer']}${drawerOpen ? ` ${worksStyles['drawer--open']}` : ''}`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="All projects"
+          aria-hidden={!drawerOpen}
+          inert={!drawerOpen}
+        >
           <div className={worksStyles['drawer__inner']}>
             <WorksSubList
               items={selectedRows}
@@ -1084,6 +1095,13 @@ function Works({ isActive }: WorksProps) {
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}
       >
+        {/* Animated particle layer, kept behind the existing 3D rings and nodes. */}
+        <canvas
+          className="particle-backdrop"
+          ref={backdropCanvasRef}
+          aria-hidden
+        />
+
         {/* Fixed overlays (not affected by drag rotation) */}
         <div className="works-bloom pulsing" />
         <div className="scene-center" />
