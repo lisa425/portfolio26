@@ -4,6 +4,7 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
 import { useMobile } from '../hooks/useMobile'
+import { useParticleBackdrop } from '../hooks/useParticleBackdrop'
 import { renderText } from '../utils/renderText'
 import { Corners } from './ui'
 
@@ -30,7 +31,11 @@ function About({ isActive }: AboutProps) {
   const contentRef = useRef<HTMLDivElement>(null)
   const lenisRef = useRef<Lenis | null>(null)
   const [activeSection, setActiveSection] = useState('profile')
-  const { isMobileDevice } = useMobile()
+  const { isMobile: isMobileView, isMobileDevice } = useMobile()
+
+  // Animated section particles stay fixed behind the scrolling About content.
+  const backdropCanvasRef = useRef<HTMLCanvasElement>(null)
+  useParticleBackdrop(backdropCanvasRef, Boolean(isActive) && !isMobileView, 'vignette')
   const navRefs = useRef<(HTMLSpanElement | null)[]>([])
   const nodeRefs = useRef<(HTMLDivElement | null)[]>([])
   const svgRef = useRef<SVGSVGElement>(null)
@@ -262,9 +267,16 @@ function About({ isActive }: AboutProps) {
 
   return (
     <>
+      {/* Animated particle field, fixed behind the scrolling content. */}
+      <canvas
+        className="particle-backdrop"
+        ref={backdropCanvasRef}
+        aria-hidden
+      />
+
       {/* Terminal-style progress nav */}
       <nav className={`terminal-bar about-nav ${isMobileDevice ? 'is-mobile-device' : ''}`}>
-        <span className="terminal-bar__label">&gt; ABOUT ───</span>
+        <span className="terminal-bar__label">&gt; INDEX ───</span>
         <span className="terminal-bar__bar">
           [
           {SECTIONS.map((s) =>
@@ -431,7 +443,12 @@ function About({ isActive }: AboutProps) {
                       >
                         <strong>{cat.name}</strong>
                         {cat.items.map((item: any) => (
-                          <span className="text-body">▪︎ {item}</span>
+                          <span
+                            className="text-body"
+                            key={`${cat.name}-${item}`}
+                          >
+                            ▪︎ {item}
+                          </span>
                         ))}
                       </div>
                     ))}
@@ -511,15 +528,6 @@ function About({ isActive }: AboutProps) {
                       </a>
                     </p>
                     <p className="btn-contact">
-                      Phone
-                      <a
-                        className="meta text-body"
-                        href={`tel:${contact.phone.replace(/\s/g, '')}`}
-                      >
-                        {contact.phone}
-                      </a>
-                    </p>
-                    <p className="btn-contact">
                       LinkedIn
                       <a
                         className="meta text-body"
@@ -554,13 +562,13 @@ function About({ isActive }: AboutProps) {
               </div>
             </section>
           </div>
-
+          {/*
           <button
             className="btn-resume"
             aria-label="resume-download"
           >
             DOWNLOAD RESUME
-          </button>
+          </button> */}
         </div>
       </div>
     </>

@@ -6,6 +6,7 @@ import WorksPreviewCard from '../WorksPreviewCard'
 
 const work: WorkType = {
   id: 1,
+  projectKey: 'azure-promilia',
   category: 1,
   dept: '',
   game: 'Azure Promilia',
@@ -52,6 +53,20 @@ describe('WorksPreviewCard', () => {
 
     await user.click(container.querySelector('.works-preview')!)
     expect(onClick).toHaveBeenCalledTimes(1)
+  })
+
+  it('Enter와 Space 키로 상세 열기 동작을 실행한다', async () => {
+    const user = userEvent.setup()
+    const onClick = jest.fn()
+    const { getByRole } = render(
+      <WorksPreviewCard work={work} index={0} total={5} active onClick={onClick} />,
+    )
+    const card = getByRole('button', { name: /Open Official Website/ })
+
+    card.focus()
+    await user.keyboard('{Enter}')
+    await user.keyboard(' ')
+    expect(onClick).toHaveBeenCalledTimes(2)
   })
 
   it('ref로 카드 루트 DOM에 접근할 수 있다 (PC 호버 패널의 위치 제어용)', () => {

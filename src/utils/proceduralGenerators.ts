@@ -1,120 +1,209 @@
-import * as THREE from "three";
+import * as THREE from 'three'
 
-export interface StarGeneratorOptions {
-  count: number;
-  radius: number;
-  innerRadiusRatio: number; // For the star shape indent (e.g. 0.4 for a classic 5-point star)
-  points: number; // 5 for a 5-pointed star
-  thickness: number; // Z-axis depth
-  jitter: number; // Random deviation from the mathematical shape
-  rotationOffset?: number; // Internal rotation offset in radians
+export interface CoreParticleOptions {
+  count: number
+  radius: number
+  flattening: number
+  densityBias: number
+  jitter: number
+  palette: string[]
+  warmCoreRatio?: number
 }
 
-export function generateStarParticles(options: StarGeneratorOptions) {
-  const positions = new Float32Array(options.count * 3);
-  const randoms = new Float32Array(options.count); // Optional: individual random seeds per particle
+export interface AccretionDiskOptions {
+  count: number
+  innerRadius: number
+  outerRadius: number
+  ellipseRatio: number
+  thickness: number
+  spiralStrength: number
+  bridgeRatio: number
+  rotation: number
+  core1: [number, number]
+  core2: [number, number]
+  palette: string[]
+  warmCoreColor: string
+}
 
-  const { count, radius, innerRadiusRatio, points, thickness, jitter } = options;
+export interface SignalFieldOptions {
+  count: number
+  width: number
+  height: number
+  depth: number
+  densityBias: number
+  irregularity: number
+  palette: string[]
+}
 
-  for (let i = 0; i < count; i++) {
-    // Determine which of the 'points' (arms of the star) this particle belongs to
-    const pointIndex = Math.floor(Math.random() * points);
-    
-    // Angle range for this arm
-    const angleStep = (Math.PI * 2) / points;
-    const baseAngle = pointIndex * angleStep;
-    
-    // Random angle within the arm (spanning from center to the two valleys)
-    const angleOffset = (Math.random() - 0.5) * angleStep;
-    let a = baseAngle + angleOffset;
+export interface AmbientParticleOptions {
+  count: number
+  spreadX: number
+  spreadY: number
+  depthMin: number
+  depthMax: number
+  palette: string[]
+}
 
-    // Apply internal rotation so the raycaster coordinates perfectly match the geometry
-    if (options.rotationOffset) {
-      a += options.rotationOffset;
+const randomSigned = () => Math.random() * 2 - 1
+
+const randomNormal = () => {
+  const u = Math.random() || 1e-9
+  const v = Math.random() || 1e-9
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(Math.PI * 2 * v)
+}
+
+const writeColor = (target: Float32Array, index: number, color: THREE.Color) => {
+  target[index * 3] = color.r
+  target[index * 3 + 1] = color.g
+  target[index * 3 + 2] = color.b
+}
+
+export function generateCoreParticles(options: CoreParticleOptions) {
+  const positions = new Float32Array(options.count * 3)
+  const randoms = new Float32Array(options.count)
+  const colors = new Float32Array(options.count * 3)
+  const palette = options.palette.map((color) => new THREE.Color(color))
+  const warmCoreRatio = options.warmCoreRatio ?? 0.28
+
+  for (let i = 0; i < options.count; i++) {
+    const theta = Math.random() * Math.PI * 2
+    const cosPhi = randomSigned()
+    const sinPhi = Math.sqrt(Math.max(0, 1 - cosPhi * cosPhi))
+    const normalizedRadius = Math.pow(Math.random(), options.densityBias)
+    const radius = normalizedRadius * options.radius
+    const edgeJitter = options.jitter * (0.25 + normalizedRadius * 0.75)
+
+    positions[i * 3] = radius * sinPhi * Math.cos(theta) + randomSigned() * edgeJitter
+    positions[i * 3 + 1] = radius * sinPhi * Math.sin(theta) + randomSigned() * edgeJitter
+    positions[i * 3 + 2] =
+      radius * cosPhi * options.flattening + randomSigned() * edgeJitter * options.flattening
+    randoms[i] = Math.random()
+
+    const coreWeight = 1 - normalizedRadius
+    const colorIndex =
+      coreWeight > 1 - warmCoreRatio
+        ? 0
+        : Math.min(palette.length - 1, 1 + Math.floor(Math.random() * Math.max(1, palette.length - 1)))
+    writeColor(colors, i, palette[colorIndex] ?? new THREE.Color('#ffffff'))
+  }
+
+  return { positions, randoms, colors }
+}
+
+export function generateAccretionDiskParticles(options: AccretionDiskOptions) {
+  const positions = new Float32Array(options.count * 3)
+  const randoms = new Float32Array(options.count)
+  const colors = new Float32Array(options.count * 3)
+  const palette = options.palette.map((color) => new THREE.Color(color))
+  const warmCoreColor = new THREE.Color(options.warmCoreColor)
+  const bridgeCount = Math.round(options.count * options.bridgeRatio)
+  const haloCount = Math.round(options.count * 0.12)
+  const cosRotation = Math.cos(options.rotation)
+  const sinRotation = Math.sin(options.rotation)
+
+  const setPosition = (index: number, x: number, y: number, z: number) => {
+    positions[index * 3] = x * cosRotation - y * sinRotation
+    positions[index * 3 + 1] = x * sinRotation + y * cosRotation
+    positions[index * 3 + 2] = z
+  }
+
+  for (let i = 0; i < options.count; i++) {
+    randoms[i] = Math.random()
+
+    if (i < bridgeCount) {
+      const t = Math.random()
+      const inverseT = 1 - t
+      const midX = (options.core1[0] + options.core2[0]) * 0.5
+      const midY = (options.core1[1] + options.core2[1]) * 0.5 + 2.1
+      const x =
+        inverseT * inverseT * options.core1[0] +
+        2 * inverseT * t * midX +
+        t * t * options.core2[0] +
+        randomSigned() * 0.65
+      const y =
+        inverseT * inverseT * options.core1[1] +
+        2 * inverseT * t * midY +
+        t * t * options.core2[1] +
+        randomSigned() * 0.38
+      positions[i * 3] = x
+      positions[i * 3 + 1] = y
+      positions[i * 3 + 2] = randomSigned() * options.thickness * 0.35
+      writeColor(colors, i, Math.random() < 0.16 ? warmCoreColor : palette[0])
+      continue
     }
 
-    // To get straight edges, we use the polar equation of a line segment 
-    // connecting the outer tip (radius) to the inner valley (radius * innerRadiusRatio).
-    const innerRadius = radius * innerRadiusRatio;
-    
-    // Math to find the radius of the straight line edge at exactly 'angleOffset'
-    const theta = Math.abs(angleOffset); // Symmetrical around the arm axis
-    const halfAngleStep = angleStep / 2;
-    
-    // Polar equation of a line between (radius, 0) and (innerRadius, halfAngleStep)
-    const numerator = radius * innerRadius * Math.sin(halfAngleStep);
-    const denominator = radius * Math.sin(theta) + innerRadius * Math.sin(halfAngleStep - theta);
-    
-    const maxR = numerator / denominator;
+    const isHalo = i >= options.count - haloCount
+    const radialProgress = isHalo
+      ? 0.58 + Math.random() * 0.42
+      : Math.pow(Math.random(), 1.18)
+    const radius = options.innerRadius + (options.outerRadius - options.innerRadius) * radialProgress
+    const arm = i % 2
+    const armWidth = isHalo ? Math.PI : 0.28 + radialProgress * 0.48
+    const angle = isHalo
+      ? Math.random() * Math.PI * 2
+      : arm * Math.PI + radialProgress * options.spiralStrength * Math.PI * 2 + randomSigned() * armWidth
+    const radialNoise = randomSigned() * (0.18 + radialProgress * 0.7)
+    const x = (radius + radialNoise) * Math.cos(angle)
+    const y = (radius + radialNoise) * Math.sin(angle) * options.ellipseRatio
+    const zSpread = options.thickness * (1 - radialProgress * 0.72)
 
-    // Direct placement: square root ensures uniform density within the 2D polygon shape
-    const r = Math.pow(Math.random(), 0.5) * maxR;
+    setPosition(i, x, y, randomSigned() * zSpread)
 
-    // Calculate distance factor from center (0 = center, 1 = edge tip)
-    const distFactor = r / maxR;
-    
-    // Apply 3D thickness: dense/bulging in the center, tapering off to zero thickness at the sharp tips
-    // This creates a 3D cushion/bevel effect instead of a flat cookie-cutter shape.
-    const currentZThickness = thickness * (1.0 - Math.pow(distFactor, 1.5)); 
-    let z = (Math.random() - 0.5 + Math.random() - 0.5) * currentZThickness;
-
-    // Add noise jitter using 3D random vector
-    // Scale jitter down near the edges to preserve sharp points
-    const rx = (Math.random() - 0.5) * jitter;
-    const ry = (Math.random() - 0.5) * jitter;
-    const rz = (Math.random() - 0.5) * jitter;
-
-    positions[i * 3 + 0] = r * Math.cos(a) + rx;
-    positions[i * 3 + 1] = r * Math.sin(a) + ry;
-    positions[i * 3 + 2] = z + rz;
-
-    randoms[i] = Math.random();
+    const nearCenter = radialProgress < 0.24
+    const paletteIndex = Math.floor(Math.random() * palette.length)
+    writeColor(colors, i, nearCenter && Math.random() < 0.14 ? warmCoreColor : palette[paletteIndex])
   }
 
-  return { positions, randoms };
+  return { positions, randoms, colors }
 }
 
+export function generateSignalFieldParticles(options: SignalFieldOptions) {
+  const positions = new Float32Array(options.count * 3)
+  const randoms = new Float32Array(options.count)
+  const colors = new Float32Array(options.count * 3)
+  const palette = options.palette.map((color) => new THREE.Color(color))
 
-export interface NebulaGeneratorOptions {
-  count: number;
-  radiusBase: number; // Inner empty area roughly
-  radiusSpread: number; // How far it spreads outward
-  thickness: number; // Z-axis depth (cloud thickness)
-}
+  for (let i = 0; i < options.count; i++) {
+    const seed = Math.random()
+    const angle = Math.random() * Math.PI * 2
+    const radius = Math.pow(Math.random(), options.densityBias)
+    const boundaryWarp =
+      1 +
+      Math.sin(angle * 3 + 0.35) * options.irregularity * 0.7 +
+      Math.sin(angle * 5 - 0.8) * options.irregularity * 0.42 +
+      Math.cos(angle * 2 + 1.2) * options.irregularity * 0.3
+    const warpedRadius = Math.max(0, radius * boundaryWarp)
+    const innerTurbulence = (1 - radius) * options.irregularity * 0.09
 
-export function generateNebulaParticles(options: NebulaGeneratorOptions) {
-  const positions = new Float32Array(options.count * 3);
-  const randoms = new Float32Array(options.count);
-  const colors = new Float32Array(options.count * 3); // Per-particle colors
-
-  const { count, radiusBase, radiusSpread, thickness } = options;
-
-  // Pre-define the 3 aesthetic colors requested by user
-  const palette = [
-    // new THREE.Color("#dedde7"), 
-    // new THREE.Color("#c7c5d2"),
-    // new THREE.Color("#9e9cb0"),
-    new THREE.Color("#ffffff"),
-  ];
-
-  for (let i = 0; i < count; i++) {
-    // 화면 전체에 균일하게 퍼지도록 직교좌표 랜덤 분포
-    const totalSpread = radiusBase + radiusSpread;
-    const x = (Math.random() - 0.5) * 2.0 * totalSpread;
-    const y = (Math.random() - 0.5) * 2.0 * totalSpread;
-    const z = (Math.random() - 0.5) * thickness;
-
-    positions[i * 3 + 0] = x;
-    positions[i * 3 + 1] = y;
-    positions[i * 3 + 2] = z;
-    randoms[i] = Math.random();
-
-    // Assign random color from palette
-    const color = palette[Math.floor(Math.random() * palette.length)];
-    colors[i * 3 + 0] = color.r;
-    colors[i * 3 + 1] = color.g;
-    colors[i * 3 + 2] = color.b;
+    const x = Math.cos(angle) * warpedRadius * options.width * 0.5 + randomNormal() * options.width * innerTurbulence
+    const y = Math.sin(angle) * warpedRadius * options.height * 0.5 + randomNormal() * options.height * innerTurbulence
+    positions[i * 3] = Math.max(-options.width * 0.545, Math.min(options.width * 0.545, x))
+    positions[i * 3 + 1] = Math.max(-options.height * 0.62, Math.min(options.height * 0.62, y))
+    positions[i * 3 + 2] = Math.max(
+      -options.depth,
+      Math.min(options.depth, randomNormal() * options.depth * (0.16 + (1 - radius) * 0.2)),
+    )
+    randoms[i] = seed
+    writeColor(colors, i, palette[Math.floor(seed * palette.length)] ?? new THREE.Color('#aeb4bc'))
   }
 
-  return { positions, randoms, colors };
+  return { positions, randoms, colors }
+}
+
+export function generateAmbientParticles(options: AmbientParticleOptions) {
+  const positions = new Float32Array(options.count * 3)
+  const randoms = new Float32Array(options.count)
+  const colors = new Float32Array(options.count * 3)
+  const palette = options.palette.map((color) => new THREE.Color(color))
+  const depthRange = options.depthMax - options.depthMin
+
+  for (let i = 0; i < options.count; i++) {
+    positions[i * 3] = randomSigned() * options.spreadX
+    positions[i * 3 + 1] = randomSigned() * options.spreadY
+    positions[i * 3 + 2] = options.depthMin + Math.random() * depthRange
+    randoms[i] = Math.random()
+    writeColor(colors, i, palette[Math.floor(Math.random() * palette.length)] ?? new THREE.Color('#77808c'))
+  }
+
+  return { positions, randoms, colors }
 }

@@ -1,117 +1,189 @@
 import {
-  generateNebulaParticles,
-  generateStarParticles,
-  type StarGeneratorOptions,
+  generateAccretionDiskParticles,
+  generateAmbientParticles,
+  generateCoreParticles,
+  generateSignalFieldParticles,
+  type AccretionDiskOptions,
+  type CoreParticleOptions,
+  type SignalFieldOptions,
 } from '../proceduralGenerators'
 
-// 랜덤 기반 생성기라 값 자체가 아니라 "불변 조건"을 검증한다:
-// 버퍼 길이, 유한성(NaN/Infinity 없음), 기하학적 범위.
-describe('generateStarParticles', () => {
-  const baseOptions: StarGeneratorOptions = {
+describe('generateCoreParticles', () => {
+  const baseOptions: CoreParticleOptions = {
     count: 1000,
-    radius: 8.5,
-    innerRadiusRatio: 0.6,
-    points: 5,
-    thickness: 4.5,
-    jitter: 0.4,
+    radius: 3.8,
+    flattening: 0.62,
+    densityBias: 1.75,
+    jitter: 0.18,
+    palette: ['#f0d7a2', '#f5f7fa', '#aeb8c6'],
   }
 
-  it('positions는 count*3, randoms는 count 길이의 버퍼를 만든다', () => {
-    const { positions, randoms } = generateStarParticles(baseOptions)
-    expect(positions).toBeInstanceOf(Float32Array)
-    expect(positions).toHaveLength(baseOptions.count * 3)
-    expect(randoms).toHaveLength(baseOptions.count)
-  })
-
-  it('모든 좌표가 유한한 수다 (NaN/Infinity 없음)', () => {
-    const { positions, randoms } = generateStarParticles(baseOptions)
-    expect(positions.every(Number.isFinite)).toBe(true)
-    expect(randoms.every(Number.isFinite)).toBe(true)
-  })
-
-  it('XY 평면에서 별 외접원(radius + jitter)을 벗어나지 않는다', () => {
-    const { positions } = generateStarParticles(baseOptions)
-    const limit = baseOptions.radius + baseOptions.jitter
-    for (let i = 0; i < baseOptions.count; i++) {
-      const x = positions[i * 3]
-      const y = positions[i * 3 + 1]
-      expect(Math.hypot(x, y)).toBeLessThanOrEqual(limit)
-    }
-  })
-
-  it('Z 깊이가 thickness + jitter 범위 안에 있다', () => {
-    const { positions } = generateStarParticles(baseOptions)
-    // z = (rand-0.5 + rand-0.5) * currentZThickness → |z| ≤ thickness, + jitter/2
-    const limit = baseOptions.thickness + baseOptions.jitter
-    for (let i = 0; i < baseOptions.count; i++) {
-      expect(Math.abs(positions[i * 3 + 2])).toBeLessThanOrEqual(limit)
-    }
-  })
-
-  it('randoms는 [0, 1) 구간의 시드다', () => {
-    const { randoms } = generateStarParticles(baseOptions)
-    for (const r of randoms) {
-      expect(r).toBeGreaterThanOrEqual(0)
-      expect(r).toBeLessThan(1)
-    }
-  })
-
-  it('rotationOffset을 줘도 반경 불변 조건이 유지된다', () => {
-    const { positions } = generateStarParticles({
-      ...baseOptions,
-      rotationOffset: Math.PI / 2 + 0.3, // heroConfig에서 실제 사용하는 값
-    })
-    const limit = baseOptions.radius + baseOptions.jitter
-    for (let i = 0; i < baseOptions.count; i++) {
-      const x = positions[i * 3]
-      const y = positions[i * 3 + 1]
-      expect(Math.hypot(x, y)).toBeLessThanOrEqual(limit)
-      expect(Number.isFinite(positions[i * 3 + 2])).toBe(true)
-    }
-  })
-
-  it('count 0이면 빈 버퍼를 돌려준다', () => {
-    const { positions, randoms } = generateStarParticles({ ...baseOptions, count: 0 })
-    expect(positions).toHaveLength(0)
-    expect(randoms).toHaveLength(0)
-  })
-})
-
-describe('generateNebulaParticles', () => {
-  const baseOptions = {
-    count: 500,
-    radiusBase: 0,
-    radiusSpread: 50,
-    thickness: 0,
-  }
-
-  it('positions/randoms/colors 버퍼 길이가 맞는다', () => {
-    const { positions, randoms, colors } = generateNebulaParticles(baseOptions)
+  it('creates correctly sized finite buffers', () => {
+    const { positions, randoms, colors } = generateCoreParticles(baseOptions)
     expect(positions).toHaveLength(baseOptions.count * 3)
     expect(randoms).toHaveLength(baseOptions.count)
     expect(colors).toHaveLength(baseOptions.count * 3)
+    expect(positions.every(Number.isFinite)).toBe(true)
+    expect(colors.every(Number.isFinite)).toBe(true)
   })
 
-  it('XY가 전체 스프레드(radiusBase + radiusSpread) 안에 균일 분포한다', () => {
-    const { positions } = generateNebulaParticles(baseOptions)
-    const spread = baseOptions.radiusBase + baseOptions.radiusSpread
+  it('keeps particles within the configured volume', () => {
+    const { positions } = generateCoreParticles(baseOptions)
+    const limit = baseOptions.radius + baseOptions.jitter * 2
     for (let i = 0; i < baseOptions.count; i++) {
-      expect(Math.abs(positions[i * 3])).toBeLessThanOrEqual(spread)
-      expect(Math.abs(positions[i * 3 + 1])).toBeLessThanOrEqual(spread)
+      expect(Math.hypot(positions[i * 3], positions[i * 3 + 1])).toBeLessThanOrEqual(limit)
+      expect(Math.abs(positions[i * 3 + 2])).toBeLessThanOrEqual(limit * baseOptions.flattening)
     }
   })
 
-  it('thickness 0이면 Z는 전부 0이다 (평면 분포)', () => {
-    const { positions } = generateNebulaParticles(baseOptions)
+  it('keeps random seeds and colors in the normalized range', () => {
+    const { randoms, colors } = generateCoreParticles(baseOptions)
+    for (const value of [...randoms, ...colors]) {
+      expect(value).toBeGreaterThanOrEqual(0)
+      expect(value).toBeLessThanOrEqual(1)
+    }
+  })
+
+  it('returns empty buffers for count 0', () => {
+    const result = generateCoreParticles({ ...baseOptions, count: 0 })
+    expect(result.positions).toHaveLength(0)
+    expect(result.randoms).toHaveLength(0)
+    expect(result.colors).toHaveLength(0)
+  })
+})
+
+describe('generateAmbientParticles', () => {
+  const options = {
+    count: 900,
+    spreadX: 34,
+    spreadY: 22,
+    depthMin: -14,
+    depthMax: -3,
+    palette: ['#8f98a4', '#66707d', '#aeb4bc'],
+  }
+
+  it('creates finite buffers inside the configured volume', () => {
+    const { positions, randoms, colors } = generateAmbientParticles(options)
+    expect(positions).toHaveLength(options.count * 3)
+    expect(randoms).toHaveLength(options.count)
+    expect(colors).toHaveLength(options.count * 3)
+    expect(positions.every(Number.isFinite)).toBe(true)
+
+    for (let i = 0; i < options.count; i++) {
+      expect(Math.abs(positions[i * 3])).toBeLessThanOrEqual(options.spreadX)
+      expect(Math.abs(positions[i * 3 + 1])).toBeLessThanOrEqual(options.spreadY)
+      expect(positions[i * 3 + 2]).toBeGreaterThanOrEqual(options.depthMin)
+      expect(positions[i * 3 + 2]).toBeLessThanOrEqual(options.depthMax)
+    }
+  })
+
+  it('returns empty buffers for count 0', () => {
+    const result = generateAmbientParticles({ ...options, count: 0 })
+    expect(result.positions).toHaveLength(0)
+    expect(result.randoms).toHaveLength(0)
+    expect(result.colors).toHaveLength(0)
+  })
+})
+
+describe('generateSignalFieldParticles', () => {
+  const options: SignalFieldOptions = {
+    count: 760,
+    width: 24,
+    height: 6.4,
+    depth: 1.8,
+    densityBias: 1.65,
+    irregularity: 0.24,
+    palette: ['#f1f3f5', '#89929d', '#626b76'],
+  }
+
+  it('creates finite buffers with normalized colors', () => {
+    const { positions, randoms, colors } = generateSignalFieldParticles(options)
+    expect(positions).toHaveLength(options.count * 3)
+    expect(randoms).toHaveLength(options.count)
+    expect(colors).toHaveLength(options.count * 3)
+    expect(positions.every(Number.isFinite)).toBe(true)
+    for (const value of [...randoms, ...colors]) {
+      expect(value).toBeGreaterThanOrEqual(0)
+      expect(value).toBeLessThanOrEqual(1)
+    }
+  })
+
+  it('keeps the field inside its configured volume', () => {
+    const { positions } = generateSignalFieldParticles(options)
+    for (let i = 0; i < options.count; i++) {
+      expect(Math.abs(positions[i * 3])).toBeLessThanOrEqual(options.width * 0.55)
+      expect(Math.abs(positions[i * 3 + 1])).toBeLessThanOrEqual(options.height)
+      expect(Math.abs(positions[i * 3 + 2])).toBeLessThanOrEqual(options.depth)
+    }
+  })
+
+  it('keeps the center denser than equal-width outer regions', () => {
+    const denseField = generateSignalFieldParticles({ ...options, count: 6000 })
+    let centerCount = 0
+    let outerCount = 0
+
+    for (let i = 0; i < 6000; i++) {
+      const normalizedX = Math.abs(denseField.positions[i * 3]) / options.width
+      if (normalizedX < 0.15) centerCount++
+      else if (normalizedX > 0.35) outerCount++
+    }
+
+    expect(centerCount).toBeGreaterThan(outerCount * 1.2)
+  })
+
+  it('returns empty buffers for count 0', () => {
+    const result = generateSignalFieldParticles({ ...options, count: 0 })
+    expect(result.positions).toHaveLength(0)
+    expect(result.randoms).toHaveLength(0)
+    expect(result.colors).toHaveLength(0)
+  })
+})
+
+describe('generateAccretionDiskParticles', () => {
+  const baseOptions: AccretionDiskOptions = {
+    count: 1100,
+    innerRadius: 1.6,
+    outerRadius: 15,
+    ellipseRatio: 0.42,
+    thickness: 1.8,
+    spiralStrength: 1.25,
+    bridgeRatio: 0.16,
+    rotation: -0.18,
+    core1: [-3.8, -0.8],
+    core2: [4.3, 1.5],
+    palette: ['#f4f6f8', '#b9c2ce', '#7f8997'],
+    warmCoreColor: '#e8c78d',
+  }
+
+  it('creates correctly sized finite buffers', () => {
+    const { positions, randoms, colors } = generateAccretionDiskParticles(baseOptions)
+    expect(positions).toHaveLength(baseOptions.count * 3)
+    expect(randoms).toHaveLength(baseOptions.count)
+    expect(colors).toHaveLength(baseOptions.count * 3)
+    expect(positions.every(Number.isFinite)).toBe(true)
+  })
+
+  it('keeps the disk inside its outer radius plus arm noise', () => {
+    const { positions } = generateAccretionDiskParticles(baseOptions)
+    const limit = baseOptions.outerRadius + 1
     for (let i = 0; i < baseOptions.count; i++) {
-      expect(positions[i * 3 + 2]).toBeCloseTo(0)
+      expect(Math.hypot(positions[i * 3], positions[i * 3 + 1])).toBeLessThanOrEqual(limit)
+      expect(Math.abs(positions[i * 3 + 2])).toBeLessThanOrEqual(baseOptions.thickness)
     }
   })
 
-  it('컬러는 흰색 팔레트(r=g=b=1)에서 나온다', () => {
-    const { colors } = generateNebulaParticles(baseOptions)
-    for (const c of colors) {
-      expect(c).toBeCloseTo(1)
+  it('keeps colors in the normalized range', () => {
+    const { colors } = generateAccretionDiskParticles(baseOptions)
+    for (const value of colors) {
+      expect(value).toBeGreaterThanOrEqual(0)
+      expect(value).toBeLessThanOrEqual(1)
     }
+  })
+
+  it('returns empty buffers for count 0', () => {
+    const result = generateAccretionDiskParticles({ ...baseOptions, count: 0 })
+    expect(result.positions).toHaveLength(0)
+    expect(result.randoms).toHaveLength(0)
+    expect(result.colors).toHaveLength(0)
   })
 })

@@ -1,5 +1,12 @@
 export type LangType = 'ko' | 'en'
 
+export type ProjectKey =
+  | 'azure-promilia'
+  | 'mabinogi-heroes-dev-environment'
+  | 'mabinogi-heroes-operations-automation'
+  | 'mabinogi-mobile-preregistration'
+  | 'baram-gallery'
+
 /** Works detail의 구조화된 성과 블록 (배경/해결/결과 등) */
 export type WorkHighlight = {
   title: string
@@ -29,6 +36,7 @@ export type SubProjectType = WorksListRowItem
 /** works.selectedProject(translation.json)의 프로젝트 항목 — Works 화면과 ui 컴포넌트가 공유 */
 export type WorkType = {
   id: number
+  projectKey: ProjectKey
   category: number
   dept: string
   game: string

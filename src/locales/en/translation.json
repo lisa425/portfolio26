@@ -19,19 +19,33 @@
     "body": "This page is designed for desktop browsers.\nFor the intended layout and interactions,\nplease open it on a screen at least 1000px wide."
   },
   "works": {
-    "items": [
+    "selectedProject": [
       {
         "id": 1,
+        "projectKey": "azure-promilia",
         "category": 1,
         "game": "Azure Promilia",
         "title": "Official Website & 1st Pre-registration",
-        "intro": "",
         "date": "2025.11 - 2025.12",
         "description": [
-          { "title": "Led the full project from architecture design as the sole frontend engineer", "p": [] },
-          { "title": "Designed a BFF layer using Next.js Route Handlers to proxy external APIs and centralise request validation", "p": [] },
-          { "title": "Delivered on a 50% compressed timeline by adopting a rolling design-to-development handoff, enabling parallel workstreams across design, development, and QA", "p": [] },
-          { "title": "Built interactions for contents from scratch, tuning each animation to fit the game's visual identity", "p": [] }
+          {
+            "title": "Delivered within a 50% shortened web-development schedule by proposing an FE-led response plan to PMs and designers and adapting implementation throughout the project",
+            "p": []
+          },
+          {
+            "title": "Introduced a BFF layer with Next.js Route Handlers, centralising shared API integration and response-code handling in the frontend server",
+            "p": [
+              "reduced maintenance costs for API specification changes and validation while simplifying connections to event APIs"
+            ]
+          },
+          {
+            "title": "Resolved network load from multiple videos, including a 200MB asset, by validating CDN delivery types and introducing HLS streaming on mobile",
+            "p": ["reduced video delay from 10 seconds to 3 seconds"]
+          },
+          {
+            "title": "Applied Mobile First sizing to UI components and CSS max() to image assets according to their purpose",
+            "p": ["preserved design intent without layout breakage across screen sizes"]
+          }
         ],
         "stack": "Next.js",
         "thumbnail": "/assets/images/az_thumb1.jpg",
@@ -41,83 +55,150 @@
           "/assets/images/az_img3.jpg",
           "/assets/images/az_img4.jpg"
         ],
-        "url": "https://azurpromilia.nexon.com/events/2025/12/preregistration"
+        "url": "https://azurpromilia.nexon.com/events/2025/12/preregistration",
+        "dept": "NEXON",
+        "intro": ""
       },
       {
         "id": 2,
+        "projectKey": "mabinogi-heroes-dev-environment",
+        "category": 1,
+        "game": "Mabinogi Heroes",
+        "title": "Shared Frontend Development Environment",
+        "date": "2026.01 - 2026.03",
+        "description": [
+          {
+            "title": "Replaced separate Webpack + JavaScript setups with a shared React + Vite development environment",
+            "p": []
+          },
+          {
+            "title": "Systematised recurring work through event templates, a development CLI, and shared components",
+            "p": ["reduced project setup time by 85%, from roughly one hour to under ten minutes"]
+          },
+          {
+            "title": "Connected deployment pipelines spread across five channels to the development environment",
+            "p": ["reduced deployment time by about 80%, from over 30 minutes to under five minutes"]
+          },
+          {
+            "title": "Added an optional build-time image compression process that removes duplicate pixels",
+            "p": ["reduced resource size by up to 80% while preventing unnecessary quality loss"]
+          },
+          {
+            "title": "Standardised a custom image-load detection hook",
+            "p": ["improved page-loading UX across projects"]
+          },
+          {
+            "title": "Documented project conventions for a Claude-assisted development environment",
+            "p": ["improved consistency while preserving developer autonomy"]
+          }
+        ],
+        "stack": "React · TypeScript · Vite · Zustand · GSAP · Claude Code",
+        "thumbnail": "/assets/images/heroes_img1.jpg",
+        "img": [],
+        "url": "",
+        "dept": "NEXON",
+        "intro": ""
+      },
+      {
+        "id": 3,
+        "projectKey": "mabinogi-heroes-operations-automation",
+        "category": 1,
+        "game": "Mabinogi Heroes",
+        "title": "Operations Workflow Automation",
+        "date": "2026.03 - 2026.04",
+        "description": [
+          {
+            "title": "Proposed and developed a content-generation tool to remove bottlenecks from repetitive live-operations work",
+            "p": []
+          },
+          {
+            "title": "Identified the design rules required for implementation, presented them to designers, and refined the rules collaboratively",
+            "p": []
+          },
+          {
+            "title": "Integrated the Figma API to scan components and layers created under the agreed design rules and automatically generate HTML content",
+            "p": []
+          },
+          {
+            "title": "Built a single tool to scan and classify source files, create content URLs, deploy by rule, and share Jira tickets across the complete workflow",
+            "p": []
+          },
+          {
+            "title": "Reduced operations turnaround time by approximately 92%, from an average of one hour per task to under five minutes",
+            "p": []
+          }
+        ],
+        "stack": "React · TypeScript · Vite · GSAP · Claude Code · Figma API · Jira Ticket",
+        "thumbnail": "/assets/images/heroes_img2.jpg",
+        "img": [],
+        "url": "",
+        "dept": "NEXON",
+        "intro": ""
+      },
+      {
+        "id": 4,
+        "projectKey": "mabinogi-mobile-preregistration",
+        "category": 1,
+        "game": "Mabinogi Mobile",
+        "title": "Launch Pre-registration Event",
+        "date": "2024.12 - 2025.02",
+        "description": [
+          {
+            "title": "Needed to deliver multiple high-resolution alpha-channel videos, but APNG caused heavy page loads while Canvas chroma keying created frame-by-frame thread overhead",
+            "p": []
+          },
+          {
+            "title": "Evaluated APNG, Canvas chroma keying, Lottie, WebM Alpha, and HEVC Alpha, then designed a browser-specific dual-format HEVC/WebM strategy",
+            "p": ["reduced resource size by 70% compared with APNG while maintaining cross-browser support"]
+          },
+          {
+            "title": "Implemented semantic markup, descriptive image alt text, and SEO-oriented event summaries",
+            "p": ["improved search visibility and screen-reader support"]
+          },
+          {
+            "title": "Proposed keyboard-based page navigation in addition to mouse interaction",
+            "p": ["improved overall web usability"]
+          }
+        ],
+        "stack": "HTML · CSS · JavaScript",
+        "thumbnail": "/assets/images/mm_pre_thumb.jpg",
+        "img": [
+          "/assets/images/mm_pre_img1.jpeg",
+          "/assets/images/mm_pre_img2.jpeg",
+          "/assets/images/mm_pre_img3.jpeg",
+          "/assets/images/mm_pre_img4.jpeg"
+        ],
+        "url": "",
+        "dept": "NEXON",
+        "intro": ""
+      },
+      {
+        "id": 5,
+        "projectKey": "baram-gallery",
         "category": 1,
         "game": "Baram",
         "title": "Archer Remaster Teaser:\n21st Anniversary Illustration Gallery",
-        "intro": "",
         "date": "2022.11 - 2022.12",
         "description": [
-          { "title": "Built a 3D gallery from scratch to showcase 21 years of brand illustrations", "p": [] },
-          { "title": "Consolidated 162 VBOs into a single draw call via shared geometry instancing, significantly reducing GPU memory overhead", "p": [] },
-          { "title": "Developed scroll-driven interaction logic for gallery rotation and year-counting animations with GSAP", "p": [] },
-          { "title": "Stabilising input responsiveness through debouncing", "p": [] }
+          {
+            "title": "Designed and built the complete Three.js 3D web gallery and its GSAP-powered scroll interactions",
+            "p": []
+          },
+          {
+            "title": "The initial implementation recalculated gallery rotation and position on every scroll event, causing excessive computation",
+            "p": ["applied throttling to suppress redundant consecutive calculations and stabilise scroll handling"]
+          },
+          {
+            "title": "Replaced 162 individually rendered Plane meshes with InstancedMesh",
+            "p": ["reduced draw calls from 162 to 1 and improved frame stability"]
+          }
         ],
         "stack": "HTML · CSS · JavaScript · Three.js · GSAP",
         "thumbnail": "/assets/images/br_thumb1.jpg",
         "img": ["/assets/images/br_img1.jpg", "/assets/images/br_img2.jpg", "/assets/images/br_img3.jpg"],
-        "url": "https://baram.nexon.com/E221215/Intro"
-      },
-      {
-        "id": 3,
-        "category": 1,
-        "game": "Blue Archive",
-        "title": "Code:BOX-The Shadow Approaching Millennum",
-        "intro": "",
-        "date": "2025.07",
-        "description": [
-          { "title": "Built an immersive interactive web experience from scratch around the game's futuristic sci-fi aesthetic, tuning animation timing and transitions to stay true to its visual identity", "p": [] },
-          { "title": "Delivered multilingual support across Korean, English, and Thai for a large-scale global audience", "p": [] }
-        ],
-        "stack": "Nuxt.js",
-        "thumbnail": "/assets/images/ba_thumb1.jpg",
-        "img": [
-          "/assets/images/ba_img1.jpg",
-          "/assets/images/ba_img2.jpg",
-          "/assets/images/ba_img3.jpg",
-          "/assets/images/ba_img4.jpg"
-        ],
-        "url": "https://bluearchive.nexon.com/events/2025/07/update"
-      },
-      {
-        "id": 4,
-        "category": 1,
-        "game": "Vindictus",
-        "title": "New Character 'Neamhain' Update",
-        "intro": "",
-        "date": "2025.01",
-        "description": [
-          { "title": "Designed and built an informational character page from scratch for the North American market", "p": [] },
-          { "title": "Crafted web animations to guide user attention and express the character's identity, with motion pacing shaped around the page's narrative structure", "p": [] }
-        ],
-        "stack": "React · TypeScript",
-        "thumbnail": "/assets/images/vd_thumb1.jpg",
-        "img": [
-          "/assets/images/vd_img1.jpg",
-          "/assets/images/vd_img2.jpg",
-          "/assets/images/vd_img3.jpg",
-          "/assets/images/vd_img4.jpg"
-        ],
-        "url": "http://vindictus.nexon.net/event/2025/0121/neamhain"
-      },
-      {
-        "id": 5,
-        "category": 1,
-        "game": "Mabinogi Mobile",
-        "title": "1st Anniversary Festival",
-        "intro": "",
-        "date": "2026.03",
-        "description": [
-          { "title": "Built an anniversary intro page featuring spring-themed particle graphics, with animation sequences designed to set the tone for the update", "p": [] },
-          { "title": "Implemented adaptive layouts and animations across mobile and PC to ensure a consistent experience on all screen sizes", "p": [] }
-        ],
-        "stack": "React · TypeScript",
-        "thumbnail": "/assets/images/mm_thumb1.jpg",
-        "img": ["/assets/images/mm_img1.jpg", "/assets/images/mm_img2.jpg", "/assets/images/mm_img3.jpg"],
-        "url": "https://mabinogimobile.nexon.com/events2026/0326/1stanniversary"
+        "url": "https://baram.nexon.com/E221215/Intro",
+        "dept": "NEXON",
+        "intro": ""
       }
     ]
   },

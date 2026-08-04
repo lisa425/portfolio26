@@ -10,6 +10,7 @@ import WorksPreviewCard from './WorksPreviewCard'
  */
 const sampleWork: WorkType = {
   id: 1,
+  projectKey: 'azure-promilia',
   category: 1,
   dept: '',
   game: 'Azure Promilia',

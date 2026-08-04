@@ -11,16 +11,17 @@
     color: rgba($text-primary, 0.65);
     letter-spacing: 0.08em;
     margin-bottom: 1.2rem;
+    padding: 0 2rem;
   }
 
   // 헤더 행과 데이터 행이 같은 컬럼 트랙을 공유
   &__head,
   &__row {
     display: grid;
-    grid-template-columns: 3.5rem minmax(0, 2.4fr) 0.8fr 1.4fr 1.1fr;
+    grid-template-columns: 0.2fr 2fr 0.35fr 0.9fr 0.4fr;
     gap: 1.2rem;
     align-items: baseline;
-    padding: 0.9rem 0.2rem;
+    padding: 0.9rem 2rem;
   }
 
   &__head {
@@ -48,11 +49,7 @@
   &__row--clickable {
     cursor: pointer;
     background: rgba($text-primary, 0.03);
-    box-shadow: inset 2px 0 0 0 rgba($text-primary, 0.2);
-    transition:
-      background-color 0.2s ease,
-      box-shadow 0.2s ease;
-
+    transition: background-color 0.2s ease;
     .sub-list__name {
       color: $text-primary;
     }
@@ -60,7 +57,6 @@
     &:hover,
     &:focus-visible {
       background: rgba($text-primary, 0.07);
-      box-shadow: inset 2px 0 0 0 rgba($text-primary, 0.5);
     }
 
     &:focus-visible {
@@ -102,7 +98,6 @@
 
   &__link {
     font-size: max(vw(10, 1920), 10px);
-    text-align: right;
 
     a {
       color: rgba($text-primary, 0.55);

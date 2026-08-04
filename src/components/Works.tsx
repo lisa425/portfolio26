@@ -5,10 +5,11 @@ import { SplitText } from 'gsap/SplitText'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { createPortal } from 'react-dom'
 import { useMobile } from '../hooks/useMobile'
+import { useParticleBackdrop } from '../hooks/useParticleBackdrop'
 import { renderText } from '../utils/renderText'
 import Lenis from 'lenis'
-import type { SubProjectType, WorksListRowItem, WorkType } from '../types'
-import { WorkDetailImage, WorksPreviewCard, WorksSubList } from './ui'
+import type { ProjectKey, SubProjectType, WorksListRowItem, WorkType } from '../types'
+import { WorksPreviewCard, WorksSubList } from './ui'
 import worksStyles from './Works.module.scss'
 
 gsap.registerPlugin(SplitText, ScrollTrigger)
@@ -21,6 +22,224 @@ interface WorksProps {
 const CATEGORY_MAP: Record<number, string> = {
   0: 'Personal_work',
   1: 'Nexon',
+}
+
+type ProcessVisualConfig = {
+  variant: 'linear' | 'branch'
+  stages: { label: string; detail: string }[]
+  insight: { label: string; from: string; to: string }
+  metrics: { value: string; label: string }[]
+  ariaLabel: string
+}
+
+const PROCESS_VISUALS: Partial<Record<ProjectKey, ProcessVisualConfig>> = {
+  'mabinogi-heroes-dev-environment': {
+    variant: 'linear',
+    stages: [
+      { label: 'INIT / TEMPLATE', detail: 'START FROM SHARED TEMPLATE / LOAD COMMON COMPONENTS' },
+      { label: 'BUILD', detail: 'OPTIONAL IMAGE COMPRESSION PIPELINE' },
+      { label: 'DEPLOY', detail: 'FIVE CHANNELS CONNECTED TO ONE FLOW' },
+    ],
+    insight: { label: 'DEPLOYMENT CONSOLIDATION', from: '5 CHANNELS', to: '1 PIPELINE' },
+    metrics: [
+      { value: '-85%', label: 'SETUP' },
+      { value: '-80%', label: 'DEPLOY' },
+      { value: '-80%', label: 'ASSET' },
+    ],
+    ariaLabel:
+      'Development pipeline starting from a shared template and reusable common components, followed by build and deploy, with setup, deploy, and asset improvements.',
+  },
+  'mabinogi-heroes-operations-automation': {
+    variant: 'linear',
+    stages: [
+      { label: 'FIGMA API', detail: 'SCAN RULE-BASED COMPONENTS + LAYERS' },
+      { label: 'HTML GENERATION', detail: 'GENERATE CONTENT MARKUP AUTOMATICALLY' },
+      { label: 'URL', detail: 'CLASSIFY SOURCE FILES + CREATE URLS' },
+      { label: 'DEPLOY', detail: 'RELEASE CONTENT BY CHANNEL RULE' },
+      { label: 'JIRA', detail: 'SHARE DELIVERY TICKET IN THE SAME FLOW' },
+    ],
+    insight: { label: 'OPERATION TIME / TASK', from: '60 MIN', to: '< 5 MIN' },
+    metrics: [{ value: '-92%', label: 'TIME' }],
+    ariaLabel:
+      'Operations automation pipeline from Figma API through HTML generation, URL creation, deployment, and Jira.',
+  },
+  'mabinogi-mobile-preregistration': {
+    variant: 'branch',
+    stages: [
+      { label: 'SOURCE', detail: 'HIGH-RESOLUTION ALPHA VIDEO' },
+      { label: 'BROWSER CHECK', detail: 'SELECT FORMAT BY RUNTIME SUPPORT' },
+      { label: 'HEVC', detail: 'ALPHA VIDEO FOR SAFARI + APPLE' },
+      { label: 'WEBM', detail: 'ALPHA VIDEO FOR CHROMIUM + FIREFOX' },
+      { label: 'DELIVERY', detail: 'CROSS-BROWSER ALPHA PLAYBACK' },
+    ],
+    insight: { label: 'FORMAT DECISION', from: '5 OPTIONS', to: '2 FORMATS' },
+    metrics: [{ value: '-70%', label: 'PAYLOAD' }],
+    ariaLabel:
+      'Alpha video delivery pipeline branching into HEVC and WebM based on browser support, reducing payload by 70 percent.',
+  },
+}
+
+function WorkDetailImage({ src, index, alt }: { src: string; index: number; alt: string }) {
+  const [loaded, setLoaded] = useState(false)
+  const [hasNaturalSize, setHasNaturalSize] = useState(false)
+
+  return (
+    <div className="panel-image-container">
+      <span className="corner top-left" />
+      <span className="corner top-right" />
+      <span className="corner bottom-left" />
+      <span className="corner bottom-right" />
+      <div
+        className={`image-wrapper${hasNaturalSize ? ' image-wrapper--loaded' : ''}`}
+        aria-busy={!loaded}
+      >
+        <div
+          className={`panel-image__skeleton${loaded ? ' panel-image__skeleton--hidden' : ''}`}
+          aria-hidden
+        />
+        <img
+          src={src}
+          alt={alt}
+          loading={index < 2 ? 'eager' : 'lazy'}
+          decoding="async"
+          onLoad={() => {
+            setLoaded(true)
+            setHasNaturalSize(true)
+          }}
+          onError={() => {
+            setLoaded(true)
+            setHasNaturalSize(false)
+          }}
+          className={loaded ? 'is-loaded' : ''}
+        />
+      </div>
+    </div>
+  )
+}
+
+function WorkProcessVisual({ projectKey }: { projectKey: ProjectKey }) {
+  const config = PROCESS_VISUALS[projectKey]
+  if (!config) return null
+
+  const renderNode = (stage: ProcessVisualConfig['stages'][number], index: number) => (
+    <div
+      className="process-node"
+      key={`${stage.label}-${index}`}
+    >
+      <span className="process-node__index">{String(index + 1).padStart(2, '0')}</span>
+      <span className="process-node__copy">
+        <strong className="process-node__label">{stage.label}</strong>
+        <span className="process-node__detail">{stage.detail}</span>
+      </span>
+    </div>
+  )
+
+  return (
+    <div
+      className={`panel-process-visual panel-process-visual--${config.variant}`}
+      role="img"
+      aria-label={config.ariaLabel}
+    >
+      <span className="corner top-left" />
+      <span className="corner top-right" />
+      <span className="corner bottom-left" />
+      <span className="corner bottom-right" />
+      <div className="process-visual__header">
+        <span>[ PROCESS_EVIDENCE ]</span>
+        <span className="process-visual__status">VERIFIED</span>
+      </div>
+      {config.variant === 'branch' ? (
+        <div
+          className="process-flow process-flow--branch"
+          aria-hidden
+        >
+          {renderNode(config.stages[0], 0)}
+          <span className="process-connector process-connector--vertical" />
+          {renderNode(config.stages[1], 1)}
+          <div className="process-branch">
+            {renderNode(config.stages[2], 2)}
+            {renderNode(config.stages[3], 3)}
+          </div>
+          <span className="process-connector process-connector--vertical" />
+          {renderNode(config.stages[4], 4)}
+        </div>
+      ) : (
+        <div
+          className="process-flow process-flow--linear"
+          aria-hidden
+        >
+          {config.stages.map((stage, index) => (
+            <div
+              className="process-flow__step"
+              key={stage.label}
+            >
+              {renderNode(stage, index)}
+              {index < config.stages.length - 1 && <span className="process-connector" />}
+            </div>
+          ))}
+        </div>
+      )}
+      <div
+        className="process-insight"
+        aria-hidden
+      >
+        <span className="process-insight__label">{config.insight.label}</span>
+        <div className="process-insight__value">
+          <span>{config.insight.from}</span>
+          <i>→</i>
+          <strong>{config.insight.to}</strong>
+        </div>
+      </div>
+      <div
+        className="process-metrics"
+        aria-hidden
+      >
+        {config.metrics.map((metric) => (
+          <div
+            className="process-metric"
+            key={metric.label}
+          >
+            <strong>{metric.value}</strong>
+            <span>{metric.label}</span>
+          </div>
+        ))}
+      </div>
+      <div className="process-visual__footer">CASE_DATA // NO_SCREEN_CAPTURE</div>
+    </div>
+  )
+}
+
+function WorkTechStack({ stack }: { stack: string }) {
+  const technologies = stack.split(/\s*(?:·|,)\s*/).filter(Boolean)
+
+  return (
+    <div
+      className="panel-tech"
+      aria-label={`Technology stack: ${stack}`}
+    >
+      <span
+        className="panel-tech__bracket"
+        aria-hidden
+      >
+        [
+      </span>
+      {technologies.map((technology, index) => (
+        <span
+          className="panel-tech__item"
+          key={technology}
+        >
+          {index > 0 && <span aria-hidden>·</span>}
+          <span>{technology}</span>
+        </span>
+      ))}
+      <span
+        className="panel-tech__bracket"
+        aria-hidden
+      >
+        ]
+      </span>
+    </div>
+  )
 }
 
 // ─── 3D Configuration ───
@@ -151,17 +370,23 @@ function Works({ isActive }: WorksProps) {
   // DOM refs
   const sceneRef = useRef<HTMLDivElement>(null)
   const scene3dRef = useRef<HTMLDivElement>(null)
+  // Animated section particles converge as Works enters, then orbit slowly.
+  const backdropCanvasRef = useRef<HTMLCanvasElement>(null)
+  useParticleBackdrop(backdropCanvasRef, isActive && !isMobileView)
   const ringEls = useRef<(HTMLDivElement | null)[]>([])
   const ringHighlightEls = useRef<(HTMLDivElement | null)[]>([])
   // One ref per work panel — show/hide managed via direct DOM (no React re-render)
   const panelRefs = useRef<(HTMLDivElement | null)[]>([])
   const activePanelIdxRef = useRef<number | null>(null)
   // Direct DOM refs for hover classes — eliminates React re-renders on hover
-  const nodeEls = useRef<(HTMLDivElement | null)[]>([])
+  const nodeEls = useRef<(HTMLButtonElement | null)[]>([])
   // Mobile list container ref — used for Lenis scroll & reset on section re-entry
   const mobileListRef = useRef<HTMLDivElement | null>(null)
   const mobileListContentRef = useRef<HTMLDivElement | null>(null)
   const mobileLenisRef = useRef<Lenis | null>(null)
+  const detailPanelRef = useRef<HTMLDivElement | null>(null)
+  const detailCloseRef = useRef<HTMLButtonElement | null>(null)
+  const detailTriggerRef = useRef<HTMLElement | null>(null)
 
   // Animation state (refs for perf — no re-renders during drag)
   const rotRef = useRef({ ...INITIAL_ROT })
@@ -346,6 +571,7 @@ function Works({ isActive }: WorksProps) {
   }, [])
 
   const handleWorkClick = useCallback((work: WorkType) => {
+    detailTriggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     setActiveWork(work)
     setIsOpen(true)
   }, [])
@@ -660,6 +886,7 @@ function Works({ isActive }: WorksProps) {
           )
         })
       })
+      tl.fromTo('.works-progress', { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.75)
     } else {
       entryTlRef.current?.kill()
       entryTlRef.current = null
@@ -673,12 +900,16 @@ function Works({ isActive }: WorksProps) {
         scale: 0,
         opacity: 0,
       })
-      gsap.set('.works-list-content .works-preview', {
-        opacity: 0,
-        clearProps: 'y',
-      })
+      const mobilePreviews = mobileListContentRef.current?.querySelectorAll('.works-preview')
+      if (mobilePreviews?.length) {
+        gsap.set(mobilePreviews, {
+          opacity: 0,
+          clearProps: 'y',
+        })
+      }
       indexSplitRef.current?.revert()
       indexSplitRef.current = null
+      gsap.set('.works-progress', { opacity: 0 })
 
       // Reset ring sweep to 0 (invisible) — no scale reset needed
       ringsRef.current.forEach((_, i) => {
@@ -689,15 +920,79 @@ function Works({ isActive }: WorksProps) {
     }
   }, [isActive])
 
-  const closeDetail = () => {
+  const closeDetail = useCallback(() => {
     setIsOpen(false)
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const trigger = detailTriggerRef.current
+    const previousOverflow = document.body.style.overflow
+    const focusFrame = requestAnimationFrame(() => detailCloseRef.current?.focus())
+    document.body.style.overflow = 'hidden'
+
+    const handleDialogKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        closeDetail()
+        return
+      }
+      if (event.key !== 'Tab' || !detailPanelRef.current) return
+
+      const focusable = Array.from(
+        detailPanelRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => !element.hasAttribute('inert'))
+      const first = focusable[0]
+      const last = focusable.at(-1)
+
+      if (!first || !last) {
+        event.preventDefault()
+        detailPanelRef.current.focus()
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleDialogKeyDown)
+    return () => {
+      cancelAnimationFrame(focusFrame)
+      document.removeEventListener('keydown', handleDialogKeyDown)
+      document.body.style.overflow = previousOverflow
+      requestAnimationFrame(() => trigger?.focus())
+    }
+  }, [closeDetail, isOpen])
 
   return (
     // is-mobile-device 클래스는 이제 "모바일 뷰"(디바이스 OR 뷰포트) 기준으로 부착 —
     // App.scss의 works 모바일 스타일 전체(리스트 표시, constellation-scene display:none 등)가
     // 이 클래스 하나로 게이트되므로 CSS 변경 없이 반응형 전환이 따라온다
     <div className={`inner works__inner ${isMobileView ? 'is-mobile-device' : ''}`}>
+      <div className="terminal-bar works-progress">
+        <span className="terminal-bar__label">&gt; SELECTED</span>
+        {!isMobileView && (
+          <>
+            <span> ─── </span>
+            <span className="terminal-bar__bar">
+              [{works.map((_, index) => (index === previewIndex ? '█' : '░')).join('')}]
+            </span>
+          </>
+        )}
+        <span className="works-progress__info">
+          <span>
+            {isMobileView
+              ? ` ─── ${String(works.length).padStart(3, '0')} PROJECTS DETECTED`
+              : `${String(previewIndex + 1).padStart(3, '0')}/${String(works.length).padStart(3, '0')} ─── ${works[previewIndex]?.game ?? ''}`}
+          </span>
+        </span>
+      </div>
+
       {/* PC 드로어 열기 버튼 — Selected Project 궤도는 항상 그대로 두고,
           View All(텍스트 리스트)만 하단 바텀시트로 열고 닫는다 */}
       {!isMobileView && (
@@ -709,7 +1004,7 @@ function Works({ isActive }: WorksProps) {
             aria-pressed={drawerOpen}
             aria-expanded={drawerOpen}
           >
-            {drawerOpen ? '[ CLOSE ]' : '[ VIEW MORE ]'}
+            {drawerOpen ? '[ CLOSE ]' : '[ VIEW ALL LIST ]'}
           </button>
         </div>
       )}
@@ -727,7 +1022,14 @@ function Works({ isActive }: WorksProps) {
       {/* PC View All 드로어: Selected Project 단일 열 리스트 + Other Projects.
           항상 렌더하고 --open으로 슬라이드 — 트랜지션을 위해 언마운트하지 않는다 */}
       {!isMobileView && (
-        <aside className={`${worksStyles['drawer']}${drawerOpen ? ` ${worksStyles['drawer--open']}` : ''}`}>
+        <aside
+          className={`${worksStyles['drawer']}${drawerOpen ? ` ${worksStyles['drawer--open']}` : ''}`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="All projects"
+          aria-hidden={!drawerOpen}
+          inert={!drawerOpen}
+        >
           <div className={worksStyles['drawer__inner']}>
             <WorksSubList
               items={selectedRows}
@@ -793,6 +1095,13 @@ function Works({ isActive }: WorksProps) {
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}
       >
+        {/* Animated particle layer, kept behind the existing 3D rings and nodes. */}
+        <canvas
+          className="particle-backdrop"
+          ref={backdropCanvasRef}
+          aria-hidden
+        />
+
         {/* Fixed overlays (not affected by drag rotation) */}
         <div className="works-bloom pulsing" />
         <div className="scene-center" />
@@ -863,11 +1172,21 @@ function Works({ isActive }: WorksProps) {
                     transform: `translate3d(${pos.x}px, ${pos.y}px, ${pos.z}px) rotateY(calc(-1 * var(--ry, 30deg))) rotateX(calc(-1 * var(--rx, -18deg)))`,
                   }}
                 >
-                  <div
+                  <button
+                    type="button"
                     className="constellation-node"
+                    aria-label={`Open ${work.title} project details`}
                     ref={(el) => {
                       nodeEls.current[idx] = el
                     }}
+                    onClick={() => handleWorkClick(work)}
+                    onKeyDown={(event) => {
+                      if (event.key !== 'Enter' && event.key !== ' ') return
+                      event.preventDefault()
+                      handleWorkClick(work)
+                    }}
+                    onFocus={() => handleNodeHover(idx)}
+                    onBlur={() => handleNodeHover(null)}
                   >
                     <span className="constellation-node__index">{String(idx + 1).padStart(3, '0')}</span>
                     <div className="constellation-node__point">
@@ -877,7 +1196,7 @@ function Works({ isActive }: WorksProps) {
                         loading="eager"
                       />
                     </div>
-                  </div>
+                  </button>
                 </div>
               )
             })}
@@ -887,21 +1206,35 @@ function Works({ isActive }: WorksProps) {
 
       {/* Detail Modal */}
       {createPortal(
-        <div className={`works__detail ${isOpen ? 'active' : ''}`}>
+        <div
+          className={`works__detail ${isOpen ? 'active' : ''}`}
+          role="dialog"
+          aria-modal="true"
+          aria-hidden={!isOpen}
+          aria-labelledby={activeWork ? `work-detail-title-${activeWork.id}` : undefined}
+          inert={!isOpen}
+        >
           <div
             className="works__detail-overlay"
             onClick={closeDetail}
+            aria-hidden
           />
-          <div className="works__detail-panel">
+          <div
+            className="works__detail-panel"
+            ref={detailPanelRef}
+            tabIndex={-1}
+          >
             {/* Panel Header */}
             <div className="panel-header">
               <span className="panel-id">
-                ◼︎ project
+                ◼︎ work_detail
                 {activeWork ? `:${String(activeWork.id).padStart(3, '0')}` : ''}
               </span>
               <button
                 className="btn-close-panel"
                 onClick={closeDetail}
+                ref={detailCloseRef}
+                aria-label="Close project details"
               >
                 [ X ] CLOSE
               </button>
@@ -913,17 +1246,62 @@ function Works({ isActive }: WorksProps) {
                 className="panel-body"
                 key={activeWork.id}
               >
-                <div className="panel-meta">
-                  <div className="panel-meta__left">
+                <div className="panel-body__left">
+                  {activeWork.img.length > 0 ? (
+                    activeWork.img.map((img, index) => (
+                      <WorkDetailImage
+                        key={`${activeWork.id}-${index}-${img}`}
+                        src={img}
+                        index={index}
+                        alt={`${activeWork.title} — ${String(index + 1).padStart(2, '0')}`}
+                      />
+                    ))
+                  ) : (
+                    <WorkProcessVisual projectKey={activeWork.projectKey} />
+                  )}
+                </div>
+
+                <div className="panel-body__right">
+                  <div className="panel-meta">
                     <div className="meta-row">
-                      <span className="meta-label">Dept</span> <span className="meta-val">{activeWork.dept}</span>
+                      <span className="meta-label">Category</span>{' '}
+                      <span className="meta-val">{CATEGORY_MAP[activeWork.category] ?? 'secret'}</span>
                     </div>
                     <div className="meta-row">
                       <span className="meta-label">Period</span> <span className="meta-val">{activeWork.date}</span>
                     </div>
-                    <div className="meta-row">
-                      <span className="meta-label">Tech</span> <span className="meta-val">{activeWork.stack}</span>
-                    </div>
+                  </div>
+
+                  <div className="panel-title-wrapper">
+                    <h2 className="panel-game text-display">{activeWork.game}</h2>
+                    <h1
+                      className="panel-title text-display"
+                      id={`work-detail-title-${activeWork.id}`}
+                    >
+                      {renderText(activeWork.title)}
+                    </h1>
+                  </div>
+
+                  <WorkTechStack stack={activeWork.stack} />
+
+                  <div className="panel-description text-body">
+                    {activeWork.intro && <p className="panel-intro">{renderText(activeWork.intro)}</p>}
+                    {activeWork.description.map((highlight, highlightIndex) => (
+                      <div
+                        className="panel-highlight"
+                        key={highlightIndex}
+                      >
+                        <p className="panel-highlight__title">{renderText(highlight.title)}</p>
+                        {highlight.p.map((line, lineIndex) => (
+                          <p
+                            className="panel-highlight__body"
+                            key={lineIndex}
+                          >
+                            {renderText(line)}
+                          </p>
+                        ))}
+                      </div>
+                    ))}
                   </div>
 
                   {activeWork.url && (
@@ -934,38 +1312,11 @@ function Works({ isActive }: WorksProps) {
                         rel="noopener noreferrer"
                         className="btn-launch"
                       >
-                        [ Link<span className="arrow">↗</span> ]
+                        [ LAUNCH_PROJECT ] <span className="arrow">↗</span>
                       </a>
                     </div>
                   )}
                 </div>
-
-                <div className="panel-title-wrapper">
-                  <h2 className="panel-game text-display">{activeWork.game}</h2>
-                  <h1 className="panel-title text-display">{renderText(activeWork.title)}</h1>
-                </div>
-
-                <div className="panel-description text-body">
-                  {activeWork.intro && <p className="panel-intro">{renderText(activeWork.intro)}</p>}
-                  {activeWork.description.map((highlight, hIdx) => (
-                    <div
-                      className="panel-highlight"
-                      key={hIdx}
-                    >
-                      <p className="panel-highlight__title">{renderText(highlight.title)}</p>
-                      {highlight.p.map((line, lIdx) => (
-                        <p
-                          className="panel-highlight__body"
-                          key={lIdx}
-                        >
-                          {renderText(line)}
-                        </p>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-
-                {activeWork.img.length > 0 ? <WorkDetailImage src={activeWork.img} /> : null}
               </div>
             )}
           </div>
